@@ -56,7 +56,8 @@ def webhook_push():
 
     event = request.get_json()
 
-    #print(json.dumps(event, indent=4))
+    with open("first-gitlab-webhook.log","a") as file:
+        print(json.dump(event, file, indent=4))
 
     print( " ### Summary ### " )
 
@@ -71,8 +72,14 @@ def webhook_push():
     for c in event['commits']:
         print("    Commit ", c['id'], " at ", c['timestamp'] )
         print("        Added: ", len(c['added']))
+        for filename in c['added']:
+            print("            ", filename)
         print("        Modified: ", len(c['modified']))
+        for filename in c['modified']:
+            print("            ", filename)
         print("        Removed: ", len(c['removed']))
+        for filename in c['removed']:
+            print("            ", filename)
 
     log.debug("END: webhook_push() finished successfully")
     return jsonify('no errors'), 200
