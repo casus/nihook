@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 venv
 env.sh
 __pycache__
+=======
+env.sh
+venv
+>>>>>>> 09bc6c4c1bea1cbe0779a447b87551368b222c1a
 *.log
