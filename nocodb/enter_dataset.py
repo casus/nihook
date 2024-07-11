@@ -27,6 +27,7 @@ if __name__ == '__main__':
     parser.add_argument("input", help="Input JSON file")
     parser.add_argument("-t", "--table", help="Existing Nocodb table id, then insert into this table")
     parser.add_argument("-b", "--base", help="Existing Nocodb base id, then create a matchin table in this base and insert in this table")
+    parser.add_argument("-n", "--name", help="Name for the newly created table, when -b/--base was used")
     args = parser.parse_args()
 
     inputfile= args.input
@@ -51,10 +52,28 @@ if __name__ == '__main__':
 
         if args.base:
 
+            table_name= None
+            if args.name:
+                table_name= args.name
+            else:
+                print("No name for new table given, abort")
+                sys.exit(-1)
+
+
             baseid= args.base
             print("Nocodb base ", baseid)
+            print(f"... create new table '{table_name}' in base {baseid}")
+
+            # prepare column definition
+            columns= prepare_json.derive_table_columns_definition( data )
+
+            # actualy create the new table 
+            base= nocodb.Base( baseid, host=nocodb_host, auth_token=nocodb_token )
+            ###   base.create_table(table_name,columns)
+
 
             tableid= 42
+
 
         else:
 

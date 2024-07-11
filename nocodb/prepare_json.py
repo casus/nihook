@@ -1,3 +1,4 @@
+import sys
 import json
 
 """
@@ -52,3 +53,78 @@ def prepare_input( input ):
     print( json.dumps(data,indent=4))
 
     return data
+
+
+def derive_table_columns_definition( data ):
+
+    columns= []
+
+    # column_template= {
+        # "column_name": "title",
+        # "title": "Title",
+
+        # "uidt": "SingleLineText",
+        # "dt": "varchar",
+
+        # "uidt": "Number" ,
+        # "dt": "float8" | "int" | "bigint"
+
+        # "uidt": "Decimal" ,
+        # "dt": "decimal"
+
+        # "uidt": "DateTime",
+        # "dt": "timestamp",
+
+        # "uidt": "Checkbox",
+        # "dt": "bool",
+
+        # "uidt": "ID",
+        # "dt": "int4",
+
+        # uidt": "SingleSelect",
+        # "dt": "text"
+
+        # "un": false
+    # }
+
+    # column_template= {
+    #     "column_name": 
+    #     "title": 
+    #     "uidt": 
+    #     "dt": 
+    #     "un": false
+    # }
+
+
+    for k in data:
+        print("    ", k, " --> ", type(data[k]))
+
+        if type(1) == type(data[k]):
+
+            print("handle int")
+
+        elif type(1.1) == type(data[k]):
+
+            print("handle float or decimal")
+
+        elif type("") == type(data[k]):
+
+            print("handle string")
+
+        elif type(True) == type(data[k]):
+
+            print("handle bool")
+
+        elif type([]) == type(data[k]):
+
+            print("handle list")
+            print("    ",data[k])
+
+        else:
+
+            ## no not cover {} above because those should have been resolved by 'flatten_keys()'
+
+            print("handle unknown, abort")
+            sys.exit(-2)
+
+    return columns
