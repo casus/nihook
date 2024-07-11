@@ -170,30 +170,35 @@ class Base:
 
 
     """
-    Read Table
-    Read the table meta data by the given table ID
-    https://meta-apis-v2.nocodb.com/#tag/DB-Table/operation/db-table-read
-    GET http://localhost:8080/api/v2/meta/tables/{tableId}
-    """
-    def read_table(self,tableid):
-
-        url= f"{self.host}/api/v2/meta/tables/{tableid}"
-
-        res= requests.get( url,
-            headers={"accept": "application/json", "xc-token": self.auth_token},
-            params={} ).json()
-
-        #print( json.dumps(res, indent=4 ) )
-
-        return res
-
-    """
     Create Table
     Create a new table in a given base
     https://meta-apis-v2.nocodb.com/#tag/DB-Table/operation/db-table-create
     POST http://localhost:8080/api/v2/meta/bases/{baseId}/tables
     TBD
     """
+    def create_table( self, name, columns ):
+
+        print("TODO Base.create_table()")
+
+        url= f"{self.host}/api/v2/meta/bases/{seld.baseid}/tables"
+
+        data= { 
+                "columns": columns,
+                "table_name": name,
+                "title": name
+            }
+
+        if color:
+            data["color"]= color
+
+        res= requests.post( url,
+            headers={"accept": "application/json", "xc-token": self.auth_token},
+            data=data ).json()
+
+        print( json.dumps(res, indent=4 ) )
+
+        return res
+
 
     def get_table_object(self,title):
 
@@ -202,7 +207,7 @@ class Base:
 
         if title in alltables:
 
-            return Table( self, alltables[title])
+            return Table( alltables[title], base=self )
 
         else:
 
@@ -215,21 +220,45 @@ Class for access to a NOCODB table
 """
 class Table:
 
-    def __init__(self, base, tableid ):
+    def __init__(self, tableid, base=None, host=None, auth_token=None):
 
         # Don't keep the parent Base object because we can work without it
         # Accessing a Table only needs the tableid and the auth_token
         # Thus like this one can create a Table object without a Base object.
         #self.base= base
         self.tableid= tableid
-        self.host= base.host
-        self.auth_token= base.auth_token
 
-        self.metadata= base.read_table(tableid)
+        if base:
+
+            self.host= base.host
+            self.auth_token= base.auth_token
+
+        else:
+
+            assert None != host
+            assert None != auth_token 
+
+            self.host= host
+            self.auth_token= auth_token
 
     def debug(self):
         print("class Table: ", self.tableid )
-        #print( json.dumps( self.metadata, indent=4 ) )
-        columns= self.metadata["columns"]
-        for c in columns:
-            print( "    ", c["title"] )
+        print( json.dumps( self.read_table(), indent=4 ) )
+
+    """
+    Read Table
+    Read the table meta data by the given table ID
+    https://meta-apis-v2.nocodb.com/#tag/DB-Table/operation/db-table-read
+    GET http://localhost:8080/api/v2/meta/tables/{tableId}
+    """
+    def read_table(self):
+
+        url= f"{self.host}/api/v2/meta/tables/{self.tableid}"
+
+        res= requests.get( url,
+            headers={"accept": "application/json", "xc-token": self.auth_token},
+            params={} ).json()
+
+        #print( json.dumps(res, indent=4 ) )
+
+        return res

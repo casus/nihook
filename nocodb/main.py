@@ -73,3 +73,10 @@ if __name__ == '__main__':
     res= otherbase.list_tables()
     for t in res:
         print("    ", t, " --> ", res[t])
+
+
+    print( " ######## work with other table, directly created \n")
+    othertable= nocodb.Table( "mkcfpzj24ar4uws", host=nocodb_host, auth_token=nocodb_token )
+    ttt= othertable.read_table()
+    for c in ttt["columns"]:
+        print(f"    {c['title']} : {c['uidt']} - {c['dt']}" )
