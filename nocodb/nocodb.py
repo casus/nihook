@@ -39,43 +39,6 @@ class Nocodb:
 
 
     """
-    Get Base info
-    Get info such as node version, arch, platform, is docker, rootdb and package version of a given base
-    GET http://localhost:8080/api/v2/meta/bases/{baseId}/info
-    """
-    def get_base_info( self, baseid ):
-
-        url= f"{self.host}/api/v2/meta/bases/{baseid}/info"
-
-        res= requests.get( url,
-            headers={"accept": "application/json", "xc-token": self.auth_token},
-            params={} ).json()
-
-        #print( json.dumps(res, indent=4 ) )
-
-        return res
-
-    """
-    Get Base
-    Get the info of a given base
-    https://meta-apis-v2.nocodb.com/#tag/Base/operation/base-read
-    GET http://localhost:8080/api/v2/meta/bases/{baseId}
-    """
-    def get_base( self, baseid ):
-
-        url= f"{self.host}/api/v2/meta/bases/{baseid}"
-
-        res= requests.get( url,
-            headers={"accept": "application/json", "xc-token": self.auth_token},
-            params={} ).json()
-
-        #print( json.dumps(res, indent=4 ) )
-
-        return res
-
-
-
-    """
     Create Base
     Create a new base
     https://meta-apis-v2.nocodb.com/#tag/Base/operation/base-create
@@ -105,7 +68,7 @@ class Nocodb:
 
         if title in allbases:
 
-            return Base( self, allbases[title] )
+            return Base( allbases[title], nocodb=self )
 
         else:
 
@@ -116,23 +79,71 @@ Class for access to a NOCODB base == one database in the Nocodb instance
 """
 class Base:
 
-    def __init__(self, nocodb, baseid ):
+    def __init__(self, baseid, nocodb=None, host=None, auth_token=None  ):
 
         # Don't keep the parent Nocodb object because we can work without it
         # Accessing a Base only needs the baseid and the auth_token
         # Thus like this one can create a Base object without a Nocodb object.
         # #self.nocodb= nocodb 
         self.baseid= baseid
-        self.host= nocodb.host
-        self.auth_token= nocodb.auth_token
 
-        self.info= nocodb.get_base_info(baseid)
-        self.metadata= nocodb.get_base(baseid)
+        if nocodb:
+
+            self.host= nocodb.host
+            self.auth_token= nocodb.auth_token
+
+        else:
+
+            assert None != host
+            assert None != auth_token 
+
+            self.host= host
+            self.auth_token= auth_token
+
+        self.info= self.get_base_info()
+        self.metadata= self.get_base()
 
     def debug(self):
         print("class Base: ", self.baseid )
         print( json.dumps( self.info, indent=4 ) )
         print( json.dumps( self.metadata, indent=4 ) )
+
+
+    """
+    Get Base info
+    Get info such as node version, arch, platform, is docker, rootdb and package version of a given base
+    GET http://localhost:8080/api/v2/meta/bases/{baseId}/info
+    """
+    def get_base_info( self ):
+
+        url= f"{self.host}/api/v2/meta/bases/{self.baseid}/info"
+
+        res= requests.get( url,
+            headers={"accept": "application/json", "xc-token": self.auth_token},
+            params={} ).json()
+
+        #print( json.dumps(res, indent=4 ) )
+
+        return res
+
+    """
+    Get Base
+    Get the info of a given base
+    https://meta-apis-v2.nocodb.com/#tag/Base/operation/base-read
+    GET http://localhost:8080/api/v2/meta/bases/{baseId}
+    """
+    def get_base( self ):
+
+        url= f"{self.host}/api/v2/meta/bases/{self.baseid}"
+
+        res= requests.get( url,
+            headers={"accept": "application/json", "xc-token": self.auth_token},
+            params={} ).json()
+
+        #print( json.dumps(res, indent=4 ) )
+
+        return res
+
 
     """
     List Tables

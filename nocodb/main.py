@@ -16,19 +16,15 @@ if __name__ == '__main__':
     #res= ndb.create_base( "test-create-base", color= "#d25cca" )
     #print( json.dumps( res, indent=4 )  )
 
+    print(" #### List bases: #### ")
+
     ret= ndb.list_bases()
     for i in ret:
 
         print(i," --> ",ret[i])
-        print()
-        print( json.dumps( ndb.get_base_info( ret[i] ), indent=4 ) )
-        print()
-        print( json.dumps( ndb.get_base( ret[i] ), indent=4 ) )
-        print()
-        print()
 
 
-    print( " ======== \n")
+    print( " ######## work with base \n")
 
     base_name= "Getting Started"
     base= ndb.get_base_object( base_name  )
@@ -66,3 +62,14 @@ if __name__ == '__main__':
 
         print("No such table, stop")
         sys.exit(1)
+
+
+    print( " ######## work with other base, directly created \n")
+    otherbase= nocodb.Base( "pe66nkeyk5bb5n3", host=nocodb_host, auth_token=nocodb_token )
+    otherbase.debug()
+
+    print(" #### List tables: #### ")
+
+    res= otherbase.list_tables()
+    for t in res:
+        print("    ", t, " --> ", res[t])
