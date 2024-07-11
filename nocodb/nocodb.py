@@ -117,14 +117,20 @@ Class for access to a NOCODB base == one database in the Nocodb instance
 class Base:
 
     def __init__(self, nocodb, baseid ):
-        self.nocodb= nocodb
+
+        # Don't keep the parent Nocodb object because we can work without it
+        # Accessing a Base only needs the baseid and the auth_token
+        # Thus like this one can create a Base object without a Nocodb object.
+        # #self.nocodb= nocodb 
         self.baseid= baseid
+        self.host= nocodb.host
+        self.auth_token= nocodb.auth_token
 
         self.info= nocodb.get_base_info(baseid)
         self.metadata= nocodb.get_base(baseid)
 
     def debug(self):
-        print("class Base: ", self.nocodb, self.baseid )
+        print("class Base: ", self.baseid )
         print( json.dumps( self.info, indent=4 ) )
         print( json.dumps( self.metadata, indent=4 ) )
 
@@ -136,10 +142,10 @@ class Base:
     """
     def list_tables(self):
 
-        url= f"{self.nocodb.host}/api/v2/meta/bases/{self.baseid}/tables"
+        url= f"{self.host}/api/v2/meta/bases/{self.baseid}/tables"
 
         res= requests.get( url,
-            headers={"accept": "application/json", "xc-token": self.nocodb.auth_token},
+            headers={"accept": "application/json", "xc-token": self.auth_token},
             params={} ).json()
 
         #print( json.dumps(res, indent=4 ) )
@@ -160,10 +166,10 @@ class Base:
     """
     def read_table(self,tableid):
 
-        url= f"{self.nocodb.host}/api/v2/meta/tables/{tableid}"
+        url= f"{self.host}/api/v2/meta/tables/{tableid}"
 
         res= requests.get( url,
-            headers={"accept": "application/json", "xc-token": self.nocodb.auth_token},
+            headers={"accept": "application/json", "xc-token": self.auth_token},
             params={} ).json()
 
         #print( json.dumps(res, indent=4 ) )
@@ -179,13 +185,12 @@ class Base:
     """
 
     def get_table_object(self,title):
-    
+
         # check if such a table exists
         alltables= self.list_tables()
 
         if title in alltables:
 
-            print("Found ", title)
             return Table( self, alltables[title])
 
         else:
@@ -200,13 +205,19 @@ Class for access to a NOCODB table
 class Table:
 
     def __init__(self, base, tableid ):
-        self.base= base
+
+        # Don't keep the parent Base object because we can work without it
+        # Accessing a Table only needs the tableid and the auth_token
+        # Thus like this one can create a Table object without a Base object.
+        #self.base= base
         self.tableid= tableid
+        self.host= base.host
+        self.auth_token= base.auth_token
 
         self.metadata= base.read_table(tableid)
 
     def debug(self):
-        print("class Table: ", self.base, self.tableid )
+        print("class Table: ", self.tableid )
         #print( json.dumps( self.metadata, indent=4 ) )
         columns= self.metadata["columns"]
         for c in columns:

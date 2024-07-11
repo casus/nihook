@@ -48,7 +48,7 @@ if __name__ == '__main__':
     print(" #### List tables: #### ")
 
     res= base.list_tables()
-    print( json.dumps( res, indent=4 ) )
+    #print( json.dumps( res, indent=4 ) )
 
     for t in res:
         print("    ", t, " --> ", res[t])
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
     if table:
 
-        print("Found table ", base_name )
+        print("Found table ", table_name )
         table.debug()
     else:
 
