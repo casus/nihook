@@ -22,18 +22,22 @@ def flatten_keys( result, prefix, json_data, separator="." ):
 
     for k in json_data:
 
-        print("    ",k, " --> ", type( json_data[k] ))
+        # replace spaces in names by underscore
+        kk= k.replace(' ','_')
+
+        # if kk != k:
+        #     print("    rename ",k, " --> ", kk, " as ", type( json_data[k] ))
 
         if type( {} ) == type( json_data[k] ):
 
-            print("        dict")
+            #print("        dict")
 
             #recursive
-            flatten_keys( result, prefix+k, json_data[k] )
+            flatten_keys( result, prefix+kk, json_data[k] )
 
         else:
 
-            flat_key= prefix+k
+            flat_key= prefix+kk
             if flat_key in result:
                 print("WARNING: ", flat_key, " already present")
 
