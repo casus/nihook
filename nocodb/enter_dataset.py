@@ -67,6 +67,8 @@ if __name__ == '__main__':
             # prepare column definition
             columns= prepare_json.derive_table_columns_definition( data )
 
+            print( json.dumps(columns,indent=4) )
+
             # actualy create the new table 
             base= nocodb.Base( baseid, host=nocodb_host, auth_token=nocodb_token )
             ###   base.create_table(table_name,columns)
