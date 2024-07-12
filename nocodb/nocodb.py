@@ -176,11 +176,11 @@ class Base:
     POST http://localhost:8080/api/v2/meta/bases/{baseId}/tables
     TBD
     """
-    def create_table( self, name, columns ):
+    def create_table( self, name, columns, color=None ):
 
         print("TODO Base.create_table()")
 
-        url= f"{self.host}/api/v2/meta/bases/{seld.baseid}/tables"
+        url= f"{self.host}/api/v2/meta/bases/{self.baseid}/tables"
 
         data= { 
                 "columns": columns,
@@ -188,16 +188,21 @@ class Base:
                 "title": name
             }
 
-        if color:
-            data["color"]= color
+        print( json.dumps(data, indent=4 ) )
+
+        # if color:
+        #     data["color"]= color
 
         res= requests.post( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            data=data ).json()
+            json=data ).json()
 
+        res['columnsById']= "<skipped>"
         print( json.dumps(res, indent=4 ) )
 
-        return res
+        print(" --> newly created table id ", res['id'] )
+
+        return res['id']
 
 
     def get_table_object(self,title):
@@ -243,7 +248,9 @@ class Table:
 
     def debug(self):
         print("class Table: ", self.tableid )
-        print( json.dumps( self.read_table(), indent=4 ) )
+        metadata= self.read_table()
+        metadata['columnsById']= "<skipped>"
+        print( json.dumps( metadata, indent=4 ) )
 
     """
     Read Table

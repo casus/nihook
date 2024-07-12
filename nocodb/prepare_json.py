@@ -1,9 +1,59 @@
 import sys
 import json
 
+import pandas
+import dateutil.parser
+
+
 """
 Prepare JSON metadata from a 'DATASET.json' file before it can be entered to Nocodb
 """
+
+""" 
+Helper function to check if a string contains time duration. Test this before is_datetime() because that 
+may also answer something but will use the currect day with the time duration as point in time.
+"""
+def is_time_duration(string):
+
+    try: 
+        # use pandas datetime parser because it also handles nanoseconds
+        result= pandas.to_datetime(string, format='%H:%M:%S.%f', errors='raise')
+        return pandas.Timedelta( days=0, 
+            hours=result.hour, minutes=result.minute, seconds=result.second, 
+            microseconds=result.microsecond, nanoseconds=result.nanosecond )
+
+    except ValueError:
+        pass
+
+    try: 
+        # use pandas datetime parser because it also handles nanoseconds
+        result= pandas.to_datetime(string, format='%H:%M:%S', errors='raise')
+        return result
+
+    except ValueError:
+        pass
+
+    return None
+
+""" 
+Helper function to check if a string contains datetime
+"""
+def is_datetime(string, fuzzy=False):
+
+    """
+    Return whether the string can be interpreted as a date.
+
+    :param string: str, string to check for date
+    :param fuzzy: bool, ignore unknown tokens in string if True
+    """
+    try: 
+        result= dateutil.parser.parse(string, fuzzy=fuzzy)
+        return result
+
+    except ValueError:
+        return None
+
+
 
 """
 Recursively flatten the keys in a nested JSON structure
@@ -45,7 +95,7 @@ def flatten_keys( result, prefix, json_data, separator="." ):
 
 def prepare_input( input ):
 
-    print( json.dumps(input,indent=4) )
+    # print( json.dumps(input,indent=4) )
 
     print(" ======== ")
 
@@ -53,8 +103,8 @@ def prepare_input( input ):
 
     flatten_keys( data, "", input )
 
-    print("Result: ")
-    print( json.dumps(data,indent=4))
+    # print("Result: ")
+    # print( json.dumps(data,indent=4))
 
     return data
 
@@ -101,11 +151,11 @@ def derive_table_columns_definition( data ):
 
 
     for k in data:
-        print("    ", k, " --> ", type(data[k]))
 
         if type(1) == type(data[k]):
 
-            print("handle int")
+            #print("    ", k, " --> type ", type(data[k]), " example ", data[k])
+            #print("handle int")
             columns.append( 
                 {
                     "column_name": k,
@@ -117,7 +167,8 @@ def derive_table_columns_definition( data ):
 
         elif type(1.1) == type(data[k]):
 
-            print("handle float or decimal")
+            #print("    ", k, " --> type ", type(data[k]), " example ", data[k])
+            #print("handle float or decimal")
             columns.append( 
                 {
                     "column_name": k,
@@ -129,21 +180,92 @@ def derive_table_columns_definition( data ):
 
         elif type("") == type(data[k]):
 
-            print("handle string")
+            #print("    ", k, " --> type ", type(data[k]), " example ", data[k])
+
+            # several differtn cases here
+
+            if is_it_time_duration := is_time_duration( data[k] ):
+
+                #print("handle string -- duration")
+                #print("    found duration ", is_it_time_duration, " from ", data[k])
+                columns.append( 
+                    {
+                        "column_name": k,
+                        "title": k,
+                        "uidt": "Duration",
+                        "dt": "decimal",
+                        "un": False
+                    })
+
+            elif is_it_datetime := is_datetime( data[k] ):
+
+                #print("handle string -- datetime")
+                #print("    found datetime ", is_it_datetime, " from ", data[k])
+                columns.append( 
+                    {
+                        "column_name": k,
+                        "title": k,
+                        "uidt": "DateTime",
+                        "dt": "timestamp",
+                        "un": False
+                    })
+
+            elif data[k].startswith("http://") or data[k].startswith("https://"):
+
+                #print("handle string -- url")
+                #print("    found datetime ", is_it_datetime, " from ", data[k])
+                columns.append( 
+                    {
+                        "column_name": k,
+                        "title": k,
+                        "uidt": "URL",
+                        "dt": "character varying",
+                        "un": False
+                    })
+            else:
+
+                #print("handle string -- generic")
+                columns.append( 
+                    {
+                        "column_name": k,
+                        "title": k,
+                        "uidt": "SingleLineText",
+                        "dt": "character varying",
+                        "un": False
+                    })
+
 
         elif type(True) == type(data[k]):
 
-            print("handle bool")
+            #print("    ", k, " --> type ", type(data[k]), " example ", data[k])
+            #print("handle bool")
+            columns.append( 
+                {
+                    "column_name": k,
+                    "title": k,
+                    "uidt": "Checkbox",
+                    "dt": "bool",
+                    "un": False
+                })
 
         elif type([]) == type(data[k]):
 
-            print("handle list")
-            print("    ",data[k])
+            # print("    ", k, " --> type ", type(data[k]), " example ", data[k])
+            # print("handle list")
+            columns.append( 
+                {
+                    "column_name": k,
+                    "title": k,
+                    "uidt": "JSON",
+                    "dt": "json",
+                    "un": False
+                })
 
         else:
 
             ## no not cover {} above because those should have been resolved by 'flatten_keys()'
 
+            print("    ", k, " --> type ", type(data[k]), " example ", data[k])
             print("handle unknown, abort")
             sys.exit(-2)
 

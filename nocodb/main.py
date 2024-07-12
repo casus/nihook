@@ -57,7 +57,7 @@ if __name__ == '__main__':
     if table:
 
         print("Found table ", table_name )
-        #table.debug()
+        table.debug()
     else:
 
         print("No such table, stop")
