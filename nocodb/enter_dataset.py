@@ -22,7 +22,6 @@ if __name__ == '__main__':
     nocodb_host = os.getenv('NOCODB_HOST', 'http://localhost')
     nocodb_token = os.getenv('NOCODB_TOKEN', 'none')
 
-
     parser = argparse.ArgumentParser()
     parser.add_argument("input", help="Input JSON file")
     parser.add_argument("-t", "--table", help="Existing Nocodb table id, then insert into this table")
@@ -79,6 +78,13 @@ if __name__ == '__main__':
 
 
     print( f"Enter input from {inputfile} into table {tableid}")
+
+    table= nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token )
+
+    #print( json.dumps(data,indent=4) )
+
+    table.insert(data)
+    #table.debug()
 
 
 

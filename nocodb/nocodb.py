@@ -178,8 +178,6 @@ class Base:
     """
     def create_table( self, name, columns, color=None ):
 
-        print("TODO Base.create_table()")
-
         url= f"{self.host}/api/v2/meta/bases/{self.baseid}/tables"
 
         data= { 
@@ -190,8 +188,8 @@ class Base:
 
         print( json.dumps(data, indent=4 ) )
 
-        # if color:
-        #     data["color"]= color
+        if color:
+            data["color"]= color
 
         res= requests.post( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
@@ -269,3 +267,22 @@ class Table:
         #print( json.dumps(res, indent=4 ) )
 
         return res
+
+    """
+    Create Table Records
+    https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-list
+    POST http://localhost:8080/api/v2/tables/{tableId}/records
+    """
+    def insert(self, data):
+
+        url= f"{self.host}/api/v2/tables/{self.tableid}/records"
+
+        #print( json.dumps(data, indent=4 ) )
+
+        res= requests.post( url,
+            headers={"accept": "application/json", "xc-token": self.auth_token},
+            json=data ).json()
+
+        #print( json.dumps(res, indent=4 ) )
+
+        return True
