@@ -102,10 +102,26 @@ def derive_table_columns_definition( data ):
         if type(1) == type(data[k]):
 
             print("handle int")
+            columns.append( 
+                {
+                    "column_name": k,
+                    "title": k,
+                    "uidt": "Number",
+                    "dt": "int",
+                    "un": False
+                })
 
         elif type(1.1) == type(data[k]):
 
             print("handle float or decimal")
+            columns.append( 
+                {
+                    "column_name": k,
+                    "title": k,
+                    "uidt": "Number",
+                    "dt": "float8",
+                    "un": False
+                })
 
         elif type("") == type(data[k]):
 
