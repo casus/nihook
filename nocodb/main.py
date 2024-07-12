@@ -57,7 +57,7 @@ if __name__ == '__main__':
     if table:
 
         print("Found table ", table_name )
-        table.debug()
+        #table.debug()
     else:
 
         print("No such table, stop")
@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
     print( " ######## work with other base, directly created \n")
     otherbase= nocodb.Base( "pe66nkeyk5bb5n3", host=nocodb_host, auth_token=nocodb_token )
-    otherbase.debug()
+    #otherbase.debug()
 
     print(" #### List tables: #### ")
 
