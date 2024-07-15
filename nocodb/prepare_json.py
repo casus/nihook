@@ -183,29 +183,23 @@ def derive_table_columns_definition( data ):
 
             #print("    ", k, " --> type ", type(data[k]), " example ", data[k])
 
-            # several differtn cases here
+            # several different cases here
 
             if is_it_time_duration := is_time_duration( data[k] ):
 
-                ## keep Duration as a normal string for now
-
                 #print("handle string -- duration")
                 #print("    found duration ", is_it_time_duration, " from ", data[k])
+
                 columns.append( 
                     {
                         "column_name": k,
                         "title": k,
-                        # "uidt": "Duration",
-                        # "dt": "decimal",
-                        "uidt": "SingleLineText",
-                        "dt": "character varying",
+                        "uidt": "Duration",
+                        "dt": "decimal",
                         "un": False
                     })
 
-
             elif is_it_datetime := is_datetime( data[k] ):
-
-                ## keep Datetime as a normal string for now
 
                 #print("handle string -- datetime")
                 #print("    found datetime ", is_it_datetime, " from ", data[k])
@@ -213,10 +207,8 @@ def derive_table_columns_definition( data ):
                     {
                         "column_name": k,
                         "title": k,
-                        # "uidt": "DateTime",
-                        # "dt": "timestamp",
-                        "uidt": "SingleLineText",
-                        "dt": "character varying",
+                        "uidt": "DateTime",
+                        "dt": "timestamp",
                         "un": False
                     })
 
@@ -287,5 +279,23 @@ Transform some data types -- compare to derive_table_columns_definition()
 """
 def fix_datatypes( data ):
 
-    # nothind to do for now as long as we have Timedelta and Datetime as string
-    pass
+    for k in data:
+
+        if type("") == type(data[k]):
+
+            if is_it_time_duration := is_time_duration( data[k] ):
+
+                # print("fix string -- duration")
+                # print("    found duration ", is_it_time_duration, " from ", data[k])
+
+                data[k]= is_it_time_duration.total_seconds()
+
+            elif is_it_datetime := is_datetime( data[k] ):
+
+                # print("fix string -- datetime")
+                # print("    found datetime ", is_it_datetime, " from ", data[k])
+
+                data[k]= is_it_datetime.isoformat()
+
+
+## TODO declare primary key
