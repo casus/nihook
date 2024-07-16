@@ -83,8 +83,9 @@ if __name__ == '__main__':
 
     #print( json.dumps(data,indent=4) )
 
-    table.insert(data)
+    res= table.insert(data)
     #table.debug()
+    print( "RESULT: ", json.dumps(res,indent=4) )
 
 
 
