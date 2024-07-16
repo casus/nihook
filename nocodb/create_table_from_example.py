@@ -37,13 +37,31 @@ if __name__ == '__main__':
 
     # prepare column definition
     columns= prepare_json.derive_table_columns_definition( data )
-    print( json.dumps(columns,indent=4) )
+    #print( json.dumps(columns,indent=4) )
 
     # actualy create the new table 
     base= nocodb.Base( args.base, host=nocodb_host, auth_token=nocodb_token )
     tableid= base.create_table(args.name,columns,color="#e6f253")
 
-    table= nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token )
+    if tableid:
+        print(f"new table {tableid} with columns:")
+
+        table= nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token )
+        details= table.read_table()
+
+        # print(json.dumps(details,indent=4))
+        for c in details['columns']:
+            print(f"    column '{c['title']}' of type {c['uidt']} / {c['dt']}" )
 
 
-    # TODO output of newly created table layoutq
+
+# "id": "clvxk44a3kswa8f",
+#             "source_id": "b71a3kuda2ljzuq",
+#             "base_id": "pjkji23o6odzgvq",
+#             "fk_model_id": "mgloh6ffsigaj0g",
+#             "title": "index.id",
+#             "column_name": "index_id",
+#             "uidt": "SingleLineText",
+#             "dt": "character varyin
+    else:
+        print("not successful")
