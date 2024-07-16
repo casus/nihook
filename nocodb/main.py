@@ -64,6 +64,12 @@ if __name__ == '__main__':
         sys.exit(1)
 
 
+
+    res= table.list()
+    for row in res['list']:
+        print( json.dumps(row,indent=4))
+
+
     print( " ######## work with other base, directly created \n")
     otherbase= nocodb.Base( "pe66nkeyk5bb5n3", host=nocodb_host, auth_token=nocodb_token )
     #otherbase.debug()
@@ -80,3 +86,4 @@ if __name__ == '__main__':
     ttt= othertable.read_table()
     for c in ttt["columns"]:
         print(f"    {c['title']} : {c['uidt']} - {c['dt']}" )
+

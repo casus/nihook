@@ -283,6 +283,38 @@ class Table:
             headers={"accept": "application/json", "xc-token": self.auth_token},
             json=data ).json()
 
-        #print( json.dumps(res, indent=4 ) )
+        print( json.dumps(res, indent=4 ) )
 
         return True
+
+
+    """ 
+    List Table Records
+    This API endpoint allows you to retrieve records from a specified table. 
+    https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-list
+    Get http://localhost:8080/api/v2/tables/{tableId}/records
+    """
+    def list(self, fields=None, sort=None, where=None, offset=0, limit=None, ):
+
+        url= f"{self.host}/api/v2/tables/{self.tableid}/records"
+
+        params={}
+
+        if fields:
+            params['fields']= fields
+        if sort:
+            params['sort']= sort
+        if where:
+            params['where']= where
+        if limit:
+            params['limit']= limit
+
+        res= requests.get( url,
+            headers={"accept": "application/json", "xc-token": self.auth_token},
+            params=params ).json()
+
+        print(" #### page info #### ")
+        print( json.dumps(res['pageInfo'], indent=4 ) )
+        print(" ######## ")
+
+        return res
