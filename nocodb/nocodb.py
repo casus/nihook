@@ -185,8 +185,7 @@ class Base:
                 "table_name": name,
                 "title": name
             }
-
-        print( json.dumps(data, indent=4 ) )
+        #print( json.dumps(data, indent=4 ) )
 
         if color:
             data["color"]= color
@@ -195,10 +194,13 @@ class Base:
             headers={"accept": "application/json", "xc-token": self.auth_token},
             json=data ).json()
 
-        res['columnsById']= "<skipped>"
-        print( json.dumps(res, indent=4 ) )
+        if "errors" in res or "msg" in res:
+            print("ERROR: ")
+            print(json.dumps(res,indent=4))
+            return None
 
-        print(" --> newly created table id ", res['id'] )
+        # print( json.dumps(res, indent=4 ) )
+        # print(" --> newly created table id ", res['id'] )
 
         return res['id']
 
@@ -244,8 +246,9 @@ class Table:
             self.host= host
             self.auth_token= auth_token
 
+
     def debug(self):
-        print("class Table: ", self.tableid )
+        # print("class Table: ", self.tableid )
         metadata= self.read_table()
         metadata['columnsById']= "<skipped>"
         print( json.dumps( metadata, indent=4 ) )
