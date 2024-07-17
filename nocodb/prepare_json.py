@@ -93,7 +93,7 @@ def flatten_keys( result, prefix, json_data, separator="." ):
 
             result[flat_key]= json_data[k]
 
-def prepare_input( input ):
+def prepare_input( input, url=None ):
 
     # print( json.dumps(input,indent=4) )
 
@@ -101,11 +101,15 @@ def prepare_input( input ):
 
     data= {}
 
+    if url:
+        data['URL']= url
+        print("using URL=",url)
+
     flatten_keys( data, "", input )
     fix_datatypes( data )
 
-    # print("Result: ")
-    # print( json.dumps(data,indent=4))
+    print("Result: ")
+    print( json.dumps(data,indent=4))
 
     return data
 
