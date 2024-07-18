@@ -97,7 +97,8 @@ def webhook_push():
 
             dirname, basename= os.path.split(filename)
             if basename in SPECIAL_FILENAMES:
-                process_files_from_gitlab.process_special_files( 'added', projectid, projecturl, ref, dirname, basename )
+                process_files_from_gitlab.process_special_files( 'added', 
+                    projectid, projecturl, ref, dirname, basename )
 
         print("        Modified: ", len(c['modified']))
         for filename in c['modified']:
@@ -105,7 +106,8 @@ def webhook_push():
 
             dirname, basename= os.path.split(filename)
             if basename in SPECIAL_FILENAMES:
-                process_files_from_gitlab.process_special_files( 'modified', projectid, projecturl, ref, dirname, basename )
+                process_files_from_gitlab.process_special_files( 'modified', 
+                    projectid, projecturl, ref, dirname, basename )
 
         print("        Removed: ", len(c['removed']))
         for filename in c['removed']:
@@ -113,7 +115,8 @@ def webhook_push():
 
             dirname, basename= os.path.split(filename)
             if basename in SPECIAL_FILENAMES:
-                process_files_from_gitlab.process_special_files( 'removed', projectid, projecturl, ref, dirname, basename )
+                process_files_from_gitlab.process_special_files( 'removed', 
+                    projectid, projecturl, ref, dirname, basename )
 
     log.debug("END: webhook_push() finished successfully")
     return jsonify('no errors'), 200
