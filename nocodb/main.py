@@ -51,7 +51,7 @@ if __name__ == '__main__':
         # res= base.read_table( t["id"] )
         # print( json.dumps( res, indent=4 ) )
 
-    table_name= "testtable"
+    table_name= "newautocreatedtable"
     table= base.get_table_object(table_name)
 
     if table:
@@ -63,8 +63,6 @@ if __name__ == '__main__':
         print("No such table, stop")
         sys.exit(1)
 
-
-
     res= table.list()
     for row in res['list']:
         print( json.dumps(row,indent=4))
@@ -72,7 +70,7 @@ if __name__ == '__main__':
 
     print( " ######## work with other base, directly created \n")
     otherbase= nocodb.Base( "pe66nkeyk5bb5n3", host=nocodb_host, auth_token=nocodb_token )
-    #otherbase.debug()
+    otherbase.debug()
 
     print(" #### List tables: #### ")
 
@@ -82,7 +80,7 @@ if __name__ == '__main__':
 
 
     print( " ######## work with other table, directly created \n")
-    othertable= nocodb.Table( "mkcfpzj24ar4uws", host=nocodb_host, auth_token=nocodb_token )
+    othertable= nocodb.Table( "mi0xkmgkyya639o", host=nocodb_host, auth_token=nocodb_token )
     ttt= othertable.read_table()
     for c in ttt["columns"]:
         print(f"    {c['title']} : {c['uidt']} - {c['dt']}" )
