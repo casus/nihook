@@ -108,8 +108,8 @@ def prepare_input( input, url=None ):
     flatten_keys( data, "", input )
     fix_datatypes( data )
 
-    print("Result: ")
-    print( json.dumps(data,indent=4))
+    # print("Result: ")
+    # print( json.dumps(data,indent=4))
 
     return data
 
