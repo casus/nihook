@@ -28,7 +28,9 @@ def is_time_duration(string):
     try: 
         # use pandas datetime parser because it also handles nanoseconds
         result= pandas.to_datetime(string, format='%H:%M:%S', errors='raise')
-        return result
+        return pandas.Timedelta( days=0, 
+            hours=result.hour, minutes=result.minute, seconds=result.second, 
+            microseconds=result.microsecond, nanoseconds=result.nanosecond )
 
     except ValueError:
         pass
@@ -96,8 +98,6 @@ def flatten_keys( result, prefix, json_data, separator="." ):
 def prepare_input( input, url=None ):
 
     # print( json.dumps(input,indent=4) )
-
-    print(" ======== ")
 
     data= {}
 
