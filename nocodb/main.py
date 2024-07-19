@@ -10,8 +10,9 @@ if __name__ == '__main__':
 
     nocodb_host = os.getenv('NOCODB_HOST', 'http://localhost')
     nocodb_token = os.getenv('NOCODB_TOKEN', 'none')
+    nocodb_ssl_cert = os.getenv('NOCODB_SSL_CERT', True)
 
-    ndb= nocodb.Nocodb(nocodb_host,nocodb_token)
+    ndb= nocodb.Nocodb( nocodb_host, nocodb_token, verify=nocodb_ssl_cert )
 
     #res= ndb.create_base( "test-create-base", color= "#d25cca" )
     #print( json.dumps( res, indent=4 )  )
@@ -27,7 +28,7 @@ if __name__ == '__main__':
     print( " ######## work with base \n")
 
     base_name= "Getting Started"
-    base= ndb.get_base_object( base_name  )
+    base= ndb.get_base_object( base_name )
 
     if base:
 
@@ -69,7 +70,7 @@ if __name__ == '__main__':
 
 
     print( " ######## work with other base, directly created \n")
-    otherbase= nocodb.Base( "pe66nkeyk5bb5n3", host=nocodb_host, auth_token=nocodb_token )
+    otherbase= nocodb.Base( "pe66nkeyk5bb5n3", host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
     otherbase.debug()
 
     print(" #### List tables: #### ")
@@ -80,7 +81,7 @@ if __name__ == '__main__':
 
 
     print( " ######## work with other table, directly created \n")
-    othertable= nocodb.Table( "mi0xkmgkyya639o", host=nocodb_host, auth_token=nocodb_token )
+    othertable= nocodb.Table( "mi0xkmgkyya639o", host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
     ttt= othertable.read_table()
     for c in ttt["columns"]:
         print(f"    {c['title']} : {c['uidt']} - {c['dt']}" )

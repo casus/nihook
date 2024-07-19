@@ -10,9 +10,10 @@ Class for access to a NOCODB instance
 """
 class Nocodb:
 
-    def __init__(self, host, auth_token ):
+    def __init__(self, host, auth_token, verify=True ):
         self.host= host
         self.auth_token= auth_token
+        self.verify=verify
 
     """ 
     List Bases
@@ -24,9 +25,11 @@ class Nocodb:
 
         url= f"{self.host}/api/v2/meta/bases/"
 
+        print(f"self.verify >{self.verify}<")
+
         res= requests.get( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            params={}, verify="cert/data_casus_science_interm.cer" ).json()
+            params={}, verify=self.verify ).json()
 
         # print( json.dumps(res, indent=4 ) )
 
@@ -54,7 +57,7 @@ class Nocodb:
 
         res= requests.post( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            data=data, verify="cert/data_casus_science_interm.cer" ).json()
+            data=data, verify=self.verify ).json()
 
         #print( json.dumps(res, indent=4 ) )
 
@@ -79,18 +82,20 @@ Class for access to a NOCODB base == one database in the Nocodb instance
 """
 class Base:
 
-    def __init__(self, baseid, nocodb=None, host=None, auth_token=None  ):
+    def __init__(self, baseid, nocodb=None, host=None, auth_token=None, verify=True ):
 
         # Don't keep the parent Nocodb object because we can work without it
         # Accessing a Base only needs the baseid and the auth_token
         # Thus like this one can create a Base object without a Nocodb object.
         # #self.nocodb= nocodb 
         self.baseid= baseid
+        self.verify=verify
 
         if nocodb:
 
             self.host= nocodb.host
             self.auth_token= nocodb.auth_token
+            self.verify= nocodb.verify
 
         else:
 
@@ -118,9 +123,11 @@ class Base:
 
         url= f"{self.host}/api/v2/meta/bases/{self.baseid}/info"
 
+        print(f"verify >{self.verify}<")
+
         res= requests.get( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            params={}, verify="cert/data_casus_science_interm.cer" ).json()
+            params={}, verify=self.verify ).json()
 
         #print( json.dumps(res, indent=4 ) )
 
@@ -138,7 +145,7 @@ class Base:
 
         res= requests.get( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            params={}, verify="cert/data_casus_science_interm.cer" ).json()
+            params={}, verify=self.verify ).json()
 
         #print( json.dumps(res, indent=4 ) )
 
@@ -157,7 +164,7 @@ class Base:
 
         res= requests.get( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            params={}, verify="cert/data_casus_science_interm.cer" ).json()
+            params={}, verify=self.verify ).json()
 
 
         #print( json.dumps(res, indent=4 ) )
@@ -193,7 +200,7 @@ class Base:
 
         res= requests.post( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            json=data, verify="cert/data_casus_science_interm.cer" ).json()
+            json=data, verify=self.verify ).json()
 
         if "errors" in res or "msg" in res:
             print("ERROR: ")
@@ -226,18 +233,20 @@ Class for access to a NOCODB table
 """
 class Table:
 
-    def __init__(self, tableid, base=None, host=None, auth_token=None):
+    def __init__(self, tableid, base=None, host=None, auth_token=None, verify=True ):
 
         # Don't keep the parent Base object because we can work without it
         # Accessing a Table only needs the tableid and the auth_token
         # Thus like this one can create a Table object without a Base object.
         #self.base= base
         self.tableid= tableid
+        self.verify=verify
 
         if base:
 
             self.host= base.host
             self.auth_token= base.auth_token
+            self.verify= base.verify
 
         else:
 
@@ -266,7 +275,7 @@ class Table:
 
         res= requests.get( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            params={}, verify="cert/data_casus_science_interm.cer" ).json()
+            params={}, verify=self.verify ).json()
 
         #print( json.dumps(res, indent=4 ) )
 
@@ -285,7 +294,7 @@ class Table:
 
         res= requests.post( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            json=data, verify="cert/data_casus_science_interm.cer" ).json()
+            json=data, verify=self.verify ).json()
 
         print( json.dumps(res, indent=4 ) )
 
@@ -315,7 +324,7 @@ class Table:
 
         res= requests.get( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            params=params, verify="cert/data_casus_science_interm.cer" ).json()
+            params=params, verify=self.verify ).json()
 
         print(" #### page info #### ")
         print( json.dumps(res['pageInfo'], indent=4 ) )
