@@ -3,7 +3,6 @@
 import os
 import gitlab
 import json
-import base64
 
 
 def read_gitlab( host, access_token ):
@@ -40,11 +39,9 @@ def read_gitlab( host, access_token ):
     ref= "refs/heads/master" # just "master" seems also to work
     print("File: ", path, ref)
     f= project.files.get(file_path= path, ref= ref)
-
-    file_content = base64.b64decode(f.content).decode("utf-8")
     # get the base64 encoded content
-    print(file_content)
-    print( json.dumps(file_content,indent=4))
+    print(f.decode())
+
 
 if __name__ == '__main__':
     host = os.getenv('GITLAB_HOST', "http://localhost")
