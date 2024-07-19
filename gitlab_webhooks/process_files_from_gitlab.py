@@ -3,11 +3,8 @@
 import os
 import time
 import json
-
 import gitlab
-
 import base64
-
 
 import nocodb
 import prepare_json
@@ -19,6 +16,7 @@ def process_special_files( operation, projectid, projecturl, ref, dirname, basen
     gitlab_access_token = os.getenv('GITLAB_ACCESS_TOKEN', "none")
     nocodb_host = os.getenv('NOCODB_HOST', 'none')
     nocodb_token = os.getenv('NOCODB_TOKEN', 'none')
+    nocodb_ssl_cert = os.getenv('NOCODB_SSL_CERT', True) # optional
 
     if 'none' == nocodb_host:
         print("WARNING: no NOCODB_HOST given as environment variable, abort here")
@@ -89,7 +87,7 @@ def process_special_files( operation, projectid, projecturl, ref, dirname, basen
 
     # enter in existing Nocodb table
 
-    table= nocodb.Table( nocodb_tableid, host=nocodb_host, auth_token=nocodb_token )
+    table= nocodb.Table( nocodb_tableid, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
 
     data= prepare_json.prepare_input( j, url=url )
     res= table.insert(data)
