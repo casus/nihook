@@ -20,6 +20,7 @@ if __name__ == '__main__':
 
     nocodb_host = os.getenv('NOCODB_HOST', 'http://localhost')
     nocodb_token = os.getenv('NOCODB_TOKEN', 'none')
+    nocodb_ssl_cert = os.getenv('NOCODB_SSL_CERT', True)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("input", help="Input JSON file")
@@ -41,6 +42,7 @@ if __name__ == '__main__':
     columns= prepare_json.derive_table_columns_definition( data )
 
     # add "URL" as extra column and as a primary key
+    # add "status" as extra column
 
     for c in columns:
 
@@ -50,26 +52,41 @@ if __name__ == '__main__':
             print("not successful")
             sys.exit(-3)
 
-    special_column= [{
+        if "status" == c['column_name'] or "URL" == c['title']:
+
+            print("ERROR: special key 'status' used in input JSON -- not allowed, rename there")
+            print("not successful")
+            sys.exit(-3)
+
+    special_columns= [{
                         "column_name": "URL",
                         "title": "URL",
                         "uidt": "URL",
                         "dt": "character varying",
                         "un": False,
                         "pk": True # primary key
+                    },{
+                        "column_name": "status",
+                        "title": "status",
+                        "uidt": "SingleSelect",
+                        "dt": "character varying",
+                        "dtx": "specificType",
+                        "dtxp": "'current','deleted','replaced'",
+                        "dtxs": "",
+                        "cdf": "'current'"
                     }]
-    columns= special_column + columns
+    columns= special_columns + columns
 
     print( json.dumps(columns,indent=4) )
 
     # actualy create the new table 
-    base= nocodb.Base( args.base, host=nocodb_host, auth_token=nocodb_token )
+    base= nocodb.Base( args.base, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
     tableid= base.create_table(args.name, columns)
 
     if tableid:
         print(f"new table {tableid} with columns:")
 
-        table= nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token )
+        table= nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
         details= table.read_table()
 
         # print(json.dumps(details,indent=4))

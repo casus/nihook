@@ -89,7 +89,7 @@ def process_special_files( operation, projectid, projecturl, ref, dirname, basen
 
     table= nocodb.Table( nocodb_tableid, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
 
-    data= prepare_json.prepare_input( j, url=url )
+    data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current" } )
     res= table.insert(data)
     print( "    RESULT: ", json.dumps(res,indent=4) )
 
