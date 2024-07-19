@@ -26,7 +26,7 @@ class Nocodb:
 
         res= requests.get( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            params={} ).json()
+            params={}, verify="cert/data_casus_science_interm.cer" ).json()
 
         # print( json.dumps(res, indent=4 ) )
 
@@ -54,7 +54,7 @@ class Nocodb:
 
         res= requests.post( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            data=data ).json()
+            data=data, verify="cert/data_casus_science_interm.cer" ).json()
 
         #print( json.dumps(res, indent=4 ) )
 
@@ -120,7 +120,7 @@ class Base:
 
         res= requests.get( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            params={} ).json()
+            params={}, verify="cert/data_casus_science_interm.cer" ).json()
 
         #print( json.dumps(res, indent=4 ) )
 
@@ -138,7 +138,7 @@ class Base:
 
         res= requests.get( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            params={} ).json()
+            params={}, verify="cert/data_casus_science_interm.cer" ).json()
 
         #print( json.dumps(res, indent=4 ) )
 
@@ -157,7 +157,7 @@ class Base:
 
         res= requests.get( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            params={} ).json()
+            params={}, verify="cert/data_casus_science_interm.cer" ).json()
 
 
         #print( json.dumps(res, indent=4 ) )
@@ -193,7 +193,7 @@ class Base:
 
         res= requests.post( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            json=data ).json()
+            json=data, verify="cert/data_casus_science_interm.cer" ).json()
 
         if "errors" in res or "msg" in res:
             print("ERROR: ")
@@ -266,7 +266,7 @@ class Table:
 
         res= requests.get( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            params={} ).json()
+            params={}, verify="cert/data_casus_science_interm.cer" ).json()
 
         #print( json.dumps(res, indent=4 ) )
 
@@ -285,7 +285,7 @@ class Table:
 
         res= requests.post( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            json=data ).json()
+            json=data, verify="cert/data_casus_science_interm.cer" ).json()
 
         print( json.dumps(res, indent=4 ) )
 
@@ -315,7 +315,7 @@ class Table:
 
         res= requests.get( url,
             headers={"accept": "application/json", "xc-token": self.auth_token},
-            params=params ).json()
+            params=params, verify="cert/data_casus_science_interm.cer" ).json()
 
         print(" #### page info #### ")
         print( json.dumps(res['pageInfo'], indent=4 ) )
