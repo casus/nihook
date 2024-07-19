@@ -4,3 +4,4 @@ __pycache__
 *.log
 gitlab_webhooks/nocodb.py
 gitlab_webhooks/prepare_json.py
+nocodb/cert
