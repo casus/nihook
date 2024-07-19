@@ -93,7 +93,7 @@ def webhook_push():
 
         print("        Added: ", len(c['added']))
         for filename in c['added']:
-            print("            ", filename)
+            #print("            ", filename)
 
             dirname, basename= os.path.split(filename)
             if basename in SPECIAL_FILENAMES:
@@ -102,7 +102,7 @@ def webhook_push():
 
         print("        Modified: ", len(c['modified']))
         for filename in c['modified']:
-            print("            ", filename, " --> ", os.path.basename(filename) )
+            #print("            ", filename, " --> ", os.path.basename(filename) )
 
             dirname, basename= os.path.split(filename)
             if basename in SPECIAL_FILENAMES:
@@ -111,7 +111,7 @@ def webhook_push():
 
         print("        Removed: ", len(c['removed']))
         for filename in c['removed']:
-            print("            ", filename)
+            #print("            ", filename)
 
             dirname, basename= os.path.split(filename)
             if basename in SPECIAL_FILENAMES:

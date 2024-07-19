@@ -43,19 +43,18 @@ def process_special_files( operation, projectid, projecturl, ref, dirname, basen
 
     ref_prefix, ref_suffix= os.path.split(ref)
 
-    print("processing: ", dirname, basename, " with ", operation, 
-        " in project ", projectid, projecturl, ref, ref_prefix, ref_suffix )
+    # print("processing: ", dirname, basename, " with ", operation, 
+    #        " in project ", projectid, projecturl, ref, ref_prefix, ref_suffix )
 
-    if 'DATASET.json' == basename:
-
-        # try to download the file
-        print("try download")
-
-    else:
+    if 'DATASET.json' != basename:
 
         print("ignore this file")
         return
 
+    if "added" != operation:
+
+        print("ignore this action, TODO")
+        return
 
     gl= gitlab.Gitlab( url= gitlab_host, private_token= gitlab_access_token )
     project= gl.projects.get(id=projectid)
@@ -83,7 +82,7 @@ def process_special_files( operation, projectid, projecturl, ref, dirname, basen
     ### recreate the complete URL to the dir that contains the DATASET.json
 
     url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
-    print("URL= ",url)
+    # print("URL= ",url)
 
     # enter in existing Nocodb table
 
@@ -91,5 +90,5 @@ def process_special_files( operation, projectid, projecturl, ref, dirname, basen
 
     data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current" } )
     res= table.insert(data)
-    print( "    RESULT: ", json.dumps(res,indent=4) )
+    #print( "    RESULT: ", json.dumps(res,indent=4) )
 

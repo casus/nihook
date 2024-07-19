@@ -296,7 +296,7 @@ class Table:
             headers={"accept": "application/json", "xc-token": self.auth_token},
             json=data, verify=self.verify ).json()
 
-        print( json.dumps(res, indent=4 ) )
+        #print( json.dumps(res, indent=4 ) )
 
         return True
 
