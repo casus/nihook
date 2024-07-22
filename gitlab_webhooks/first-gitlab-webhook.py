@@ -59,6 +59,14 @@ log.addHandler(fh)
 app = Flask(__name__)
 
 
+def checkauth( authcode ):
+
+    print("TODO TODO TODO: implement auth code check")
+
+    return True
+
+
+
 @app.route('/webhooks/push', methods=['POST'])
 def webhook_push():
     """
@@ -68,13 +76,22 @@ def webhook_push():
     log.debug("START: webhook_push() called")
     start_time = time.time()
 
+    headers= request.headers
     event = request.get_json()
 
     with open("first-gitlab-webhook.log","a") as file:
         print(json.dump(event, file, indent=4))
 
-    print( " ### Summary ### " )
+    #print("Headers:")
+    #print(headers)
 
+    tableid= headers['Nocodbtableid']
+    auth= headers['Auth']
+
+    if not checkauth(auth):
+        return jsonify('no proper auth for webhooks'), 401 # Although the HTTP standard specifies "unauthorized", semantically this response means "unauthenticated". That is, the client must authenticate itself to get the requested response. 
+
+    print( " ### Summary ### " )
     project= event['project']
 
     ref= event['ref']
@@ -98,7 +115,7 @@ def webhook_push():
             dirname, basename= os.path.split(filename)
             if basename in SPECIAL_FILENAMES:
                 process_files_from_gitlab.process_special_files( 'added', 
-                    projectid, projecturl, ref, dirname, basename )
+                    projectid, projecturl, ref, dirname, basename, tableid=tableid )
 
         print("        Modified: ", len(c['modified']))
         for filename in c['modified']:
@@ -107,7 +124,7 @@ def webhook_push():
             dirname, basename= os.path.split(filename)
             if basename in SPECIAL_FILENAMES:
                 process_files_from_gitlab.process_special_files( 'modified', 
-                    projectid, projecturl, ref, dirname, basename )
+                    projectid, projecturl, ref, dirname, basename, tableid=tableid )
 
         print("        Removed: ", len(c['removed']))
         for filename in c['removed']:
@@ -116,7 +133,7 @@ def webhook_push():
             dirname, basename= os.path.split(filename)
             if basename in SPECIAL_FILENAMES:
                 process_files_from_gitlab.process_special_files( 'removed', 
-                    projectid, projecturl, ref, dirname, basename )
+                    projectid, projecturl, ref, dirname, basename, tableid=tableid )
 
     log.debug("END: webhook_push() finished successfully")
     return jsonify('no errors'), 200

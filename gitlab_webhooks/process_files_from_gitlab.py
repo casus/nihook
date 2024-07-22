@@ -10,7 +10,7 @@ import nocodb
 import prepare_json
 
 
-def process_special_files( operation, projectid, projecturl, ref, dirname, basename ):
+def process_special_files( operation, projectid, projecturl, ref, dirname, basename, tableid= None ):
 
     gitlab_host = os.getenv('GITLAB_HOST', "http://localhost")
     gitlab_access_token = os.getenv('GITLAB_ACCESS_TOKEN', "none")
@@ -30,14 +30,6 @@ def process_special_files( operation, projectid, projecturl, ref, dirname, basen
     # - look up central Nocodb table, if we find an entry for projecturl
     # - then get the matchin entry which has to include a Nocodb table id where this DATASET.json should be inserted
     # ... shortcut it for now
-
-    nocodb_tableid = os.getenv('NOCODB_TABLE_ID', 'none')
-    if 'none' == nocodb_tableid:
-        print("WARNING: no NOCODB_TABLE_ID given as environment variable, abort here")
-        return
-
-    print("WARNING: NOCODB_TABLE_ID as a environment variable is only as a temporary shortcut")
-
 
     ## try to download a "DATASET.json" file
 
@@ -85,8 +77,7 @@ def process_special_files( operation, projectid, projecturl, ref, dirname, basen
     # print("URL= ",url)
 
     # enter in existing Nocodb table
-
-    table= nocodb.Table( nocodb_tableid, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
+    table= nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
 
     data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current" } )
     res= table.insert(data)
