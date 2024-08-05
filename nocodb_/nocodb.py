@@ -312,7 +312,7 @@ class Table:
         return res
 
     """
-    [META] Create Table Records
+    [DATA] Create Table Records
     https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-list
     POST http://localhost:8080/api/v2/tables/{tableId}/records
     """
@@ -332,7 +332,7 @@ class Table:
         return True
 
     """ 
-    List Table Records
+    [DATA] List Table Records
     This API endpoint allows you to retrieve records from a specified table. 
     https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-list
     Get http://localhost:8080/api/v2/tables/{tableId}/records
