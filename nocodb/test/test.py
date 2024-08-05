@@ -1,8 +1,9 @@
 import json
 import os
 
-from nocodb_ import prepare_json
-from nocodb_.nocodb import Nocodb, Base, Table
+from nocodb.nocodb import Nocodb, Base, Table
+
+from nocodb import prepare_json
 
 nocodb_host = 'http://192.168.11.104:8080'
 nocodb_token = os.getenv('NOCODB_TOKEN')
