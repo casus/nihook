@@ -12,6 +12,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("user", help="username")
+    parser.add_argument("--size", type=int, default=32, help="Length of secret in bytes")
     args = parser.parse_args()
 
     auth={}
@@ -28,10 +29,12 @@ if __name__ == '__main__':
         print("User already existing, abort")
         sys.exit(-1)
 
-    size= 32
+    if args.size < 32:
+        print("Size must be >= 32")
+        sys.exit(-2)
 
-    salt_bytes= os.urandom(size)
-    secret_bytes= os.urandom(size)
+    salt_bytes= os.urandom(args.size)
+    secret_bytes= os.urandom(args.size)
 
     salt= b64encode(salt_bytes).decode('utf-8')
     secret= b64encode(secret_bytes).decode('utf-8')
@@ -41,7 +44,7 @@ if __name__ == '__main__':
 
     print(f"{secret}")
 
-    auth[args.user]={ "salt": salt, "hash": hash}
+    auth[args.user]={ "salt": salt, "hash": hash, "size": args.size}
 
     # print( json.dumps(auth,indent=4) )
 

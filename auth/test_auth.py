@@ -32,17 +32,18 @@ if __name__ == '__main__':
 
     record= auth[args.user]
 
-    if "salt" not in record or "hash" not in record:
+    if "salt" not in record or "hash" not in record or "size" not in record:
         print("Entry incomplete, abort")
         sys.exit(-13)
-
-    size= 32
 
     salt= record['salt']
     secret= args.secret
 
     salt_bytes= b64decode(salt)
     secret_bytes= b64decode(secret)
+
+    salt_len= len(salt_bytes)
+    # print("len=", salt_len)
 
     hash_bytes= hashlib.scrypt(secret_bytes, salt=salt_bytes, n= 2048, r= 8, p= 1, dklen=64 )
     hash= b64encode(hash_bytes).decode('utf-8')
