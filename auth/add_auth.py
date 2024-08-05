@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import os
 from base64 import b64encode
 import json
@@ -25,14 +26,24 @@ if __name__ == '__main__':
 
     if args.user in auth:
         print("User already existing, abort")
-        os.exit(1)
+        sys.exit(-1)
 
-    size=64
+    size= 32
 
-    salt= b64encode(os.urandom(size)).decode('utf-8')
-    secret= b64encode(os.urandom(size)).decode('utf-8')
+    salt_bytes= os.urandom(size)
+    secret_bytes= os.urandom(size)
 
-    hash= hashlib.scrypt(secret, salt=salt)
+    salt= b64encode(salt_bytes).decode('utf-8')
+    secret= b64encode(secret_bytes).decode('utf-8')
 
-    print(f" {user} {salt} {secret} ")
+    hash_bytes= hashlib.scrypt(secret_bytes, salt=salt_bytes, n= 2048, r= 8, p= 1, dklen=64 )
+    hash= b64encode(hash_bytes).decode('utf-8')
 
+    print(f"{secret}")
+
+    auth[args.user]={ "salt": salt, "hash": hash}
+
+    # print( json.dumps(auth,indent=4) )
+
+    with open(filename,"w+") as f:
+        json.dump(auth,f,indent=4)
