@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 
 import sys
-import os
-from base64 import b64encode
-import json
 import argparse
 
-import hashlib
+import auth
 
 if __name__ == '__main__':
 
@@ -15,38 +12,13 @@ if __name__ == '__main__':
     parser.add_argument("--size", type=int, default=32, help="Length of secret in bytes")
     args = parser.parse_args()
 
-    auth={}
+    auth= auth.Auth() 
 
-    filename= "auth"
+    secret= auth.add(args.user, args.size)
 
-    try:
-        with open(filename,"r") as f:
-            auth= json.load(f)
-    except FileNotFoundError:
-        print("File does not yet exist")
+    if "" != secret:
+        print( secret )
+    else:
+        print("failed")
 
-    if args.user in auth:
-        print("User already existing, abort")
-        sys.exit(-1)
-
-    if args.size < 32:
-        print("Size must be >= 32")
-        sys.exit(-2)
-
-    salt_bytes= os.urandom(args.size)
-    secret_bytes= os.urandom(args.size)
-
-    salt= b64encode(salt_bytes).decode('utf-8')
-    secret= b64encode(secret_bytes).decode('utf-8')
-
-    hash_bytes= hashlib.scrypt(secret_bytes, salt=salt_bytes, n= 2048, r= 8, p= 1, dklen=64 )
-    hash= b64encode(hash_bytes).decode('utf-8')
-
-    print(f"{secret}")
-
-    auth[args.user]={ "salt": salt, "hash": hash, "size": args.size}
-
-    # print( json.dumps(auth,indent=4) )
-
-    with open(filename,"w+") as f:
-        json.dump(auth,f,indent=4)
+    auth.write()
