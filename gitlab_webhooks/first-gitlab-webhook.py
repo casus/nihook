@@ -42,6 +42,9 @@ from logging.handlers import RotatingFileHandler
 from logging import handlers
 import sys
 
+import auth
+
+
 LOGFILE= "push-hook.log"
 
 log = logging.getLogger('')
@@ -58,13 +61,7 @@ log.addHandler(fh)
 
 app = Flask(__name__)
 
-
-def checkauth( authcode ):
-
-    print("TODO TODO TODO: implement auth code check")
-
-    return True
-
+authentication= None
 
 
 @app.route('/webhooks/push', methods=['POST'])
@@ -86,10 +83,11 @@ def webhook_push():
     #print(headers)
 
     tableid= headers['Nocodbtableid']
-    auth= headers['Auth']
+    user= headers['User']
+    secret= headers['Auth']
 
-    if not checkauth(auth):
-        return jsonify('no proper auth for webhooks'), 401 # Although the HTTP standard specifies "unauthorized", semantically this response means "unauthenticated". That is, the client must authenticate itself to get the requested response. 
+    if not authentication.check( user, secret ):
+        return jsonify('authentication failed'), 401 # Although the HTTP standard specifies "unauthorized", semantically this response means "unauthenticated". That is, the client must authenticate itself to get the requested response. 
 
     print( " ### Summary ### " )
     project= event['project']
@@ -140,6 +138,11 @@ def webhook_push():
 
 
 if __name__ == '__main__':
+
+
     host = os.getenv('HOOK_HOST', '127.0.0.1')
     port = os.getenv('HOOK_PORT', '5000')
+
+    authentication= auth.Auth("auth")
+
     app.run(host=host, port=int(port))
