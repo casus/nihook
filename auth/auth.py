@@ -25,6 +25,7 @@ class Auth:
             print(f"New auth file {filename}")
 
 
+    def debug(self):
         print("Know users: ")
         for u in self.auth:
             print(f"    {u}")
