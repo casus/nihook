@@ -106,36 +106,18 @@ def webhook_push():
     for c in event['commits']:
         print("    Commit ", c['id'], " at ", c['timestamp'] )
 
-        print("        Added: ", len(c['added']))
-        for filename in c['added']:
-            #print("            ", filename)
+        for action in ['added','modified','removed']:
 
-            dirname, basename= os.path.split(filename)
-            if basename in SPECIAL_FILENAMES:
-                process_files_from_gitlab.process_special_files( 'added', 
-                    projectid, projecturl, ref, dirname, basename, tableid=tableid )
+            print(f"        {action}: ", len(c[action]))
+            for filename in c[action]:
 
-        print("        Modified: ", len(c['modified']))
-        for filename in c['modified']:
-            #print("            ", filename, " --> ", os.path.basename(filename) )
-
-            dirname, basename= os.path.split(filename)
-            if basename in SPECIAL_FILENAMES:
-                process_files_from_gitlab.process_special_files( 'modified', 
-                    projectid, projecturl, ref, dirname, basename, tableid=tableid )
-
-        print("        Removed: ", len(c['removed']))
-        for filename in c['removed']:
-            #print("            ", filename)
-
-            dirname, basename= os.path.split(filename)
-            if basename in SPECIAL_FILENAMES:
-                process_files_from_gitlab.process_special_files( 'removed', 
-                    projectid, projecturl, ref, dirname, basename, tableid=tableid )
+                dirname, basename= os.path.split(filename)
+                if basename in SPECIAL_FILENAMES:
+                    process_files_from_gitlab.process_special_files( action, 
+                        projectid, projecturl, ref, dirname, basename, tableid=tableid )
 
     log.debug("END: webhook_push() finished successfully")
     return jsonify('no errors'), 200
-
 
 if __name__ == '__main__':
 
