@@ -26,11 +26,6 @@ def process_special_files( operation, projectid, projecturl, ref, dirname, basen
         print("WARNING: no NOCODB_TOKEN given as environment variable, abort here")
         return
 
-    # TODO 
-    # - look up central Nocodb table, if we find an entry for projecturl
-    # - then get the matchin entry which has to include a Nocodb table id where this DATASET.json should be inserted
-    # ... shortcut it for now
-
     ## try to download a "DATASET.json" file
 
     ref_prefix, ref_suffix= os.path.split(ref)
