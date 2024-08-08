@@ -71,10 +71,12 @@ def process_special_files( operation, projectid, projecturl, ref, commit_before,
         print("TODO action 'modified'")
         return False
 
-    # when DATASET.json was remove, then try to find it's previous Nocodb entry and change its status to 'deleted'
+    # when DATASET.json was removed, then 
+    # - try to find it's previous Nocodb entry and change its status to 'deleted'
+    # - change URL to the commit where one can find the old version
+    #     - actually create a new table entry because the URL is the primary key which cannot be changed
+    #     - then delete the original table entry instead
     if 'removed' == operation:
-
-        print("TODO action 'removed'")
 
         url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
         print("URL= ",url)
@@ -83,16 +85,20 @@ def process_special_files( operation, projectid, projecturl, ref, commit_before,
 
         # get the old entry
         old= table.list(where=f"(URL,eq,{url})" )
-        print(json.dumps(old,indent=4))
+        # print(json.dumps(old,indent=4))
 
         assert 'list' in old
+
+        if 0 == len(old['list']):
+
+            # did not find an old entry, can happen if it was added to gitlab which the webhook was inactive, skip
+            print("No matchin entry in DB, skip")
+            return False
+
         assert 1 == len(old['list'])
 
-        # modify the entry
         old_record= old['list'][0]
-
         old_url= old_record['URL']
-        print("PRE: ", old_record['URL'], old_record['status'])
 
         old_record['URL']= projecturl + "/-/commit/" + commit_before
         old_record['status']= 'deleted'
@@ -101,14 +107,7 @@ def process_special_files( operation, projectid, projecturl, ref, commit_before,
         old_record.pop('CreatedAt')
         old_record.pop('UpdatedAt')
 
-        print("POST: ", old_record['URL'], old_record['status'])
-
-        # insert the old entry with modified URL and status -- because we cannot update the primary key
-        print("INSERT")
         res= table.insert(old_record)
-
-        print("DELETE")
-        # delete the originalö entry
         res= table.delete( { "URL": old_url } )
 
         return True
