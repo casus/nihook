@@ -146,6 +146,7 @@ class Base:
     """
     [META] Get Base info
     Get info such as node version, arch, platform, is docker, rootdb and package version of a given base
+    https://meta-apis-v2.nocodb.com/#tag/Base/operation/base-meta-get
     GET http://localhost:8080/api/v2/meta/bases/{baseId}/info
     """
 
