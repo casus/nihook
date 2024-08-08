@@ -74,10 +74,6 @@ def webhook_push():
     start_time = time.time()
 
     headers= request.headers
-    event = request.get_json()
-
-    with open("first-gitlab-webhook.log","a") as file:
-        print(json.dump(event, file, indent=4))
 
     #print("Headers:")
     #print(headers)
@@ -89,12 +85,19 @@ def webhook_push():
     if not authentication.check( user, secret ):
         return jsonify('authentication failed'), 401 # Although the HTTP standard specifies "unauthorized", semantically this response means "unauthenticated". That is, the client must authenticate itself to get the requested response. 
 
+    event = request.get_json()
+
+    with open("first-gitlab-webhook.log","a") as file:
+        print(json.dump(event, file, indent=4))
+
     print( " ### Summary ### " )
     project= event['project']
+    commit_before= event['before']
+    commit_after= event['after']
 
     ref= event['ref']
 
-    print( "Project : ", project['name'], " id ", project['id'] )
+    print( "Project : ", project['name'], " id ", project['id'], " previous commit id ", commit_before, " current commit id ", commit_after )
     projectid= project['id']
     print( "URL : ", project['web_url'] )
     projecturl= project['web_url']
@@ -112,9 +115,10 @@ def webhook_push():
             for filename in c[action]:
 
                 dirname, basename= os.path.split(filename)
+                print(f"            handle {dirname} {basename}")
                 if basename in SPECIAL_FILENAMES:
                     process_files_from_gitlab.process_special_files( action, 
-                        projectid, projecturl, ref, dirname, basename, tableid=tableid )
+                        projectid, projecturl, ref, commit_before, commit_after, dirname, basename, tableid=tableid )
 
     log.debug("END: webhook_push() finished successfully")
     return jsonify('no errors'), 200

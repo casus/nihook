@@ -296,18 +296,18 @@ class Table:
                             headers={"accept": "application/json", "xc-token": self.auth_token},
                             json=data, verify=self.verify ).json()
 
-        #print( json.dumps(res, indent=4 ) )
+        print( json.dumps(res, indent=4 ) )
 
         return True
 
 
-    """ 
+    """
     List Table Records
     This API endpoint allows you to retrieve records from a specified table. 
     https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-list
     Get http://localhost:8080/api/v2/tables/{tableId}/records
     """
-    def list(self, fields=None, sort=None, where=None, offset=0, limit=None, ):
+    def list(self, fields=None, sort=None, where=None, offset=0, limit=None ):
 
         url= f"{self.host}/api/v2/tables/{self.tableid}/records"
 
@@ -319,6 +319,7 @@ class Table:
             params['sort']= sort
         if where:
             params['where']= where
+            print("                WHERE ", where)
         if limit:
             params['limit']= limit
 
@@ -326,8 +327,41 @@ class Table:
                            headers={"accept": "application/json", "xc-token": self.auth_token},
                            params=params, verify=self.verify ).json()
 
+        # print(" #### page info #### ")
+        # print( json.dumps(res['pageInfo'], indent=4 ) )
+        # print(" ######## ")
+
+        return res
+
+
+    """
+    Delete Table Records
+    This API endpoint allows deleting existing records within a specified table identified by 
+    an array of Record-IDs, serving as unique identifier for the record. Records to be deleted are input as an array of record-identifiers.
+    https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-delete
+    DELETE http://localhost:8080/api/v2/tables/{tableId}/records
+    http://localhost:8080/api/v2/tables/{tableId}/records
+    """
+    def delete(self, list):
+
+        url= f"{self.host}/api/v2/tables/{self.tableid}/records"
+
+        print("TABLE DELETE ", json.dumps(list,indent=4) )
+        print("    JSON ", json.dumps(list))
+
+        res= requests.delete( url,
+                           headers={"accept": "application/json", "xc-token": self.auth_token},
+                           data=json.dumps(list), verify=self.verify )
+
+        print("REQ URL: ", res.request.url)
+        print("REQ BODY: ", res.request.body)
+        print("REQ HEADERS: ", res.request.headers)
+        print("REQ: ", res.request)
+
+
         print(" #### page info #### ")
-        print( json.dumps(res['pageInfo'], indent=4 ) )
+        print( json.dumps(res.json(), indent=4 ) )
         print(" ######## ")
 
         return res
+
