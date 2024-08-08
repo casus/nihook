@@ -69,6 +69,10 @@ def process_special_files( operation, projectid, projecturl, ref, commit_before,
     if 'modified' == operation:
 
         print("TODO action 'modified'")
+
+        # TODO replace the old entry like below for 'removed' with new status 'replaced'
+        # TODO add a new entry with the proper URL and the status 'current'
+
         return False
 
     # when DATASET.json was removed, then 
