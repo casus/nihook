@@ -10,17 +10,11 @@ import nocodb
 import prepare_json
 
 
-def process_special_files( operation, projectid, projecturl, ref, commit_before, commit_after, dirname, basename, tableid= None ) -> bool:
+def process_special_files( operation, gitlab_project, projecturl, ref, commit_before, commit_after, dirname, basename, tableid= None ) -> bool:
 
-    gitlab_host = os.getenv('GITLAB_HOST', "http://localhost")
-    gitlab_access_token = os.getenv('GITLAB_ACCESS_TOKEN', "none")
     nocodb_host = os.getenv('NOCODB_HOST', 'none')
     nocodb_token = os.getenv('NOCODB_TOKEN', 'none')
     nocodb_ssl_cert = os.getenv('NOCODB_SSL_CERT', True) # optional
-
-    if "none" == gitlab_access_token:
-        print("WARNING: no GITLAB_ACCESS_TOKEN given as environment variable, abort here")
-        return False
 
     if 'none' == nocodb_host:
         print("WARNING: no NOCODB_HOST given as environment variable, abort here")
@@ -38,15 +32,10 @@ def process_special_files( operation, projectid, projecturl, ref, commit_before,
 
     ref_prefix, ref_suffix= os.path.split(ref)
 
-    # print("processing: ", dirname, basename, " with ", operation, 
-    #        " in project ", projectid, projecturl, ref, ref_prefix, ref_suffix )
-
     # when DATASET.json was added, then read it and add a new row to the Nocodb table 
     if 'added' == operation:
 
-        gl= gitlab.Gitlab( url= gitlab_host, private_token= gitlab_access_token )
-        project= gl.projects.get(id=projectid)
-        f= project.files.get( file_path= os.path.join(dirname,basename), ref= ref ) # get the base64 encoded content
+        f= gitlab_project.files.get( file_path= os.path.join(dirname,basename), ref= ref ) # get the base64 encoded content
         file_content= f.decode()
         j= json.loads(file_content)
         #print( json.dumps(j,indent=4) )
@@ -83,9 +72,7 @@ def process_special_files( operation, projectid, projecturl, ref, commit_before,
         assert 'list' in old
 
         # load data from gitlab -- needed in both cases below
-        gl= gitlab.Gitlab( url= gitlab_host, private_token= gitlab_access_token )
-        project= gl.projects.get(id=projectid)
-        f= project.files.get( file_path= os.path.join(dirname,basename), ref= ref ) # get the base64 encoded content
+        f= gitlab_project.files.get( file_path= os.path.join(dirname,basename), ref= ref ) # get the base64 encoded content
         file_content= f.decode()
         j= json.loads(file_content)
         #print( json.dumps(j,indent=4) )

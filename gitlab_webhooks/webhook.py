@@ -90,6 +90,7 @@ def webhook_push():
     with open("first-gitlab-webhook.log","a") as file:
         print(json.dump(event, file, indent=4))
 
+
     print( " ### Summary ### " )
     project= event['project']
     commit_before= event['before']
@@ -106,6 +107,21 @@ def webhook_push():
     print( "Number commits: ", len(event['commits']) )
     print( "Total commits: ", event['total_commits_count'] )
 
+
+    # create gitlab connection object only once
+    gitlab_host = os.getenv('GITLAB_HOST', "http://localhost")
+    gitlab_access_token = os.getenv('GITLAB_ACCESS_TOKEN', "none")
+
+    if "none" == gitlab_access_token:
+        print("WARNING: no GITLAB_ACCESS_TOKEN given as environment variable, abort here")
+        return False
+
+    gl= gitlab.Gitlab( url= gitlab_host, private_token= gitlab_access_token )
+    gitlab_project= gl.projects.get(id=projectid)
+
+
+
+
     for c in event['commits']:
         print("    Commit ", c['id'], " at ", c['timestamp'] )
 
@@ -118,7 +134,7 @@ def webhook_push():
                 if basename in SPECIAL_FILENAMES:
                     print(f"            handle {dirname} {basename}")
                     process_files_from_gitlab.process_special_files( action, 
-                        projectid, projecturl, ref, commit_before, commit_after, dirname, basename, tableid=tableid )
+                        gitlab_project, projecturl, ref, commit_before, commit_after, dirname, basename, tableid=tableid )
 
     log.debug("END: webhook_push() finished successfully")
     return jsonify('no errors'), 200
