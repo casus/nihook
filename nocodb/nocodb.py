@@ -291,8 +291,10 @@ class Table:
             self.session.headers.update( {"accept": "application/json", "xc-token": self.auth_token} ) 
             self.session.verify= self.verify
 
+        # connection test
         res= self.count()
-        print("Count as a connection test: ", json.dumps(res,indent=4))
+        assert 'count' in res
+        assert 'msg' not in res
 
 
     def debug(self):

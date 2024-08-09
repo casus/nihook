@@ -6,6 +6,7 @@ import json
 from flask import Flask, request, jsonify, send_file
 
 import gitlab
+import nocodb
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError, SchemaError
@@ -119,8 +120,20 @@ def webhook_push():
     gl= gitlab.Gitlab( url= gitlab_host, private_token= gitlab_access_token )
     gitlab_project= gl.projects.get(id=projectid)
 
+    # create Nocodb Table object only once becasue the same table will be used anyway
+    nocodb_host = os.getenv('NOCODB_HOST', 'none')
+    nocodb_token = os.getenv('NOCODB_TOKEN', 'none')
+    nocodb_ssl_cert = os.getenv('NOCODB_SSL_CERT', True) # optional
 
+    if 'none' == nocodb_host:
+        print("WARNING: no NOCODB_HOST given as environment variable, abort here")
+        return False
 
+    if 'none' == nocodb_token:
+        print("WARNING: no NOCODB_TOKEN given as environment variable, abort here")
+        return False
+
+    table= nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
 
     for c in event['commits']:
         print("    Commit ", c['id'], " at ", c['timestamp'] )
@@ -134,7 +147,7 @@ def webhook_push():
                 if basename in SPECIAL_FILENAMES:
                     print(f"            handle {dirname} {basename}")
                     process_files_from_gitlab.process_special_files( action, 
-                        gitlab_project, projecturl, ref, commit_before, commit_after, dirname, basename, tableid=tableid )
+                        gitlab_project, projecturl, ref, commit_before, commit_after, dirname, basename, table )
 
     log.debug("END: webhook_push() finished successfully")
     return jsonify('no errors'), 200

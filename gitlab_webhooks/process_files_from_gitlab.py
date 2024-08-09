@@ -10,19 +10,7 @@ import nocodb
 import prepare_json
 
 
-def process_special_files( operation, gitlab_project, projecturl, ref, commit_before, commit_after, dirname, basename, tableid= None ) -> bool:
-
-    nocodb_host = os.getenv('NOCODB_HOST', 'none')
-    nocodb_token = os.getenv('NOCODB_TOKEN', 'none')
-    nocodb_ssl_cert = os.getenv('NOCODB_SSL_CERT', True) # optional
-
-    if 'none' == nocodb_host:
-        print("WARNING: no NOCODB_HOST given as environment variable, abort here")
-        return False
-
-    if 'none' == nocodb_token:
-        print("WARNING: no NOCODB_TOKEN given as environment variable, abort here")
-        return False
+def process_special_files( operation, gitlab_project, projecturl, ref, commit_before, commit_after, dirname, basename, table ) -> bool:
 
     # double check here even though it should have been checked upstairs already
     if 'DATASET.json' != basename:
@@ -45,9 +33,6 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
         url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
         # print("URL= ",url)
 
-        # enter in existing Nocodb table
-        table= nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
-
         data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current" } )
         res= table.insert(data)
         return res
@@ -62,8 +47,6 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
 
         url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
         print("URL= ",url)
-
-        table= nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
 
         # get the old entry
         old= table.list(where=f"(URL,eq,{url})" )
@@ -124,8 +107,6 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
 
         url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
         print("URL= ",url)
-
-        table= nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
 
         # get the old entry
         old= table.list(where=f"(URL,eq,{url})" )
