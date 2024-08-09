@@ -1,6 +1,8 @@
 # nocodb class
 
 import os
+from enum import Enum
+
 import requests
 import json
 from typing import Optional, List
@@ -18,13 +20,13 @@ class Nocodb:
         self.verify = verify
 
     """ 
-    List Bases
+    [META] List Bases
     List all base meta data
     https://meta-apis-v2.nocodb.com/#tag/Base/operation/base-list
     GET http://localhost:8080/api/v2/meta/bases/
     """
 
-    def list_bases(self):
+    def list_bases(self) -> dict:
 
         url = f"{self.host}/api/v2/meta/bases/"
 
@@ -38,29 +40,35 @@ class Nocodb:
 
         ret = {}
         for i in res['list']:
+            # FIXME this will overwrite bases with the same title!
             # print( i['title'], i['id'] )
             ret[i['title']] = i['id']
 
         return ret
 
     """
-    Create Base
+    [META] Create Base
     Create a new base
     https://meta-apis-v2.nocodb.com/#tag/Base/operation/base-create
     POST http://localhost:8080/api/v2/meta/bases/
     """
 
-    def create_base(self, title, color=None):
+    def create_base(self, title, color=None, description=None, base_type=None) -> dict:
 
         url = f"{self.host}/api/v2/meta/bases/"
 
         data = {"title": title}
         if color:
             data["color"] = color
+        if description:
+            data["description"] = description
+        # TODO this won't be returned
+        if base_type:
+            data["type"] = base_type.name
 
         res = requests.post(url,
                             headers={"accept": "application/json", "xc-token": self.auth_token},
-                            data=data, verify=self.verify).json()
+                            data=data).json()
 
         # print( json.dumps(res, indent=4 ) )
 
@@ -79,6 +87,18 @@ class Nocodb:
 
             return None
 
+    """
+    [META] Delete Base
+    Delete the given base
+    https://meta-apis-v2.nocodb.com/#tag/Base/operation/base-delete
+    DELETE http://localhost:8080/api/v2/meta/bases/{baseId}
+    """
+
+    def delete_base(self, base_id) -> dict:
+        url = f'{self.host}/api/v2/meta/bases/{base_id}'
+        headers = {"accept": "application/json", "xc-token": self.auth_token}
+        return requests.delete(url, headers=headers).json()
+
 
 """
 Class for access to a NOCODB base == one database in the Nocodb instance
@@ -87,13 +107,13 @@ Class for access to a NOCODB base == one database in the Nocodb instance
 
 class Base:
 
-    def __init__(self, baseid, nocodb=None, host=None, auth_token=None, verify=True):
+    def __init__(self, base_id, nocodb=None, host=None, auth_token=None, verify=True):
 
         # Don't keep the parent Nocodb object because we can work without it
         # Accessing a Base only needs the baseid and the auth_token
         # Thus like this one can create a Base object without a Nocodb object.
         # #self.nocodb= nocodb
-        self.baseid = baseid
+        self.base_id = base_id
         self.verify = verify
 
         if nocodb:
@@ -113,20 +133,26 @@ class Base:
         self.info = self.get_base_info()
         self.metadata = self.get_base()
 
+    class Type(Enum):
+        database = 'database'
+        documentation = 'documentation'
+        dashboard = 'dashboard'
+
     def debug(self):
-        print("class Base: ", self.baseid)
+        print("class Base: ", self.base_id)
         print(json.dumps(self.info, indent=4))
         print(json.dumps(self.metadata, indent=4))
 
     """
-    Get Base info
+    [META] Get Base info
     Get info such as node version, arch, platform, is docker, rootdb and package version of a given base
+    https://meta-apis-v2.nocodb.com/#tag/Base/operation/base-meta-get
     GET http://localhost:8080/api/v2/meta/bases/{baseId}/info
     """
 
-    def get_base_info(self):
+    def get_base_info(self) -> dict:
 
-        url = f"{self.host}/api/v2/meta/bases/{self.baseid}/info"
+        url = f"{self.host}/api/v2/meta/bases/{self.base_id}/info"
 
         print(f"verify >{self.verify}<")
 
@@ -139,15 +165,15 @@ class Base:
         return res
 
     """
-    Get Base
+    [META] Get Base
     Get the info of a given base
     https://meta-apis-v2.nocodb.com/#tag/Base/operation/base-read
     GET http://localhost:8080/api/v2/meta/bases/{baseId}
     """
 
-    def get_base(self):
+    def get_base(self) -> dict:
 
-        url = f"{self.host}/api/v2/meta/bases/{self.baseid}"
+        url = f"{self.host}/api/v2/meta/bases/{self.base_id}"
 
         res = requests.get(url,
                            headers={"accept": "application/json", "xc-token": self.auth_token},
@@ -158,15 +184,15 @@ class Base:
         return res
 
     """
-    List Tables
+    [META] List Tables
     List all tables in a given base
     https://meta-apis-v2.nocodb.com/#tag/DB-Table/operation/db-table-list
     GET http://localhost:8080/api/v2/meta/bases/{baseId}/tables
     """
 
-    def list_tables(self):
+    def list_tables(self) -> dict:
 
-        url = f"{self.host}/api/v2/meta/bases/{self.baseid}/tables"
+        url = f"{self.host}/api/v2/meta/bases/{self.base_id}/tables"
 
         res = requests.get(url,
                            headers={"accept": "application/json", "xc-token": self.auth_token},
@@ -182,7 +208,7 @@ class Base:
         return ret
 
     """
-    Create Table
+    [META] Create Table
     Create a new table in a given base
     https://meta-apis-v2.nocodb.com/#tag/DB-Table/operation/db-table-create
     POST http://localhost:8080/api/v2/meta/bases/{baseId}/tables
@@ -191,7 +217,7 @@ class Base:
 
     def create_table(self, name, columns, color=None):
 
-        url = f"{self.host}/api/v2/meta/bases/{self.baseid}/tables"
+        url = f"{self.host}/api/v2/meta/bases/{self.base_id}/tables"
 
         data = {
             "columns": columns,
@@ -268,7 +294,7 @@ class Table:
         print(json.dumps(metadata, indent=4))
 
     """
-    Read Table
+    [META] Read Table
     Read the table meta data by the given table ID
     https://meta-apis-v2.nocodb.com/#tag/DB-Table/operation/db-table-read
     GET http://localhost:8080/api/v2/meta/tables/{tableId}
@@ -287,7 +313,7 @@ class Table:
         return res
 
     """
-    Create Table Records
+    [DATA] Create Table Records
     https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-list
     POST http://localhost:8080/api/v2/tables/{tableId}/records
     """
@@ -302,12 +328,12 @@ class Table:
                             headers={"accept": "application/json", "xc-token": self.auth_token},
                             json=data, verify=self.verify).json()
 
-        print(json.dumps(res, indent=4))
+        # print( json.dumps(res, indent=4 ) )
 
         return True
 
-    """
-    List Table Records
+    """ 
+    [DATA] List Table Records
     This API endpoint allows you to retrieve records from a specified table. 
     https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-list
     Get http://localhost:8080/api/v2/tables/{tableId}/records
