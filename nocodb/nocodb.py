@@ -332,6 +332,27 @@ class Table:
 
         return True
 
+    """
+    [DATA] Update Table Records
+    https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-create
+    PATCH http://localhost:8080/api/v2/tables/{tableId}/records
+    """
+    def update(self, data):
+
+        print("AA")
+
+        url = f"{self.host}/api/v2/tables/{self.tableid}/records"
+
+        # print( json.dumps(data, indent=4 ) )
+
+        res = requests.post(url,
+                            headers={"accept": "application/json", "xc-token": self.auth_token},
+                            json=data, verify=self.verify).json()
+
+        print( json.dumps(res, indent=4 ) )
+
+        return True
+
     """ 
     [DATA] List Table Records
     This API endpoint allows you to retrieve records from a specified table. 
