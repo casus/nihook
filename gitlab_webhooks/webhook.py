@@ -115,8 +115,8 @@ def webhook_push():
             for filename in c[action]:
 
                 dirname, basename= os.path.split(filename)
-                print(f"            handle {dirname} {basename}")
                 if basename in SPECIAL_FILENAMES:
+                    print(f"            handle {dirname} {basename}")
                     process_files_from_gitlab.process_special_files( action, 
                         projectid, projecturl, ref, commit_before, commit_after, dirname, basename, tableid=tableid )
 

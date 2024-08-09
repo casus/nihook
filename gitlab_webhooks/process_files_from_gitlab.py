@@ -36,8 +36,6 @@ def process_special_files( operation, projectid, projecturl, ref, commit_before,
         print(f"ignore this file '{basename}'")
         return False
 
-    ## try to download a "DATASET.json" file
-
     ref_prefix, ref_suffix= os.path.split(ref)
 
     # print("processing: ", dirname, basename, " with ", operation, 
