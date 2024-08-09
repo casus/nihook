@@ -19,6 +19,10 @@ class Nocodb:
         self.auth_token = auth_token
         self.verify = verify
 
+        self.session= requests.Session()
+        self.session.headers.update( {"accept": "application/json", "xc-token": self.auth_token} ) 
+        self.session.verify= self.verify
+
     """ 
     [META] List Bases
     List all base meta data
@@ -32,9 +36,7 @@ class Nocodb:
 
         print(f"self.verify >{self.verify}<")
 
-        res = requests.get(url,
-                           headers={"accept": "application/json", "xc-token": self.auth_token},
-                           params={}, verify=self.verify).json()
+        res = self.session.get(url, params={}).json()
 
         # print( json.dumps(res, indent=4 ) )
 
@@ -66,9 +68,7 @@ class Nocodb:
         if base_type:
             data["type"] = base_type.name
 
-        res = requests.post(url,
-                            headers={"accept": "application/json", "xc-token": self.auth_token},
-                            data=data).json()
+        res = self.session.post(url,data=data).json()
 
         # print( json.dumps(res, indent=4 ) )
 
@@ -115,12 +115,14 @@ class Base:
         # #self.nocodb= nocodb
         self.base_id = base_id
         self.verify = verify
+        self.session= None
 
         if nocodb:
 
             self.host = nocodb.host
             self.auth_token = nocodb.auth_token
             self.verify = nocodb.verify
+            self.session= nocodb.session # re-use the same session
 
         else:
 
@@ -129,6 +131,10 @@ class Base:
 
             self.host = host
             self.auth_token = auth_token
+
+            self.session= requests.Session()
+            self.session.headers.update( {"accept": "application/json", "xc-token": self.auth_token} ) 
+            self.session.verify= self.verify
 
         self.info = self.get_base_info()
         self.metadata = self.get_base()
@@ -156,9 +162,7 @@ class Base:
 
         print(f"verify >{self.verify}<")
 
-        res = requests.get(url,
-                           headers={"accept": "application/json", "xc-token": self.auth_token},
-                           params={}, verify=self.verify).json()
+        res = self.session.get(url, params={}).json()
 
         # print( json.dumps(res, indent=4 ) )
 
@@ -175,9 +179,7 @@ class Base:
 
         url = f"{self.host}/api/v2/meta/bases/{self.base_id}"
 
-        res = requests.get(url,
-                           headers={"accept": "application/json", "xc-token": self.auth_token},
-                           params={}, verify=self.verify).json()
+        res = self.session.get(url, params={}).json()
 
         # print( json.dumps(res, indent=4 ) )
 
@@ -194,9 +196,7 @@ class Base:
 
         url = f"{self.host}/api/v2/meta/bases/{self.base_id}/tables"
 
-        res = requests.get(url,
-                           headers={"accept": "application/json", "xc-token": self.auth_token},
-                           params={}, verify=self.verify).json()
+        res = self.session.get(url, params={}).json()
 
         # print( json.dumps(res, indent=4 ) )
 
@@ -229,9 +229,7 @@ class Base:
         if color:
             data["color"] = color
 
-        res = requests.post(url,
-                            headers={"accept": "application/json", "xc-token": self.auth_token},
-                            json=data, verify=self.verify).json()
+        res = self.session.post(url, json=data).json()
 
         if "errors" in res or "msg" in res:
             print("ERROR: ")
@@ -272,12 +270,14 @@ class Table:
         # self.base= base
         self.tableid = tableid
         self.verify = verify
+        self.session = None
 
         if base:
 
             self.host = base.host
             self.auth_token = base.auth_token
             self.verify = base.verify
+            self.session = base.session
 
         else:
 
@@ -286,6 +286,16 @@ class Table:
 
             self.host = host
             self.auth_token = auth_token
+
+            self.session= requests.Session()
+            self.session.headers.update( {"accept": "application/json", "xc-token": self.auth_token} ) 
+            self.session.verify= self.verify
+
+        # connection test
+        res= self.count()
+        assert 'count' in res
+        assert 'msg' not in res
+
 
     def debug(self):
         # print("class Table: ", self.tableid )
@@ -304,9 +314,7 @@ class Table:
 
         url = f"{self.host}/api/v2/meta/tables/{self.tableid}"
 
-        res = requests.get(url,
-                           headers={"accept": "application/json", "xc-token": self.auth_token},
-                           params={}, verify=self.verify).json()
+        res = self.session.get(url, params={}).json()
 
         # print( json.dumps(res, indent=4 ) )
 
@@ -324,13 +332,50 @@ class Table:
 
         # print( json.dumps(data, indent=4 ) )
 
-        res = requests.post(url,
-                            headers={"accept": "application/json", "xc-token": self.auth_token},
-                            json=data, verify=self.verify).json()
+        res = self.session.post(url, json=data).json()
 
         # print( json.dumps(res, indent=4 ) )
 
         return True
+
+    """
+    [DATA] Update Table Records
+    https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-create
+    PATCH http://localhost:8080/api/v2/tables/{tableId}/records
+    """
+    def update(self, data):
+
+        print("AA")
+
+        url = f"{self.host}/api/v2/tables/{self.tableid}/records"
+
+        # print( json.dumps(data, indent=4 ) )
+
+        res = self.session.post(url, json=data).json()
+
+        print( json.dumps(res, indent=4 ) )
+
+        return True
+
+    """ 
+    [DATA] Count Table Records
+    This API endpoint allows you to retrieve the total number of records from a specified table or a view. You can narrow down search results by applying where query parameter
+    https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-count
+    Get http://localhost:8080/api/v2/tables/{tableId}/records/count
+    """
+    def count(self, where=None):
+
+        url = f"{self.host}/api/v2/tables/{self.tableid}/records/count"
+
+        params = {}
+
+        if where:
+            params['where'] = where
+
+        res = self.session.get(url, params=params).json()
+
+        return res
+
 
     """ 
     [DATA] List Table Records
@@ -338,7 +383,6 @@ class Table:
     https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-list
     Get http://localhost:8080/api/v2/tables/{tableId}/records
     """
-
     def list(self, fields=None, sort=None, where=None, offset=0, limit=None):
 
         url = f"{self.host}/api/v2/tables/{self.tableid}/records"
@@ -355,9 +399,7 @@ class Table:
         if limit:
             params['limit'] = limit
 
-        res = requests.get(url,
-                           headers={"accept": "application/json", "xc-token": self.auth_token},
-                           params=params, verify=self.verify).json()
+        res = self.session.get(url, params=params).json()
 
         # print(" #### page info #### ")
         # print( json.dumps(res['pageInfo'], indent=4 ) )
@@ -382,13 +424,9 @@ class Table:
         # print("    JSON ", json.dumps(list))
 
         if list is None:
-            res = requests.delete(url,
-                                  headers={"accept": "application/json", "xc-token": self.auth_token},
-                                  verify=self.verify)
+            res = self.session.delete(url)
         else:
-            res = requests.delete(url,
-                                  headers={"accept": "application/json", "xc-token": self.auth_token},
-                                  data=list, verify=self.verify)
+            res = self.session.delete(url, data=list)
 
         print("REQ URL: ", res.request.url)
         print("REQ BODY: ", res.request.body)

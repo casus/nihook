@@ -10,25 +10,7 @@ import nocodb
 import prepare_json
 
 
-def process_special_files( operation, projectid, projecturl, ref, commit_before, commit_after, dirname, basename, tableid= None ) -> bool:
-
-    gitlab_host = os.getenv('GITLAB_HOST', "http://localhost")
-    gitlab_access_token = os.getenv('GITLAB_ACCESS_TOKEN', "none")
-    nocodb_host = os.getenv('NOCODB_HOST', 'none')
-    nocodb_token = os.getenv('NOCODB_TOKEN', 'none')
-    nocodb_ssl_cert = os.getenv('NOCODB_SSL_CERT', True) # optional
-
-    if "none" == gitlab_access_token:
-        print("WARNING: no GITLAB_ACCESS_TOKEN given as environment variable, abort here")
-        return False
-
-    if 'none' == nocodb_host:
-        print("WARNING: no NOCODB_HOST given as environment variable, abort here")
-        return False
-
-    if 'none' == nocodb_token:
-        print("WARNING: no NOCODB_TOKEN given as environment variable, abort here")
-        return False
+def process_special_files( operation, gitlab_project, projecturl, ref, commit_before, commit_after, dirname, basename, table ) -> bool:
 
     # double check here even though it should have been checked upstairs already
     if 'DATASET.json' != basename:
@@ -38,15 +20,10 @@ def process_special_files( operation, projectid, projecturl, ref, commit_before,
 
     ref_prefix, ref_suffix= os.path.split(ref)
 
-    # print("processing: ", dirname, basename, " with ", operation, 
-    #        " in project ", projectid, projecturl, ref, ref_prefix, ref_suffix )
-
     # when DATASET.json was added, then read it and add a new row to the Nocodb table 
     if 'added' == operation:
 
-        gl= gitlab.Gitlab( url= gitlab_host, private_token= gitlab_access_token )
-        project= gl.projects.get(id=projectid)
-        f= project.files.get( file_path= os.path.join(dirname,basename), ref= ref ) # get the base64 encoded content
+        f= gitlab_project.files.get( file_path= os.path.join(dirname,basename), ref= ref ) # get the base64 encoded content
         file_content= f.decode()
         j= json.loads(file_content)
         #print( json.dumps(j,indent=4) )
@@ -55,9 +32,6 @@ def process_special_files( operation, projectid, projecturl, ref, commit_before,
 
         url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
         # print("URL= ",url)
-
-        # enter in existing Nocodb table
-        table= nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
 
         data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current" } )
         res= table.insert(data)
@@ -71,7 +45,58 @@ def process_special_files( operation, projectid, projecturl, ref, commit_before,
         # TODO replace the old entry like below for 'removed' with new status 'replaced'
         # TODO add a new entry with the proper URL and the status 'current'
 
-        return False
+        url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
+        print("URL= ",url)
+
+        # get the old entry
+        old= table.list(where=f"(URL,eq,{url})" )
+        # print(json.dumps(old,indent=4))
+
+        assert 'list' in old
+
+        # load data from gitlab -- needed in both cases below
+        f= gitlab_project.files.get( file_path= os.path.join(dirname,basename), ref= ref ) # get the base64 encoded content
+        file_content= f.decode()
+        j= json.loads(file_content)
+        #print( json.dumps(j,indent=4) )
+
+
+        # of len == 0, then no old entry present -- can happen because webhook was inactive some time, ignore
+        # len cannot be > 1 because the URL is the primary key
+        if 1 == len(old['list']):
+
+            print("A")
+
+            old_record= old['list'][0]
+            old_url= old_record['URL']
+
+            old_record['URL']= projecturl + "/-/commit/" + commit_before
+            old_record['status']= 'replaced'
+
+            # remove Nocodb's system fields
+            old_record.pop('CreatedAt')
+            old_record.pop('UpdatedAt')
+
+            res= table.insert(old_record)
+            res= table.delete( { "URL": old_url } )
+
+            # if an existing entry was present, then change it according to the new data
+            # let the 'index.id' hash unchanged if it was not changed in the 'DATASET.json' 
+            # so one can track which changed versions belong together
+            data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current" } )
+            res= table.update(data)
+
+        else:
+
+            print("B")
+
+            # if no existing entry was present, then add the new entry
+
+            data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current" } )
+            res= table.insert(data)
+
+        return True
+
 
     # when DATASET.json was removed, then 
     # - try to find it's previous Nocodb entry and change its status to 'deleted'
@@ -82,8 +107,6 @@ def process_special_files( operation, projectid, projecturl, ref, commit_before,
 
         url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
         print("URL= ",url)
-
-        table= nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
 
         # get the old entry
         old= table.list(where=f"(URL,eq,{url})" )
