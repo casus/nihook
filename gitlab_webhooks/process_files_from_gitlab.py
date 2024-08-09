@@ -10,7 +10,7 @@ import nocodb
 import prepare_json
 
 
-def process_special_files( operation, projectid, projecturl, ref, dirname, basename, tableid= None ):
+def process_special_files( operation, projectid, projecturl, ref, commit_before, commit_after, dirname, basename, tableid= None ) -> bool:
 
     gitlab_host = os.getenv('GITLAB_HOST', "http://localhost")
     gitlab_access_token = os.getenv('GITLAB_ACCESS_TOKEN', "none")
@@ -18,68 +18,102 @@ def process_special_files( operation, projectid, projecturl, ref, dirname, basen
     nocodb_token = os.getenv('NOCODB_TOKEN', 'none')
     nocodb_ssl_cert = os.getenv('NOCODB_SSL_CERT', True) # optional
 
+    if "none" == gitlab_access_token:
+        print("WARNING: no GITLAB_ACCESS_TOKEN given as environment variable, abort here")
+        return False
+
     if 'none' == nocodb_host:
         print("WARNING: no NOCODB_HOST given as environment variable, abort here")
-        return
+        return False
 
     if 'none' == nocodb_token:
         print("WARNING: no NOCODB_TOKEN given as environment variable, abort here")
-        return
+        return False
 
-    # TODO 
-    # - look up central Nocodb table, if we find an entry for projecturl
-    # - then get the matchin entry which has to include a Nocodb table id where this DATASET.json should be inserted
-    # ... shortcut it for now
+    # double check here even though it should have been checked upstairs already
+    if 'DATASET.json' != basename:
 
-    ## try to download a "DATASET.json" file
+        print(f"ignore this file '{basename}'")
+        return False
 
     ref_prefix, ref_suffix= os.path.split(ref)
 
     # print("processing: ", dirname, basename, " with ", operation, 
     #        " in project ", projectid, projecturl, ref, ref_prefix, ref_suffix )
 
-    if 'DATASET.json' != basename:
+    # when DATASET.json was added, then read it and add a new row to the Nocodb table 
+    if 'added' == operation:
 
-        print("ignore this file")
-        return
+        gl= gitlab.Gitlab( url= gitlab_host, private_token= gitlab_access_token )
+        project= gl.projects.get(id=projectid)
+        f= project.files.get( file_path= os.path.join(dirname,basename), ref= ref ) # get the base64 encoded content
+        file_content= f.decode()
+        j= json.loads(file_content)
+        #print( json.dumps(j,indent=4) )
 
-    if "added" != operation:
+        ### recreate the complete URL to the dir that contains the DATASET.json
 
-        print("ignore this action, TODO")
-        return
+        url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
+        # print("URL= ",url)
 
-    gl= gitlab.Gitlab( url= gitlab_host, private_token= gitlab_access_token )
-    project= gl.projects.get(id=projectid)
-    f= project.files.get( file_path= os.path.join(dirname,basename), ref= ref ) # get the base64 encoded content
+        # enter in existing Nocodb table
+        table= nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
 
-    # file_content = base64.b64decode(f.content) ##.decode("utf-8")
-    ##file_content= base64.b64decode(f.content).decode("utf-8") ##.decode("unicode_escape")
-
-    file_content= f.decode()
-
-    # get the base64 encoded content
-    #print(file_content)
-    #print(file_content.replace('\\n','\n'))
-    #print( json.dumps(file_content,indent=4))
-
-    # metadata= f.decode()
-    # print(metadata)
-
-    j= json.loads(file_content)
-
-    #print( json.dumps(j,indent=4) )
+        data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current" } )
+        res= table.insert(data)
+        return res
 
 
+    if 'modified' == operation:
 
-    ### recreate the complete URL to the dir that contains the DATASET.json
+        print("TODO action 'modified'")
 
-    url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
-    # print("URL= ",url)
+        # TODO replace the old entry like below for 'removed' with new status 'replaced'
+        # TODO add a new entry with the proper URL and the status 'current'
 
-    # enter in existing Nocodb table
-    table= nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
+        return False
 
-    data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current" } )
-    res= table.insert(data)
-    #print( "    RESULT: ", json.dumps(res,indent=4) )
+    # when DATASET.json was removed, then 
+    # - try to find it's previous Nocodb entry and change its status to 'deleted'
+    # - change URL to the commit where one can find the old version
+    #     - actually create a new table entry because the URL is the primary key which cannot be changed
+    #     - then delete the original table entry instead
+    if 'removed' == operation:
 
+        url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
+        print("URL= ",url)
+
+        table= nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
+
+        # get the old entry
+        old= table.list(where=f"(URL,eq,{url})" )
+        # print(json.dumps(old,indent=4))
+
+        assert 'list' in old
+
+        if 0 == len(old['list']):
+
+            # did not find an old entry, can happen if it was added to gitlab which the webhook was inactive, skip
+            print("No matchin entry in DB, skip")
+            return False
+
+        assert 1 == len(old['list'])
+
+        old_record= old['list'][0]
+        old_url= old_record['URL']
+
+        old_record['URL']= projecturl + "/-/commit/" + commit_before
+        old_record['status']= 'deleted'
+
+        # remove Nocodb's system fields
+        old_record.pop('CreatedAt')
+        old_record.pop('UpdatedAt')
+
+        res= table.insert(old_record)
+        res= table.delete( { "URL": old_url } )
+
+        return True
+
+
+    print(f"unknown operation '{operation}', skip")
+    return False
