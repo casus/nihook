@@ -4,7 +4,6 @@ import json
 import pandas
 import dateutil.parser
 
-
 """
 Prepare JSON metadata from a 'DATASET.json' file before it can be entered to Nocodb
 """
@@ -13,35 +12,39 @@ Prepare JSON metadata from a 'DATASET.json' file before it can be entered to Noc
 Helper function to check if a string contains time duration. Test this before is_datetime() because that 
 may also answer something but will use the currect day with the time duration as point in time.
 """
-def is_time_duration(string):
 
+
+def is_time_duration(string):
     try:
         # use pandas datetime parser because it also handles nanoseconds
-        result= pandas.to_datetime(string, format='%H:%M:%S.%f', errors='raise')
-        return pandas.Timedelta( days=0,
-                                 hours=result.hour, minutes=result.minute, seconds=result.second,
-                                 microseconds=result.microsecond, nanoseconds=result.nanosecond )
+        result = pandas.to_datetime(string, format='%H:%M:%S.%f', errors='raise')
+        return pandas.Timedelta(days=0,
+                                hours=result.hour, minutes=result.minute, seconds=result.second,
+                                microseconds=result.microsecond, nanoseconds=result.nanosecond)
 
     except ValueError:
         pass
 
     try:
+        # same but with no second decimals
         # use pandas datetime parser because it also handles nanoseconds
-        result= pandas.to_datetime(string, format='%H:%M:%S', errors='raise')
-        return pandas.Timedelta( days=0,
-                                 hours=result.hour, minutes=result.minute, seconds=result.second,
-                                 microseconds=result.microsecond, nanoseconds=result.nanosecond )
+        result = pandas.to_datetime(string, format='%H:%M:%S', errors='raise')
+        return pandas.Timedelta(days=0,
+                                hours=result.hour, minutes=result.minute, seconds=result.second,
+                                microseconds=result.microsecond, nanoseconds=result.nanosecond)
 
     except ValueError:
         pass
 
     return None
 
+
 """ 
 Helper function to check if a string contains datetime
 """
-def is_datetime(string, fuzzy=False):
 
+
+def is_datetime(string, fuzzy=False):
     """
     Return whether the string can be interpreted as a date.
 
@@ -49,12 +52,11 @@ def is_datetime(string, fuzzy=False):
     :param fuzzy: bool, ignore unknown tokens in string if True
     """
     try:
-        result= dateutil.parser.parse(string, fuzzy=fuzzy)
+        result = dateutil.parser.parse(string, fuzzy=fuzzy)
         return result
 
     except ValueError:
         return None
-
 
 
 """
@@ -66,47 +68,48 @@ Recursively flatten the keys in a nested JSON structure
 - use '.' as separators for flattened keys
     - check if there are collisions between existing names and flattened names
 """
-def flatten_keys( result, prefix, json_data, separator="." ):
 
+
+def flatten_keys(result, prefix, json_data, separator="."):
     # only append a separator if prefix was not empty
     if "" != prefix:
-        prefix= prefix+separator
+        prefix = prefix + separator
 
     for k in json_data:
 
         # replace spaces in names by underscore
-        kk= k.replace(' ','_')
+        kk = k.replace(' ', '_')
 
         # if kk != k:
         #     print("    rename ",k, " --> ", kk, " as ", type( json_data[k] ))
 
-        if type( {} ) == type( json_data[k] ):
+        if type({}) == type(json_data[k]):
 
-            #print("        dict")
+            # print("        dict")
 
-            #recursive
-            flatten_keys( result, prefix+kk, json_data[k] )
+            # recursive
+            flatten_keys(result, prefix + kk, json_data[k])
 
         else:
 
-            flat_key= prefix+kk
+            flat_key = prefix + kk
             if flat_key in result:
                 print("WARNING: ", flat_key, " already present")
 
-            result[flat_key]= json_data[k]
+            result[flat_key] = json_data[k]
 
-def prepare_input( input, extra=None ):
 
+def prepare_input(input, extra=None):
     # print( json.dumps(input,indent=4) )
 
-    data= {}
+    data = {}
 
     if extra:
-        data= extra
-        #print("extra keys ",extra)
+        data = extra
+        # print("extra keys ",extra)
 
-    flatten_keys( data, "", input )
-    fix_datatypes( data )
+    flatten_keys(data, "", input)
+    # fix_datatypes(data)
 
     # print("Result: ")
     # print( json.dumps(data,indent=4))
@@ -114,9 +117,8 @@ def prepare_input( input, extra=None ):
     return data
 
 
-def derive_table_columns_definition( data ):
-
-    columns= []
+def derive_table_columns_definition(data):
+    columns = []
 
     # column_template= {
     # "column_name": "title",
@@ -147,20 +149,19 @@ def derive_table_columns_definition( data ):
     # }
 
     # column_template= {
-    #     "column_name":
-    #     "title":
-    #     "uidt":
-    #     "dt":
+    #     "column_name": 
+    #     "title": 
+    #     "uidt": 
+    #     "dt": 
     #     "un": false
     # }
 
-
     for k in data:
+        v = data[k]
+        if type(v) is int:
 
-        if type(1) == type(data[k]):
-
-            #print("    ", k, " --> type ", type(data[k]), " example ", data[k])
-            #print("handle int")
+            # print("    ", k, " --> type ", type(v), " example ", v)
+            # print("handle int")
             columns.append(
                 {
                     "column_name": k,
@@ -170,10 +171,10 @@ def derive_table_columns_definition( data ):
                     "un": False
                 })
 
-        elif type(1.1) == type(data[k]):
+        elif type(v) is float:
 
-            #print("    ", k, " --> type ", type(data[k]), " example ", data[k])
-            #print("handle float or decimal")
+            # print("    ", k, " --> type ", type(v), " example ", v)
+            # print("handle float or decimal")
             columns.append(
                 {
                     "column_name": k,
@@ -183,16 +184,16 @@ def derive_table_columns_definition( data ):
                     "un": False
                 })
 
-        elif type("") == type(data[k]):
+        elif type(v) is str:
 
-            #print("    ", k, " --> type ", type(data[k]), " example ", data[k])
+            # print("    ", k, " --> type ", type(v), " example ", v)
 
             # several different cases here
 
-            if is_it_time_duration := is_time_duration( data[k] ):
+            if time_duration := is_time_duration(v):
 
-                #print("handle string -- duration")
-                #print("    found duration ", is_it_time_duration, " from ", data[k])
+                # print("handle string -- duration")
+                # print("    found duration ", time_duration, " from ", v)
 
                 columns.append(
                     {
@@ -203,10 +204,10 @@ def derive_table_columns_definition( data ):
                         "un": False
                     })
 
-            elif is_it_datetime := is_datetime( data[k] ):
+            elif datetime := is_datetime(v):
 
-                #print("handle string -- datetime")
-                #print("    found datetime ", is_it_datetime, " from ", data[k])
+                # print("handle string -- datetime")
+                # print("    found datetime ", datetime, " from ", v)
                 columns.append(
                     {
                         "column_name": k,
@@ -216,10 +217,10 @@ def derive_table_columns_definition( data ):
                         "un": False
                     })
 
-            elif data[k].startswith("http://") or data[k].startswith("https://"):
+            elif v.startswith("http://") or v.startswith("https://"):
 
-                #print("handle string -- url")
-                #print("    found datetime ", is_it_datetime, " from ", data[k])
+                # print("handle string -- url")
+                # print("    found datetime ", datetime, " from ", v)
                 columns.append(
                     {
                         "column_name": k,
@@ -230,7 +231,7 @@ def derive_table_columns_definition( data ):
                     })
             else:
 
-                #print("handle string -- generic")
+                # print("handle string -- generic")
                 columns.append(
                     {
                         "column_name": k,
@@ -241,10 +242,10 @@ def derive_table_columns_definition( data ):
                     })
 
 
-        elif type(True) == type(data[k]):
+        elif type(v) is bool:
 
-            #print("    ", k, " --> type ", type(data[k]), " example ", data[k])
-            #print("handle bool")
+            # print("    ", k, " --> type ", type(v), " example ", v)
+            # print("handle bool")
             columns.append(
                 {
                     "column_name": k,
@@ -254,9 +255,9 @@ def derive_table_columns_definition( data ):
                     "un": False
                 })
 
-        elif type([]) == type(data[k]):
+        elif type(v) is list:
 
-            # print("    ", k, " --> type ", type(data[k]), " example ", data[k])
+            # print("    ", k, " --> type ", type(v), " example ", v)
             # print("handle list")
             columns.append(
                 {
@@ -271,7 +272,7 @@ def derive_table_columns_definition( data ):
 
             ## no not cover {} above because those should have been resolved by 'flatten_keys()'
 
-            print("    ", k, " --> type ", type(data[k]), " example ", data[k])
+            print("    ", k, " --> type ", type(v), " example ", v)
             print("handle unknown, abort")
             sys.exit(-2)
 
@@ -281,25 +282,25 @@ def derive_table_columns_definition( data ):
 """
 Transform some data types -- compare to derive_table_columns_definition()
 """
-def fix_datatypes( data ):
 
+
+def fix_datatypes(data):
     for k in data:
 
         if type("") == type(data[k]):
 
-            if is_it_time_duration := is_time_duration( data[k] ):
+            if is_it_time_duration := is_time_duration(data[k]):
 
                 # print("fix string -- duration")
                 # print("    found duration ", is_it_time_duration, " from ", data[k])
 
-                data[k]= is_it_time_duration.total_seconds()
+                data[k] = is_it_time_duration.total_seconds()
 
-            elif is_it_datetime := is_datetime( data[k] ):
+            elif is_it_datetime := is_datetime(data[k]):
 
                 # print("fix string -- datetime")
                 # print("    found datetime ", is_it_datetime, " from ", data[k])
 
-                data[k]= is_it_datetime.isoformat()
-
+                data[k] = is_it_datetime.isoformat()
 
 ## TODO declare primary key
