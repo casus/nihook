@@ -12,6 +12,7 @@ from jsonschema import validate
 from jsonschema.exceptions import ValidationError, SchemaError
 
 import base64
+from urllib.parse import urlparse
 
 import process_files_from_gitlab
 
@@ -64,6 +65,8 @@ app = Flask(__name__)
 
 authentication= None
 
+# dictionary of all known gitlab projects and their access tokens
+gitlab_projects= {}
 
 @app.route('/webhooks/push', methods=['POST'])
 def webhook_push():
@@ -108,14 +111,26 @@ def webhook_push():
     print( "Number commits: ", len(event['commits']) )
     print( "Total commits: ", event['total_commits_count'] )
 
+    # old from evn var
+    # gitlab_host = os.getenv('GITLAB_HOST', "http://localhost")
+    # gitlab_access_token = os.getenv('GITLAB_ACCESS_TOKEN', "none")
 
-    # create gitlab connection object only once
-    gitlab_host = os.getenv('GITLAB_HOST', "http://localhost")
-    gitlab_access_token = os.getenv('GITLAB_ACCESS_TOKEN', "none")
+    # new: get gitlab access token from 'gitlab.projects' file
+
+    parsed_uri = urlparse(projecturl)
+    gitlab_host= '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
+
+    if projecturl in gitlab_projects:
+
+        gitlab_access_token= gitlab_projects[projecturl]
+    else:
+        gitlab_access_token= "none"
 
     if "none" == gitlab_access_token:
         print("WARNING: no GITLAB_ACCESS_TOKEN given as environment variable, abort here")
         return False
+
+    # create gitlab connection object only once
 
     gl= gitlab.Gitlab( url= gitlab_host, private_token= gitlab_access_token )
     gitlab_project= gl.projects.get(id=projectid)
@@ -159,5 +174,14 @@ if __name__ == '__main__':
     port = os.getenv('HOOK_PORT', '5000')
 
     authentication= auth.Auth("auth")
+
+    # read in all known gitlab projects and their access tokens
+    gitlab_projects= {}
+    with open("gitlab.projects", 'r') as f:
+        gitlab_projects= json.load(f)
+
+    print("Known gitlab projects:")
+    for i in gitlab_projects:
+        print("    ", i)
 
     app.run(host=host, port=int(port))
