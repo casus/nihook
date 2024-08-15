@@ -268,6 +268,20 @@ def derive_table_columns_definition(data):
                     "un": False
                 })
 
+        elif v is None:
+
+                # special case NoneType -- handle as string
+
+                # print("handle NoneType as string")
+                columns.append(
+                    {
+                        "column_name": k,
+                        "title": k,
+                        "uidt": "SingleLineText",
+                        "dt": "character varying",
+                        "un": False
+                    })
+
         else:
 
             ## no not cover {} above because those should have been resolved by 'flatten_keys()'
