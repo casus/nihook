@@ -40,13 +40,13 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
 
     if 'modified' == operation:
 
-        print("TODO action 'modified'")
+        # print("TODO action 'modified'")
 
         # TODO replace the old entry like below for 'removed' with new status 'replaced'
         # TODO add a new entry with the proper URL and the status 'current'
 
         url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
-        print("URL= ",url)
+        # print("URL= ",url)
 
         # get the old entry
         old= table.list(where=f"(URL,eq,{url})" )
@@ -65,12 +65,12 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
         # len cannot be > 1 because the URL is the primary key
         if 1 == len(old['list']):
 
-            print("A")
-
             old_record= old['list'][0]
             old_url= old_record['URL']
 
-            old_record['URL']= projecturl + "/-/commit/" + commit_before
+            # need to add the dirname in the end, otherwise multiple cases in the same commit get overwritten
+            # assume that there can be only one DATASET.json or maybe other special file names (!) in the dir
+            old_record['URL']= projecturl + "/-/tree/" + commit_before + "/" + dirname
             old_record['status']= 'replaced'
 
             # remove Nocodb's system fields
@@ -80,15 +80,17 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
             res= table.insert(old_record)
             res= table.delete( { "URL": old_url } )
 
+            # print("delete res: ", res)
+
             # if an existing entry was present, then change it according to the new data
             # let the 'index.id' hash unchanged if it was not changed in the 'DATASET.json' 
             # so one can track which changed versions belong together
             data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current" } )
             res= table.update(data)
 
-        else:
+            # print("update res: ", res)
 
-            print("B")
+        else:
 
             # if no existing entry was present, then add the new entry
 
@@ -106,7 +108,7 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
     if 'removed' == operation:
 
         url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
-        print("URL= ",url)
+        # print("URL= ",url)
 
         # get the old entry
         old= table.list(where=f"(URL,eq,{url})" )
@@ -125,7 +127,9 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
         old_record= old['list'][0]
         old_url= old_record['URL']
 
-        old_record['URL']= projecturl + "/-/commit/" + commit_before
+        # need to add the dirname in the end, otherwise multiple cases in the same commit get overwritten
+        # assume that there can be only one DATASET.json or maybe other special file names (!) in the dir
+        old_record['URL']= projecturl + "/-/tree/" + commit_before + "/" + dirname
         old_record['status']= 'deleted'
 
         # remove Nocodb's system fields
