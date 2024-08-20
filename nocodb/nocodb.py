@@ -345,17 +345,13 @@ class Table:
     """
     def update(self, data):
 
-        print("AA")
-
         url = f"{self.host}/api/v2/tables/{self.tableid}/records"
 
         # print( json.dumps(data, indent=4 ) )
 
         res = self.session.post(url, json=data).json()
 
-        print( json.dumps(res, indent=4 ) )
-
-        return True
+        return res
 
     """ 
     [DATA] Count Table Records
@@ -427,14 +423,5 @@ class Table:
             res = self.session.delete(url)
         else:
             res = self.session.delete(url, data=list)
-
-        print("REQ URL: ", res.request.url)
-        print("REQ BODY: ", res.request.body)
-        print("REQ HEADERS: ", res.request.headers)
-        print("REQ: ", res.request)
-
-        print(" #### page info #### ")
-        print(json.dumps(res.json(), indent=4))
-        print(" ######## ")
 
         return res
