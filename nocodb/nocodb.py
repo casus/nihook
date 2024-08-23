@@ -450,13 +450,6 @@ def delete(self, list=None):
     else:
         res = self.session.delete(url, data=list)
 
-    print("REQ URL: ", res.request.url)
-    print("REQ BODY: ", res.request.body)
-    print("REQ HEADERS: ", res.request.headers)
-    print("REQ: ", res.request)
 
-    print(" #### page info #### ")
-    print(json.dumps(res.json(), indent=4))
-    print(" ######## ")
 
     return res
