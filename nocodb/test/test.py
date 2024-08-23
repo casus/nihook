@@ -1,7 +1,6 @@
 import json
 import os
 
-# from nocodb.create_table_from_example import special_columns
 from nocodb.nocodb import Nocodb, Base, Table
 
 from nocodb import prepare_json
@@ -183,6 +182,8 @@ def test_read_table_columns():
 
         delete_base()
 
+def test_dummy():
+    print(0)
 
 def int_bigint_promotion():
 # def test_int_bigint_promotion():

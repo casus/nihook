@@ -1,15 +1,9 @@
 # nocodb class
 
-import os
 from enum import Enum
 
 import requests
 import json
-from typing import Optional, List
-
-from pandas import read_table
-
-from nocodb.test.test import base_id
 
 """
 Class for access to a NOCODB instance
@@ -80,13 +74,10 @@ class Nocodb:
         # check if such a table exists
         all_bases = self.list_bases()
 
-        if base_id in all_bases:
-
-            return Base(base_id, nocodb=self)
-
-        else:
-
-            return None
+        for (base_id, base_title) in all_bases:
+            if title == base_title:
+                return Base(base_id, nocodb=self)
+        return None
 
     """
     [META] Delete Base
@@ -364,6 +355,7 @@ class Table:
     https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-read
     GET http://localhost:8080/api/v2/tables/{tableId}/records/{recordId}
     """
+
     def read_table_record(self, primary_key: int) -> dict:
         url = f"{self.host}/api/v2/tables/{self.tableid}/records/{primary_key}"
         return self.session.get(url).json()
@@ -450,7 +442,5 @@ def delete(self, list=None):
         res = self.session.delete(url)
     else:
         res = self.session.delete(url, data=list)
-
-
 
     return res
