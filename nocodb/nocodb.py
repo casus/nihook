@@ -74,7 +74,7 @@ class Nocodb:
         # check if such a table exists
         all_bases = self.list_bases()
 
-        for (base_id, base_title) in all_bases:
+        for base_id, base_title in all_bases.items():
             if title == base_title:
                 return Base(base_id, nocodb=self)
         return None

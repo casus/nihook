@@ -182,11 +182,8 @@ def test_read_table_columns():
 
         delete_base()
 
-def test_dummy():
-    print(0)
-
-def int_bigint_promotion():
-# def test_int_bigint_promotion():
+# def int_bigint_promotion():
+def test_int_bigint_promotion():
     base_dict = create_base()
     with open('DATASET.json', 'r') as f:
         json_input = json.load(f)
