@@ -7,6 +7,8 @@ import requests
 import json
 from typing import Optional, List
 
+from pandas import read_table
+
 """
 Class for access to a NOCODB instance
 """
@@ -19,9 +21,9 @@ class Nocodb:
         self.auth_token = auth_token
         self.verify = verify
 
-        self.session= requests.Session()
-        self.session.headers.update( {"accept": "application/json", "xc-token": self.auth_token} ) 
-        self.session.verify= self.verify
+        self.session = requests.Session()
+        self.session.headers.update({"accept": "application/json", "xc-token": self.auth_token})
+        self.session.verify = self.verify
 
     """ 
     [META] List Bases
@@ -34,11 +36,9 @@ class Nocodb:
 
         url = f"{self.host}/api/v2/meta/bases/"
 
-        print(f"self.verify >{self.verify}<")
-
         res = self.session.get(url, params={}).json()
 
-        # print( json.dumps(res, indent=4 ) )
+        # print(json.dumps(res, indent=4))
 
         ret = {}
         for i in res['list']:
@@ -68,7 +68,7 @@ class Nocodb:
         if base_type:
             data["type"] = base_type.name
 
-        res = self.session.post(url,data=data).json()
+        res = self.session.post(url, data=data).json()
 
         # print( json.dumps(res, indent=4 ) )
 
@@ -115,14 +115,14 @@ class Base:
         # #self.nocodb= nocodb
         self.base_id = base_id
         self.verify = verify
-        self.session= None
+        self.session = None
 
         if nocodb:
 
             self.host = nocodb.host
             self.auth_token = nocodb.auth_token
             self.verify = nocodb.verify
-            self.session= nocodb.session # re-use the same session
+            self.session = nocodb.session  # re-use the same session
 
         else:
 
@@ -132,9 +132,9 @@ class Base:
             self.host = host
             self.auth_token = auth_token
 
-            self.session= requests.Session()
-            self.session.headers.update( {"accept": "application/json", "xc-token": self.auth_token} ) 
-            self.session.verify= self.verify
+            self.session = requests.Session()
+            self.session.headers.update({"accept": "application/json", "xc-token": self.auth_token})
+            self.session.verify = self.verify
 
         self.info = self.get_base_info()
         self.metadata = self.get_base()
@@ -159,8 +159,6 @@ class Base:
     def get_base_info(self) -> dict:
 
         url = f"{self.host}/api/v2/meta/bases/{self.base_id}/info"
-
-        print(f"verify >{self.verify}<")
 
         res = self.session.get(url, params={}).json()
 
@@ -287,15 +285,14 @@ class Table:
             self.host = host
             self.auth_token = auth_token
 
-            self.session= requests.Session()
-            self.session.headers.update( {"accept": "application/json", "xc-token": self.auth_token} ) 
-            self.session.verify= self.verify
+            self.session = requests.Session()
+            self.session.headers.update({"accept": "application/json", "xc-token": self.auth_token})
+            self.session.verify = self.verify
 
         # connection test
-        res= self.count()
+        res = self.count()
         assert 'count' in res
         assert 'msg' not in res
-
 
     def debug(self):
         # print("class Table: ", self.tableid )
@@ -326,7 +323,7 @@ class Table:
     POST http://localhost:8080/api/v2/tables/{tableId}/records
     """
 
-    def insert(self, data):
+    def insert(self, data) -> dict:
 
         url = f"{self.host}/api/v2/tables/{self.tableid}/records"
 
@@ -336,26 +333,50 @@ class Table:
 
         # print( json.dumps(res, indent=4 ) )
 
-        return True
+        return res
 
     """
     [DATA] Update Table Records
     https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-create
     PATCH http://localhost:8080/api/v2/tables/{tableId}/records
     """
+
     def update(self, data):
 
-        print("AA")
+        # print("AA")
+        # print("TABLE DELETE ", json.dumps(list,indent=4) )
+        # print("    JSON ", json.dumps(list))
 
         url = f"{self.host}/api/v2/tables/{self.tableid}/records"
 
         # print( json.dumps(data, indent=4 ) )
 
-        res = self.session.post(url, json=data).json()
+        res = self.session.patch(url, json=data).json()
 
-        print( json.dumps(res, indent=4 ) )
+        # print(json.dumps(res, indent=4))
 
-        return True
+        return res
+
+    """
+    [DATA] Read Table Record
+    This API endpoint allows you to retrieve a single record identified by Record-ID, serving as unique identifier for the record from a specified table.
+    https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-read
+    GET http://localhost:8080/api/v2/tables/{tableId}/records/{recordId}
+    """
+    def read_table_record(self, primary_key: int) -> dict:
+        url = f"{self.host}/api/v2/tables/{self.tableid}/records/{primary_key}"
+        return self.session.get(url).json()
+
+    def update_single_field(self, pk: int, key: str, value: object) -> dict:
+        record = self.read_table_record(pk)
+        if 'CreatedAt' in record:
+            del record['CreatedAt']
+        if 'UpdatedAt' in record:
+            del record['UpdatedAt']
+        if key is 'Primary Key':
+            raise ValueError("Primary Key is not overridable")
+        record[key] = value
+        return self.update(record)
 
     """ 
     [DATA] Count Table Records
@@ -363,6 +384,7 @@ class Table:
     https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-count
     Get http://localhost:8080/api/v2/tables/{tableId}/records/count
     """
+
     def count(self, where=None):
 
         url = f"{self.host}/api/v2/tables/{self.tableid}/records/count"
@@ -376,13 +398,13 @@ class Table:
 
         return res
 
-
     """ 
     [DATA] List Table Records
     This API endpoint allows you to retrieve records from a specified table. 
     https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-list
     Get http://localhost:8080/api/v2/tables/{tableId}/records
     """
+
     def list(self, fields=None, sort=None, where=None, offset=0, limit=None):
 
         url = f"{self.host}/api/v2/tables/{self.tableid}/records"
@@ -407,34 +429,34 @@ class Table:
 
         return res
 
-    """
-    Delete Table Records
-    This API endpoint allows deleting existing records within a specified table identified by 
-    an array of Record-IDs, serving as unique identifier for the record. Records to be deleted are input as an array of record-identifiers.
-    https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-delete
-    DELETE http://localhost:8080/api/v2/tables/{tableId}/records
-    http://localhost:8080/api/v2/tables/{tableId}/records
-    """
 
-    def delete(self, list=None):
+"""
+[DATA] Delete Table Records
+This API endpoint allows deleting existing records within a specified table identified by 
+an array of Record-IDs, serving as unique identifier for the record. Records to be deleted are input as an array of record-identifiers.
+https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-delete
+DELETE http://localhost:8080/api/v2/tables/{tableId}/records
+"""
 
-        url = f"{self.host}/api/v2/tables/{self.tableid}/records"
 
-        # print("TABLE DELETE ", json.dumps(list,indent=4) )
-        # print("    JSON ", json.dumps(list))
+def delete(self, list=None):
+    url = f"{self.host}/api/v2/tables/{self.tableid}/records"
 
-        if list is None:
-            res = self.session.delete(url)
-        else:
-            res = self.session.delete(url, data=list)
+    # print("TABLE DELETE ", json.dumps(list,indent=4) )
+    # print("    JSON ", json.dumps(list))
 
-        print("REQ URL: ", res.request.url)
-        print("REQ BODY: ", res.request.body)
-        print("REQ HEADERS: ", res.request.headers)
-        print("REQ: ", res.request)
+    if list is None:
+        res = self.session.delete(url)
+    else:
+        res = self.session.delete(url, data=list)
 
-        print(" #### page info #### ")
-        print(json.dumps(res.json(), indent=4))
-        print(" ######## ")
+    print("REQ URL: ", res.request.url)
+    print("REQ BODY: ", res.request.body)
+    print("REQ HEADERS: ", res.request.headers)
+    print("REQ: ", res.request)
 
-        return res
+    print(" #### page info #### ")
+    print(json.dumps(res.json(), indent=4))
+    print(" ######## ")
+
+    return res
