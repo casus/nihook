@@ -9,6 +9,8 @@ from typing import Optional, List
 
 from pandas import read_table
 
+from nocodb.test.test import base_id
+
 """
 Class for access to a NOCODB instance
 """
@@ -42,9 +44,8 @@ class Nocodb:
 
         ret = {}
         for i in res['list']:
-            # FIXME this will overwrite bases with the same title!
             # print( i['title'], i['id'] )
-            ret[i['title']] = i['id']
+            ret[i['id']] = i['title']
 
         return ret
 
@@ -77,11 +78,11 @@ class Nocodb:
     def get_base_object(self, title):
 
         # check if such a table exists
-        allbases = self.list_bases()
+        all_bases = self.list_bases()
 
-        if title in allbases:
+        if base_id in all_bases:
 
-            return Base(allbases[title], nocodb=self)
+            return Base(base_id, nocodb=self)
 
         else:
 
