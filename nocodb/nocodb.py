@@ -65,6 +65,9 @@ class Nocodb:
 
         res = self.session.post(url, data=data).json()
 
+        if 'msg' in res and res['msg'] == 'Invalid token':
+            raise Exception("Invalid token")
+
         # print( json.dumps(res, indent=4 ) )
 
         return res
@@ -329,7 +332,7 @@ class Table:
 
     """
     [DATA] Update Table Records
-    https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-create
+    https://data-apis-v2.nocodb.com/#tag/Table-Records/operation/db-data-table-row-update
     PATCH http://localhost:8080/api/v2/tables/{tableId}/records
     """
 
@@ -342,7 +345,7 @@ class Table:
         url = f"{self.host}/api/v2/tables/{self.tableid}/records"
 
         # print( json.dumps(data, indent=4 ) )
-        res= self.session.patch(url, data=data)
+        res= self.session.patch(url, data=data).json()
 
         return res
 
@@ -353,19 +356,20 @@ class Table:
     GET http://localhost:8080/api/v2/tables/{tableId}/records/{recordId}
     """
 
-    def read_table_record(self, primary_key: int) -> dict:
+    def read_table_record(self, primary_key: any) -> dict:
         url = f"{self.host}/api/v2/tables/{self.tableid}/records/{primary_key}"
         return self.session.get(url).json()
 
-    def update_single_field(self, pk: int, key: str, value: object) -> dict:
-        record = self.read_table_record(pk)
-        if 'CreatedAt' in record:
-            del record['CreatedAt']
-        if 'UpdatedAt' in record:
-            del record['UpdatedAt']
-        if key is 'Primary Key':
-            raise ValueError("Primary Key is not overridable")
-        record[key] = value
+    def update_record(self, pk: int, key: str, value: object) -> dict:
+        # record = self.read_table_record(pk)
+        # if 'CreatedAt' in record:
+        #     del record['CreatedAt']
+        # if 'UpdatedAt' in record:
+        #     del record['UpdatedAt']
+        # if key == 'Primary Key':
+        #     raise ValueError("Primary Key is not overridable")
+        # record[key] = value
+        record = [{'Primary Key': pk, f'{key}': value}]
         return self.update(record)
 
     """ 
