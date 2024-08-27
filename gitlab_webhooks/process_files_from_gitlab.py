@@ -40,11 +40,6 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
 
     if 'modified' == operation:
 
-        # print("TODO action 'modified'")
-
-        # TODO replace the old entry like below for 'removed' with new status 'replaced'
-        # TODO add a new entry with the proper URL and the status 'current'
-
         url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
         # print("URL= ",url)
 
@@ -78,17 +73,15 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
             old_record.pop('UpdatedAt')
 
             res= table.insert(old_record)
-            res= table.delete( { "URL": old_url } )
-
-            # print("delete res: ", res)
+            # print("inserted res: ", res)
 
             # if an existing entry was present, then change it according to the new data
             # let the 'index.id' hash unchanged if it was not changed in the 'DATASET.json' 
             # so one can track which changed versions belong together
             data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current" } )
-            res= table.update(data)
 
-            # print("update res: ", res)
+            res= table.update(data)
+            # print("updated res: ", res)
 
         else:
 
