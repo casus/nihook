@@ -20,9 +20,9 @@ if __name__ == '__main__':
     print(" #### List bases: #### ")
 
     ret= ndb.list_bases()
-    for i in ret:
+    for base_id in ret:
 
-        print(i," --> ",ret[i])
+        print(ret[base_id], " --> ", base_id)
 
 
     print( " ######## work with base \n")

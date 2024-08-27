@@ -8,6 +8,24 @@ import argparse
 import nocodb
 import prepare_json
 
+special_columns= [{
+    "column_name": "URL",
+    "title": "URL",
+    "uidt": "URL",
+    "dt": "character varying",
+    "un": False,
+    "pk": True # primary key
+},{
+    "column_name": "status",
+    "title": "status",
+    "uidt": "SingleSelect",
+    "dt": "character varying",
+    "dtx": "specificType",
+    "dtxp": "'current','deleted','replaced'",
+    "dtxs": "",
+    "cdf": "'current'"
+}]
+
 """
 Read a 'DATASET.json' file and create a matching NocoDB table. 
 
@@ -58,23 +76,6 @@ if __name__ == '__main__':
             print("not successful")
             sys.exit(-3)
 
-    special_columns= [{
-                        "column_name": "URL",
-                        "title": "URL",
-                        "uidt": "URL",
-                        "dt": "character varying",
-                        "un": False,
-                        "pk": True # primary key
-                    },{
-                        "column_name": "status",
-                        "title": "status",
-                        "uidt": "SingleSelect",
-                        "dt": "character varying",
-                        "dtx": "specificType",
-                        "dtxp": "'current','deleted','replaced'",
-                        "dtxs": "",
-                        "cdf": "'current'"
-                    }]
     columns= special_columns + columns
 
     print( json.dumps(columns,indent=4) )
