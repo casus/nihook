@@ -50,6 +50,10 @@ def parse_and_append_column_metadata(columns: [], k: str, v: str):
             for k, v in v['properties'].items():
                 parse_and_append_column_metadata(columns, f'{root}.{k}', v)
 
+#                 generate schema
+# apply schema and create table
+# take input file (validate) and create a table directly (not the default), without data
+
 def generate(args: argparse.Namespace):
     assert args.base is None
     assert args.name is None
@@ -58,6 +62,7 @@ def generate(args: argparse.Namespace):
     builder = SchemaBuilder()
     with open(input_file, "r") as f:
         input = json.load(f)
+
         builder.add_object(input)
 
     schema = builder.to_json(indent=2)
