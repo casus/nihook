@@ -3,6 +3,7 @@ import json
 
 import pandas
 import dateutil.parser
+from numpy.ma.core import append
 
 """
 Prepare JSON metadata from a 'DATASET.json' file before it can be entered to Nocodb
@@ -116,6 +117,138 @@ def prepare_input(input, extra=None):
 
     return data
 
+def append_column_metadata(columns, k, v):
+    if type(v) is int:
+
+        # print("    ", k, " --> type ", type(v), " example ", v)
+        # print("handle int")
+        columns.append(
+            {
+                "column_name": k,
+                "title": k,
+                "uidt": "Number",
+                "dt": "int",
+                "un": False
+            })
+
+    elif type(v) is float:
+
+        # print("    ", k, " --> type ", type(v), " example ", v)
+        # print("handle float or decimal")
+        columns.append(
+            {
+                "column_name": k,
+                "title": k,
+                "uidt": "Number",
+                "dt": "float8",
+                "un": False
+            })
+
+    elif type(v) is str:
+
+        # print("    ", k, " --> type ", type(v), " example ", v)
+
+        # several different cases here
+
+        if time_duration := is_time_duration(v):
+
+            # print("handle string -- duration")
+            # print("    found duration ", time_duration, " from ", v)
+
+            columns.append(
+                {
+                    "column_name": k,
+                    "title": k,
+                    "uidt": "Duration",
+                    "dt": "decimal",
+                    "un": False
+                })
+
+        elif datetime := is_datetime(v):
+
+            # print("handle string -- datetime")
+            # print("    found datetime ", datetime, " from ", v)
+            columns.append(
+                {
+                    "column_name": k,
+                    "title": k,
+                    "uidt": "DateTime",
+                    "dt": "timestamp",
+                    "un": False
+                })
+
+        elif v.startswith("http://") or v.startswith("https://"):
+
+            # print("handle string -- url")
+            # print("    found datetime ", datetime, " from ", v)
+            columns.append(
+                {
+                    "column_name": k,
+                    "title": k,
+                    "uidt": "URL",
+                    "dt": "character varying",
+                    "un": False
+                })
+        else:
+
+            # print("handle string -- generic")
+            columns.append(
+                {
+                    "column_name": k,
+                    "title": k,
+                    "uidt": "SingleLineText",
+                    "dt": "character varying",
+                    "un": False
+                })
+
+
+    elif type(v) is bool:
+
+        # print("    ", k, " --> type ", type(v), " example ", v)
+        # print("handle bool")
+        columns.append(
+            {
+                "column_name": k,
+                "title": k,
+                "uidt": "Checkbox",
+                "dt": "bool",
+                "un": False
+            })
+
+    elif type(v) is list:
+
+        # print("    ", k, " --> type ", type(v), " example ", v)
+        # print("handle list")
+        columns.append(
+            {
+                "column_name": k,
+                "title": k,
+                "uidt": "JSON",
+                "dt": "json",
+                "un": False
+            })
+
+    elif v is None:
+
+        # special case NoneType -- handle as string
+
+        # print("handle NoneType as string")
+        columns.append(
+            {
+                "column_name": k,
+                "title": k,
+                "uidt": "SingleLineText",
+                "dt": "character varying",
+                "un": False
+            })
+
+    else:
+
+        ## no not cover {} above because those should have been resolved by 'flatten_keys()'
+
+        print("    ", k, " --> type ", type(v), " example ", v)
+        print("handle unknown, abort")
+        sys.exit(-2)
 
 def derive_table_columns_definition(data):
     columns = []
@@ -158,140 +291,9 @@ def derive_table_columns_definition(data):
 
     for k in data:
         v = data[k]
-        if type(v) is int:
-
-            # print("    ", k, " --> type ", type(v), " example ", v)
-            # print("handle int")
-            columns.append(
-                {
-                    "column_name": k,
-                    "title": k,
-                    "uidt": "Number",
-                    "dt": "int",
-                    "un": False
-                })
-
-        elif type(v) is float:
-
-            # print("    ", k, " --> type ", type(v), " example ", v)
-            # print("handle float or decimal")
-            columns.append(
-                {
-                    "column_name": k,
-                    "title": k,
-                    "uidt": "Number",
-                    "dt": "float8",
-                    "un": False
-                })
-
-        elif type(v) is str:
-
-            # print("    ", k, " --> type ", type(v), " example ", v)
-
-            # several different cases here
-
-            if time_duration := is_time_duration(v):
-
-                # print("handle string -- duration")
-                # print("    found duration ", time_duration, " from ", v)
-
-                columns.append(
-                    {
-                        "column_name": k,
-                        "title": k,
-                        "uidt": "Duration",
-                        "dt": "decimal",
-                        "un": False
-                    })
-
-            elif datetime := is_datetime(v):
-
-                # print("handle string -- datetime")
-                # print("    found datetime ", datetime, " from ", v)
-                columns.append(
-                    {
-                        "column_name": k,
-                        "title": k,
-                        "uidt": "DateTime",
-                        "dt": "timestamp",
-                        "un": False
-                    })
-
-            elif v.startswith("http://") or v.startswith("https://"):
-
-                # print("handle string -- url")
-                # print("    found datetime ", datetime, " from ", v)
-                columns.append(
-                    {
-                        "column_name": k,
-                        "title": k,
-                        "uidt": "URL",
-                        "dt": "character varying",
-                        "un": False
-                    })
-            else:
-
-                # print("handle string -- generic")
-                columns.append(
-                    {
-                        "column_name": k,
-                        "title": k,
-                        "uidt": "SingleLineText",
-                        "dt": "character varying",
-                        "un": False
-                    })
-
-
-        elif type(v) is bool:
-
-            # print("    ", k, " --> type ", type(v), " example ", v)
-            # print("handle bool")
-            columns.append(
-                {
-                    "column_name": k,
-                    "title": k,
-                    "uidt": "Checkbox",
-                    "dt": "bool",
-                    "un": False
-                })
-
-        elif type(v) is list:
-
-            # print("    ", k, " --> type ", type(v), " example ", v)
-            # print("handle list")
-            columns.append(
-                {
-                    "column_name": k,
-                    "title": k,
-                    "uidt": "JSON",
-                    "dt": "json",
-                    "un": False
-                })
-
-        elif v is None:
-
-                # special case NoneType -- handle as string
-
-                # print("handle NoneType as string")
-                columns.append(
-                    {
-                        "column_name": k,
-                        "title": k,
-                        "uidt": "SingleLineText",
-                        "dt": "character varying",
-                        "un": False
-                    })
-
-        else:
-
-            ## no not cover {} above because those should have been resolved by 'flatten_keys()'
-
-            print("    ", k, " --> type ", type(v), " example ", v)
-            print("handle unknown, abort")
-            sys.exit(-2)
+        append_column_metadata(columns, k, v)
 
     return columns
-
 
 """
 Transform some data types -- compare to derive_table_columns_definition()
