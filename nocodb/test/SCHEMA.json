@@ -1,0 +1,2012 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "type": "object",
+  "properties": {
+    "empty string": {
+      "type": "string"
+    },
+    "duration": {
+      "type": "string"
+    },
+    "Timestamp of this run": {
+      "type": "string"
+    },
+    "index": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "dir": {
+          "type": "string"
+        },
+        "full_path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "dir",
+        "full_path",
+        "id"
+      ]
+    },
+    "SLURM": {
+      "type": "object",
+      "properties": {
+        "SLURM_CLUSTER_NAME": {
+          "type": "string"
+        },
+        "SLURM_CPUS_ON_NODE": {
+          "type": "integer"
+        },
+        "SLURM_JOB_ACCOUNT": {
+          "type": "string"
+        },
+        "SLURM_JOB_NAME": {
+          "type": "string"
+        },
+        "SLURM_JOB_NODELIST": {
+          "type": "string"
+        },
+        "SLURM_JOB_NUM_NODES": {
+          "type": "integer"
+        },
+        "SLURM_JOB_PARTITION": {
+          "type": "string"
+        },
+        "SLURM_JOB_USER": {
+          "type": "string"
+        },
+        "SLURM_MEM_PER_CPU": {
+          "type": "integer"
+        },
+        "SLURM_NPROCS": {
+          "type": "integer"
+        },
+        "SLURM_NTASKS": {
+          "type": "integer"
+        },
+        "SLURM_SUBMIT_DIR": {
+          "type": "string"
+        },
+        "SLURM_SUBMIT_HOST": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "SLURM_CLUSTER_NAME",
+        "SLURM_CPUS_ON_NODE",
+        "SLURM_JOB_ACCOUNT",
+        "SLURM_JOB_NAME",
+        "SLURM_JOB_NODELIST",
+        "SLURM_JOB_NUM_NODES",
+        "SLURM_JOB_PARTITION",
+        "SLURM_JOB_USER",
+        "SLURM_MEM_PER_CPU",
+        "SLURM_NPROCS",
+        "SLURM_NTASKS",
+        "SLURM_SUBMIT_DIR",
+        "SLURM_SUBMIT_HOST"
+      ]
+    },
+    "flame_in": {
+      "type": "object",
+      "properties": {
+        "main": {
+          "type": "object",
+          "properties": {
+            "task": {
+              "type": "string"
+            },
+            "verbosity": {
+              "type": "integer"
+            },
+            "types": {
+              "type": "string"
+            },
+            "rng_type": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "rng_type",
+            "task",
+            "types",
+            "verbosity"
+          ]
+        },
+        "potential": {
+          "type": "object",
+          "properties": {
+            "potential": {
+              "type": "string"
+            },
+            "print_force": {
+              "type": "boolean"
+            },
+            "ewald": {
+              "type": "object",
+              "properties": {
+                "ewald": {
+                  "type": "boolean"
+                },
+                "psolver": {
+                  "type": "string"
+                },
+                "cell_ortho": {
+                  "type": "boolean"
+                },
+                "ecut": {
+                  "type": "number"
+                },
+                "ecutz": {
+                  "type": "number"
+                },
+                "rgcut": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "cell_ortho",
+                "ecut",
+                "ecutz",
+                "ewald",
+                "psolver",
+                "rgcut"
+              ]
+            }
+          },
+          "required": [
+            "ewald",
+            "potential",
+            "print_force"
+          ]
+        },
+        "ann": {
+          "type": "object",
+          "properties": {
+            "syslinsolver": {
+              "type": "string"
+            },
+            "approach": {
+              "type": "string"
+            },
+            "nstep_cep": {
+              "type": "integer"
+            },
+            "alphax_q": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "alphax_q",
+            "approach",
+            "nstep_cep",
+            "syslinsolver"
+          ]
+        },
+        "dynamics": {
+          "type": "object",
+          "properties": {
+            "md_method": {
+              "type": "string"
+            },
+            "nfreq": {
+              "type": "integer"
+            },
+            "dt": {
+              "type": "number"
+            },
+            "nmd": {
+              "type": "integer"
+            },
+            "temp": {
+              "type": "integer"
+            },
+            "init_temp": {
+              "type": "integer"
+            },
+            "ntherm": {
+              "type": "integer"
+            },
+            "highest_freq": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "dt",
+            "highest_freq",
+            "init_temp",
+            "md_method",
+            "nfreq",
+            "nmd",
+            "ntherm",
+            "temp"
+          ]
+        }
+      },
+      "required": [
+        "ann",
+        "dynamics",
+        "main",
+        "potential"
+      ]
+    },
+    "flame_log": {
+      "type": "object",
+      "properties": {
+        "Reference Paper": {
+          "type": "string"
+        },
+        "Timestamp of this run": {
+          "type": "string"
+        },
+        "main": {
+          "type": "object",
+          "properties": {
+            "task": {
+              "type": "string"
+            },
+            "types": {
+              "type": "string"
+            },
+            "two_level_geopt": {
+              "type": "boolean"
+            },
+            "verbosity": {
+              "type": "integer"
+            },
+            "verbose": {
+              "type": "integer"
+            },
+            "rng_type": {
+              "type": "string"
+            },
+            "seed": {
+              "type": "integer"
+            },
+            "nat": {
+              "type": "integer"
+            },
+            "pressure": {
+              "type": "number"
+            },
+            "findsym": {
+              "type": "boolean"
+            },
+            "finddos": {
+              "type": "boolean"
+            },
+            "params_new": {
+              "type": "boolean"
+            },
+            "time_limit": {
+              "type": "number"
+            },
+            "datafilesdir": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "datafilesdir",
+            "finddos",
+            "findsym",
+            "nat",
+            "params_new",
+            "pressure",
+            "rng_type",
+            "seed",
+            "task",
+            "time_limit",
+            "two_level_geopt",
+            "types",
+            "verbose",
+            "verbosity"
+          ]
+        },
+        "minhopp": {
+          "type": "object",
+          "properties": {
+            "nstep": {
+              "type": "integer"
+            },
+            "nsoften": {
+              "type": "integer"
+            },
+            "mdmin": {
+              "type": "integer"
+            },
+            "minter": {
+              "type": "integer"
+            },
+            "nrandoff": {
+              "type": "integer"
+            },
+            "npminx": {
+              "type": "integer"
+            },
+            "etoler": {
+              "type": "number"
+            },
+            "eref": {
+              "type": "number"
+            },
+            "ekinmax": {
+              "type": "number"
+            },
+            "alpha1": {
+              "type": "number"
+            },
+            "alpha2": {
+              "type": "string"
+            },
+            "beta1": {
+              "type": "string"
+            },
+            "beta2": {
+              "type": "string"
+            },
+            "beta3": {
+              "type": "number"
+            },
+            "trajectory": {
+              "type": "boolean"
+            },
+            "print_force": {
+              "type": "boolean"
+            },
+            "auto_soft": {
+              "type": "boolean"
+            },
+            "alpha_lat": {
+              "type": "number"
+            },
+            "alpha_at": {
+              "type": "number"
+            },
+            "mol_soften": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "alpha1",
+            "alpha2",
+            "alpha_at",
+            "alpha_lat",
+            "auto_soft",
+            "beta1",
+            "beta2",
+            "beta3",
+            "ekinmax",
+            "eref",
+            "etoler",
+            "mdmin",
+            "minter",
+            "mol_soften",
+            "npminx",
+            "nrandoff",
+            "nsoften",
+            "nstep",
+            "print_force",
+            "trajectory"
+          ]
+        },
+        "geopt": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string"
+            },
+            "fmaxtol": {
+              "type": "number"
+            },
+            "alphax": {
+              "type": "number"
+            },
+            "condnum": {
+              "type": "number"
+            },
+            "precaution": {
+              "type": "string"
+            },
+            "lprint": {
+              "type": "boolean"
+            },
+            "dt_start": {
+              "type": "number"
+            },
+            "nit": {
+              "type": "integer"
+            },
+            "dxmax": {
+              "type": "number"
+            },
+            "anoise": {
+              "type": "number"
+            },
+            "nsatur": {
+              "type": "integer"
+            },
+            "cellrelax": {
+              "type": "boolean"
+            },
+            "funits": {
+              "type": "number"
+            },
+            "print_force": {
+              "type": "boolean"
+            },
+            "trajectory": {
+              "type": "boolean"
+            },
+            "nhist": {
+              "type": "integer"
+            },
+            "dt_min": {
+              "type": "number"
+            },
+            "dt_max": {
+              "type": "number"
+            },
+            "strfact": {
+              "type": "number"
+            },
+            "hesslat": {
+              "type": "number"
+            },
+            "hessat": {
+              "type": "number"
+            },
+            "geoext": {
+              "type": "boolean"
+            },
+            "qbfgsndim": {
+              "type": "integer"
+            },
+            "qbfgstri": {
+              "type": "number"
+            },
+            "qbfgstrmin": {
+              "type": "number"
+            },
+            "qbfgstrmax": {
+              "type": "number"
+            },
+            "qbfgsw1": {
+              "type": "number"
+            },
+            "qbfgsw2": {
+              "type": "number"
+            },
+            "maxrise": {
+              "type": "number"
+            },
+            "sqnmcutoff": {
+              "type": "number"
+            },
+            "sqnmsteep": {
+              "type": "number"
+            },
+            "sqnmtrustr": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "alphax",
+            "anoise",
+            "cellrelax",
+            "condnum",
+            "dt_max",
+            "dt_min",
+            "dt_start",
+            "dxmax",
+            "fmaxtol",
+            "funits",
+            "geoext",
+            "hessat",
+            "hesslat",
+            "lprint",
+            "maxrise",
+            "method",
+            "nhist",
+            "nit",
+            "nsatur",
+            "precaution",
+            "print_force",
+            "qbfgsndim",
+            "qbfgstri",
+            "qbfgstrmax",
+            "qbfgstrmin",
+            "qbfgsw1",
+            "qbfgsw2",
+            "sqnmcutoff",
+            "sqnmsteep",
+            "sqnmtrustr",
+            "strfact",
+            "trajectory"
+          ]
+        },
+        "geopt_prec": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string"
+            },
+            "fmaxtol": {
+              "type": "number"
+            },
+            "alphax": {
+              "type": "number"
+            },
+            "condnum": {
+              "type": "number"
+            },
+            "precaution": {
+              "type": "string"
+            },
+            "lprint": {
+              "type": "boolean"
+            },
+            "dt_start": {
+              "type": "number"
+            },
+            "nit": {
+              "type": "integer"
+            },
+            "dxmax": {
+              "type": "number"
+            },
+            "anoise": {
+              "type": "number"
+            },
+            "nsatur": {
+              "type": "integer"
+            },
+            "cellrelax": {
+              "type": "boolean"
+            },
+            "funits": {
+              "type": "number"
+            },
+            "print_force": {
+              "type": "boolean"
+            },
+            "trajectory": {
+              "type": "boolean"
+            },
+            "nhist": {
+              "type": "integer"
+            },
+            "dt_min": {
+              "type": "number"
+            },
+            "dt_max": {
+              "type": "number"
+            },
+            "strfact": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "alphax",
+            "anoise",
+            "cellrelax",
+            "condnum",
+            "dt_max",
+            "dt_min",
+            "dt_start",
+            "dxmax",
+            "fmaxtol",
+            "funits",
+            "lprint",
+            "method",
+            "nhist",
+            "nit",
+            "nsatur",
+            "precaution",
+            "print_force",
+            "strfact",
+            "trajectory"
+          ]
+        },
+        "saddle_opt": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string"
+            },
+            "fmaxtol": {
+              "type": "number"
+            },
+            "alphax": {
+              "type": "number"
+            },
+            "condnum": {
+              "type": "number"
+            },
+            "precaution": {
+              "type": "string"
+            },
+            "lprint": {
+              "type": "boolean"
+            },
+            "dt_start": {
+              "type": "number"
+            },
+            "nit": {
+              "type": "integer"
+            },
+            "dxmax": {
+              "type": "number"
+            },
+            "anoise": {
+              "type": "number"
+            },
+            "nsatur": {
+              "type": "integer"
+            },
+            "cellrelax": {
+              "type": "boolean"
+            },
+            "funits": {
+              "type": "number"
+            },
+            "print_force": {
+              "type": "boolean"
+            },
+            "trajectory": {
+              "type": "boolean"
+            },
+            "nhist": {
+              "type": "integer"
+            },
+            "dt_min": {
+              "type": "number"
+            },
+            "dt_max": {
+              "type": "number"
+            },
+            "strfact": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "alphax",
+            "anoise",
+            "cellrelax",
+            "condnum",
+            "dt_max",
+            "dt_min",
+            "dt_start",
+            "dxmax",
+            "fmaxtol",
+            "funits",
+            "lprint",
+            "method",
+            "nhist",
+            "nit",
+            "nsatur",
+            "precaution",
+            "print_force",
+            "strfact",
+            "trajectory"
+          ]
+        },
+        "saddle": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string"
+            },
+            "list_random_displace": {
+              "type": "string"
+            },
+            "dimsep": {
+              "type": "number"
+            },
+            "ampl": {
+              "type": "number"
+            },
+            "np_splsad": {
+              "type": "integer"
+            },
+            "np_neb": {
+              "type": "integer"
+            },
+            "ns2": {
+              "type": "integer"
+            },
+            "vdtol": {
+              "type": "number"
+            },
+            "dt": {
+              "type": "number"
+            },
+            "htol": {
+              "type": "number"
+            },
+            "alphax": {
+              "type": "number"
+            },
+            "hybrid": {
+              "type": "string"
+            },
+            "docineb": {
+              "type": "string"
+            },
+            "doneb": {
+              "type": "string"
+            },
+            "pickbestanchorpoints": {
+              "type": "string"
+            },
+            "runstat": {
+              "type": "string"
+            },
+            "typintpol": {
+              "type": "string"
+            },
+            "fcalls_max": {
+              "type": "integer"
+            },
+            "fmaxtol_splsad": {
+              "type": "number"
+            },
+            "fmaxtol_neb": {
+              "type": "number"
+            },
+            "dbar": {
+              "type": "number"
+            },
+            "stepsize": {
+              "type": "number"
+            },
+            "fnrmtol_coarse": {
+              "type": "number"
+            },
+            "nstep": {
+              "type": "integer"
+            },
+            "bar_contract": {
+              "type": "boolean"
+            },
+            "dbar_contracted": {
+              "type": "number"
+            },
+            "fnrmtol_contracted": {
+              "type": "number"
+            },
+            "nstep_contract": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "alphax",
+            "ampl",
+            "bar_contract",
+            "dbar",
+            "dbar_contracted",
+            "dimsep",
+            "docineb",
+            "doneb",
+            "dt",
+            "fcalls_max",
+            "fmaxtol_neb",
+            "fmaxtol_splsad",
+            "fnrmtol_coarse",
+            "fnrmtol_contracted",
+            "htol",
+            "hybrid",
+            "list_random_displace",
+            "method",
+            "np_neb",
+            "np_splsad",
+            "ns2",
+            "nstep",
+            "nstep_contract",
+            "pickbestanchorpoints",
+            "runstat",
+            "stepsize",
+            "typintpol",
+            "vdtol"
+          ]
+        },
+        "potential": {
+          "type": "object",
+          "properties": {
+            "potential": {
+              "type": "string"
+            },
+            "cal_charge": {
+              "type": "boolean"
+            },
+            "cal_scn": {
+              "type": "boolean"
+            },
+            "potential_sec": {
+              "type": "string"
+            },
+            "boundary": {
+              "type": "integer"
+            },
+            "ann_boundcheck": {
+              "type": "string"
+            },
+            "component_ff": {
+              "type": "string"
+            },
+            "sockinet": {
+              "type": "integer"
+            },
+            "sockport": {
+              "type": "integer"
+            },
+            "sockhost": {
+              "type": "string"
+            },
+            "ipiinet": {
+              "type": "integer"
+            },
+            "ipiport": {
+              "type": "integer"
+            },
+            "ipihost": {
+              "type": "string"
+            },
+            "ipiecutwf": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "sockecutwf": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "drift": {
+              "type": "boolean"
+            },
+            "add_repulsive": {
+              "type": "boolean"
+            },
+            "voids": {
+              "type": "boolean"
+            },
+            "core_rep": {
+              "type": "boolean"
+            },
+            "core_rep_par": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "usewfgeo": {
+              "type": "boolean"
+            },
+            "usewfsoft": {
+              "type": "boolean"
+            },
+            "usewfmd": {
+              "type": "boolean"
+            },
+            "auto_kpt": {
+              "type": "boolean"
+            },
+            "kptmesh": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            "kptden": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "ewald": {
+              "type": "object",
+              "properties": {
+                "hx": {
+                  "type": "number"
+                },
+                "hy": {
+                  "type": "number"
+                },
+                "hz": {
+                  "type": "number"
+                },
+                "alpha": {
+                  "type": "number"
+                },
+                "ecut": {
+                  "type": "number"
+                },
+                "ecutz": {
+                  "type": "number"
+                },
+                "ecut_auto": {
+                  "type": "boolean"
+                },
+                "rcut": {
+                  "type": "number"
+                },
+                "rgcut": {
+                  "type": "number"
+                },
+                "screening_factor": {
+                  "type": "number"
+                },
+                "free_space": {
+                  "type": "number"
+                },
+                "nsp": {
+                  "type": "integer"
+                },
+                "plane_voltageu": {
+                  "type": "number"
+                },
+                "plane_voltagel": {
+                  "type": "number"
+                },
+                "plane_voltageu_ac": {
+                  "type": "number"
+                },
+                "frequency": {
+                  "type": "number"
+                },
+                "gnrmtol": {
+                  "type": "number"
+                },
+                "psolver": {
+                  "type": "string"
+                },
+                "bigdft_kwald": {
+                  "type": "boolean"
+                },
+                "ewald": {
+                  "type": "boolean"
+                },
+                "cell_ortho": {
+                  "type": "boolean"
+                },
+                "cell_ortho_noshift": {
+                  "type": "boolean"
+                },
+                "ewald_tol": {
+                  "type": "number"
+                },
+                "bias_type": {
+                  "type": "string"
+                },
+                "external_field": {
+                  "type": "number"
+                },
+                "dielec_const": {
+                  "type": "number"
+                },
+                "dielec_const1": {
+                  "type": "number"
+                },
+                "dielec_const2": {
+                  "type": "number"
+                },
+                "cal_polar": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "alpha",
+                "bias_type",
+                "bigdft_kwald",
+                "cal_polar",
+                "cell_ortho",
+                "cell_ortho_noshift",
+                "dielec_const",
+                "dielec_const1",
+                "dielec_const2",
+                "ecut",
+                "ecut_auto",
+                "ecutz",
+                "ewald",
+                "ewald_tol",
+                "external_field",
+                "free_space",
+                "frequency",
+                "gnrmtol",
+                "hx",
+                "hy",
+                "hz",
+                "nsp",
+                "plane_voltagel",
+                "plane_voltageu",
+                "plane_voltageu_ac",
+                "psolver",
+                "rcut",
+                "rgcut",
+                "screening_factor"
+              ]
+            },
+            "confine": {
+              "type": "object",
+              "properties": {
+                "confinement": {
+                  "type": "boolean"
+                },
+                "nconfine": {
+                  "type": "integer"
+                },
+                "cartred": {
+                  "type": "string"
+                },
+                "dim": {
+                  "type": "integer"
+                },
+                "exp": {
+                  "type": "integer"
+                },
+                "prefac": {
+                  "type": "number"
+                },
+                "cut": {
+                  "type": "number"
+                },
+                "av": {
+                  "type": "integer"
+                },
+                "eq": {
+                  "type": "integer"
+                },
+                "nat": {
+                  "type": "integer"
+                },
+                "atoms": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "atoms",
+                "av",
+                "cartred",
+                "confinement",
+                "cut",
+                "dim",
+                "eq",
+                "exp",
+                "nat",
+                "nconfine",
+                "prefac"
+              ]
+            },
+            "print_force": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "add_repulsive",
+            "ann_boundcheck",
+            "auto_kpt",
+            "boundary",
+            "cal_charge",
+            "cal_scn",
+            "component_ff",
+            "confine",
+            "core_rep",
+            "core_rep_par",
+            "drift",
+            "ewald",
+            "ipiecutwf",
+            "ipihost",
+            "ipiinet",
+            "ipiport",
+            "kptden",
+            "kptmesh",
+            "potential",
+            "potential_sec",
+            "print_force",
+            "sockecutwf",
+            "sockhost",
+            "sockinet",
+            "sockport",
+            "usewfgeo",
+            "usewfmd",
+            "usewfsoft",
+            "voids"
+          ]
+        },
+        "ann": {
+          "type": "object",
+          "properties": {
+            "subtask": {
+              "type": "string"
+            },
+            "optimizer": {
+              "type": "string"
+            },
+            "approach": {
+              "type": "string"
+            },
+            "symfunc": {
+              "type": "string"
+            },
+            "nstep_opt": {
+              "type": "integer"
+            },
+            "nstep_cep": {
+              "type": "integer"
+            },
+            "alphax_q": {
+              "type": "number"
+            },
+            "alphax_r": {
+              "type": "number"
+            },
+            "nconf_rmse": {
+              "type": "integer"
+            },
+            "ampl_rand": {
+              "type": "number"
+            },
+            "symfunc_type": {
+              "type": "string"
+            },
+            "syslinsolver": {
+              "type": "string"
+            },
+            "rgnrmtol": {
+              "type": "number"
+            },
+            "qgnrmtol": {
+              "type": "number"
+            },
+            "tol_incompatible": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "ftol": {
+              "type": "number"
+            },
+            "normalization": {
+              "type": "boolean"
+            },
+            "bondbased": {
+              "type": "boolean"
+            },
+            "prefit": {
+              "type": "boolean"
+            },
+            "read_forces": {
+              "type": "boolean"
+            },
+            "restart_param": {
+              "type": "boolean"
+            },
+            "restart_iter": {
+              "type": "integer"
+            },
+            "print_energy": {
+              "type": "boolean"
+            },
+            "fit_hoppint": {
+              "type": "boolean"
+            },
+            "save_symfunc_force": {
+              "type": "boolean"
+            },
+            "weight_hardness": {
+              "type": "number"
+            },
+            "save_symfunc_behnam": {
+              "type": "boolean"
+            },
+            "freeBC_direct": {
+              "type": "boolean"
+            },
+            "pickdiffconfs": {
+              "type": "boolean"
+            },
+            "dtol": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "alphax_q",
+            "alphax_r",
+            "ampl_rand",
+            "approach",
+            "bondbased",
+            "dtol",
+            "fit_hoppint",
+            "freeBC_direct",
+            "ftol",
+            "nconf_rmse",
+            "normalization",
+            "nstep_cep",
+            "nstep_opt",
+            "optimizer",
+            "pickdiffconfs",
+            "prefit",
+            "print_energy",
+            "qgnrmtol",
+            "read_forces",
+            "restart_iter",
+            "restart_param",
+            "rgnrmtol",
+            "save_symfunc_behnam",
+            "save_symfunc_force",
+            "subtask",
+            "symfunc",
+            "symfunc_type",
+            "syslinsolver",
+            "tol_incompatible",
+            "weight_hardness"
+          ]
+        },
+        "dynamics": {
+          "type": "object",
+          "properties": {
+            "nmd": {
+              "type": "integer"
+            },
+            "nfreq": {
+              "type": "integer"
+            },
+            "dt": {
+              "type": "number"
+            },
+            "temp": {
+              "type": "integer"
+            },
+            "init_temp": {
+              "type": "integer"
+            },
+            "md_method": {
+              "type": "string"
+            },
+            "print_force": {
+              "type": "boolean"
+            },
+            "restart": {
+              "type": "boolean"
+            },
+            "algo": {
+              "type": "integer"
+            },
+            "integrator": {
+              "type": "integer"
+            },
+            "presscomp": {
+              "type": "number"
+            },
+            "cellmass": {
+              "type": "number"
+            },
+            "auto_mdmin": {
+              "type": "boolean"
+            },
+            "mdmin_init": {
+              "type": "integer"
+            },
+            "mdmin_min": {
+              "type": "integer"
+            },
+            "mdmin_max": {
+              "type": "integer"
+            },
+            "auto_mddt": {
+              "type": "boolean"
+            },
+            "dt_init": {
+              "type": "number"
+            },
+            "nit_per_min": {
+              "type": "integer"
+            },
+            "encon": {
+              "type": "boolean"
+            },
+            "highest_freq": {
+              "type": "integer"
+            },
+            "ntherm": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "algo",
+            "auto_mddt",
+            "auto_mdmin",
+            "cellmass",
+            "dt",
+            "dt_init",
+            "encon",
+            "highest_freq",
+            "init_temp",
+            "integrator",
+            "md_method",
+            "mdmin_init",
+            "mdmin_max",
+            "mdmin_min",
+            "nfreq",
+            "nit_per_min",
+            "nmd",
+            "ntherm",
+            "presscomp",
+            "print_force",
+            "restart",
+            "temp"
+          ]
+        },
+        "bader": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string"
+            },
+            "filename": {
+              "type": "string"
+            },
+            "vacuum": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "filename",
+            "method",
+            "vacuum"
+          ]
+        },
+        "genconf": {
+          "type": "object",
+          "properties": {
+            "subtask": {
+              "type": "string"
+            },
+            "cal_pot": {
+              "type": "string"
+            },
+            "nat_add": {
+              "type": "integer"
+            },
+            "sat": {
+              "type": "string"
+            },
+            "amargin": {
+              "type": "number"
+            },
+            "dmin": {
+              "type": "number"
+            },
+            "dmax": {
+              "type": "number"
+            },
+            "npoint": {
+              "type": "integer"
+            },
+            "fbmin": {
+              "type": "number"
+            },
+            "fbmax": {
+              "type": "number"
+            },
+            "volperatom_bounds": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "ntry": {
+              "type": "integer"
+            },
+            "ispg": {
+              "type": "integer"
+            },
+            "ncells": {
+              "type": "integer"
+            },
+            "nconf": {
+              "type": "integer"
+            },
+            "nat_types_fu": {
+              "type": "integer"
+            },
+            "list_fu": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            "rmin_pairs": {
+              "type": "string"
+            },
+            "variable_cell": {
+              "type": "boolean"
+            },
+            "nonorthogonal": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "amargin",
+            "cal_pot",
+            "dmax",
+            "dmin",
+            "fbmax",
+            "fbmin",
+            "ispg",
+            "list_fu",
+            "nat_add",
+            "nat_types_fu",
+            "ncells",
+            "nconf",
+            "nonorthogonal",
+            "npoint",
+            "ntry",
+            "rmin_pairs",
+            "sat",
+            "subtask",
+            "variable_cell",
+            "volperatom_bounds"
+          ]
+        },
+        "conf_comp": {
+          "type": "object",
+          "properties": {
+            "tol": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "tol"
+          ]
+        },
+        "testforces": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "method"
+          ]
+        },
+        "single_point": {
+          "type": "object",
+          "properties": {
+            "print_force": {
+              "type": "boolean"
+            },
+            "format": {
+              "type": "string"
+            },
+            "usesocket": {
+              "type": "string"
+            },
+            "sockinet": {
+              "type": "integer"
+            },
+            "sockport": {
+              "type": "integer"
+            },
+            "sockhost": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "format",
+            "print_force",
+            "sockhost",
+            "sockinet",
+            "sockport",
+            "usesocket"
+          ]
+        },
+        "misc": {
+          "type": "object",
+          "properties": {
+            "subtask": {
+              "type": "string"
+            },
+            "gaussian_width": {
+              "type": "number"
+            },
+            "pen_coeff": {
+              "type": "number"
+            },
+            "q_avg_target": {
+              "type": "number"
+            },
+            "boundcond": {
+              "type": "string"
+            },
+            "posinp": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "boundcond",
+            "gaussian_width",
+            "pen_coeff",
+            "posinp",
+            "q_avg_target",
+            "subtask"
+          ]
+        },
+        "fit_elecpot": {
+          "type": "object",
+          "properties": {
+            "ngto": {
+              "type": "integer"
+            },
+            "iat_plot": {
+              "type": "integer"
+            },
+            "gwe_per_type": {
+              "type": "number"
+            },
+            "q_per_type": {
+              "type": "number"
+            },
+            "alphax_q": {
+              "type": "number"
+            },
+            "alphax_a": {
+              "type": "number"
+            },
+            "alphax_r": {
+              "type": "number"
+            },
+            "pot_rmse_tol": {
+              "type": "number"
+            },
+            "cutoff_fit_elecpot": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "alphax_a",
+            "alphax_q",
+            "alphax_r",
+            "cutoff_fit_elecpot",
+            "gwe_per_type",
+            "iat_plot",
+            "ngto",
+            "pot_rmse_tol",
+            "q_per_type"
+          ]
+        },
+        "fingerprint": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string"
+            },
+            "rcut": {
+              "type": "number"
+            },
+            "dbin": {
+              "type": "number"
+            },
+            "sigma": {
+              "type": "number"
+            },
+            "nl": {
+              "type": "integer"
+            },
+            "power": {
+              "type": "integer"
+            },
+            "gaussfac1": {
+              "type": "number"
+            },
+            "gaussfac2": {
+              "type": "number"
+            },
+            "atnmax": {
+              "type": "integer"
+            },
+            "natx": {
+              "type": "integer"
+            },
+            "orbital": {
+              "type": "string"
+            },
+            "nexcut": {
+              "type": "integer"
+            },
+            "principleev": {
+              "type": "integer"
+            },
+            "molecules": {
+              "type": "integer"
+            },
+            "expa": {
+              "type": "integer"
+            },
+            "molsphere": {
+              "type": "integer"
+            },
+            "widthcut": {
+              "type": "number"
+            },
+            "widthover": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "atnmax",
+            "dbin",
+            "expa",
+            "gaussfac1",
+            "gaussfac2",
+            "method",
+            "molecules",
+            "molsphere",
+            "natx",
+            "nexcut",
+            "nl",
+            "orbital",
+            "power",
+            "principleev",
+            "rcut",
+            "sigma",
+            "widthcut",
+            "widthover"
+          ]
+        },
+        "system info": {
+          "type": "object",
+          "properties": {
+            "ntypat": {
+              "type": "integer"
+            },
+            "Ca": {
+              "type": "integer"
+            },
+            "F": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "Ca",
+            "F",
+            "ntypat"
+          ]
+        },
+        "mpi started": {
+          "type": "object",
+          "properties": {
+            "iproc_world": {
+              "type": "integer"
+            },
+            "nproc_world": {
+              "type": "integer"
+            },
+            "iproc": {
+              "type": "integer"
+            },
+            "nproc": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "iproc",
+            "iproc_world",
+            "nproc",
+            "nproc_world"
+          ]
+        },
+        "nthreads": {
+          "type": "integer"
+        },
+        "random number generator": {
+          "type": "object",
+          "properties": {
+            "iproc": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "iproc"
+          ]
+        },
+        "reading structures": {
+          "type": "object",
+          "properties": {
+            "filename": {
+              "type": "string"
+            },
+            "nconf": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "filename",
+            "nconf"
+          ]
+        },
+        "number of ANN": {
+          "type": "integer"
+        },
+        "ANN architecture": {
+          "type": "string"
+        },
+        "symfunc numbers from input": {
+          "type": "object",
+          "properties": {
+            "ng1": {
+              "type": "integer"
+            },
+            "ng2": {
+              "type": "integer"
+            },
+            "ng3": {
+              "type": "integer"
+            },
+            "ng4": {
+              "type": "integer"
+            },
+            "ng5": {
+              "type": "integer"
+            },
+            "ng6": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "ng1",
+            "ng2",
+            "ng3",
+            "ng4",
+            "ng5",
+            "ng6"
+          ]
+        },
+        "grid info": {
+          "type": "object",
+          "properties": {
+            "ngpx": {
+              "type": "integer"
+            },
+            "ngpy": {
+              "type": "integer"
+            },
+            "ngpz": {
+              "type": "integer"
+            },
+            "ngptot": {
+              "type": "integer"
+            },
+            "nbgpx": {
+              "type": "integer"
+            },
+            "nbgpy": {
+              "type": "integer"
+            },
+            "nbgpz": {
+              "type": "integer"
+            },
+            "hxx": {
+              "type": "number"
+            },
+            "hyx": {
+              "type": "number"
+            },
+            "hzx": {
+              "type": "number"
+            },
+            "hxy": {
+              "type": "number"
+            },
+            "hyy": {
+              "type": "number"
+            },
+            "hzy": {
+              "type": "number"
+            },
+            "hxz": {
+              "type": "number"
+            },
+            "hyz": {
+              "type": "number"
+            },
+            "hzz": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "hxx",
+            "hxy",
+            "hxz",
+            "hyx",
+            "hyy",
+            "hyz",
+            "hzx",
+            "hzy",
+            "hzz",
+            "nbgpx",
+            "nbgpy",
+            "nbgpz",
+            "ngptot",
+            "ngpx",
+            "ngpy",
+            "ngpz"
+          ]
+        },
+        "inside get_beta_grid": {
+          "type": "number"
+        },
+        "CEP": {
+          "type": "object",
+          "properties": {
+            "iter": {
+              "type": "integer"
+            },
+            "epot_es": {
+              "type": "number"
+            },
+            "de": {
+              "type": "number"
+            },
+            "gnrm": {
+              "type": "number"
+            },
+            "stepsize": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "de",
+            "epot_es",
+            "gnrm",
+            "iter",
+            "stepsize"
+          ]
+        },
+        "CPU time": {
+          "type": "object",
+          "properties": {
+            "iproc": {
+              "type": "integer"
+            },
+            "hrs": {
+              "type": "number"
+            },
+            "min": {
+              "type": "number"
+            },
+            "sec": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "hrs",
+            "iproc",
+            "min",
+            "sec"
+          ]
+        },
+        "mpi finalized": {
+          "type": "object",
+          "properties": {
+            "iproc_world": {
+              "type": "integer"
+            },
+            "nproc_world": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "iproc_world",
+            "nproc_world"
+          ]
+        },
+        "Memory Consumption Report": {
+          "type": "object",
+          "properties": {
+            "Tot. No. of Allocations": {
+              "type": "integer"
+            },
+            "Tot. No. of Deallocations": {
+              "type": "integer"
+            },
+            "Remaining Memory (B)": {
+              "type": "integer"
+            },
+            "Memory occupation": {
+              "type": "object",
+              "properties": {
+                "Peak Value (MB)": {
+                  "type": "number"
+                },
+                "for the array": {
+                  "type": "string"
+                },
+                "in the routine": {
+                  "type": "string"
+                },
+                "Memory Peak of process": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "Memory Peak of process",
+                "Peak Value (MB)",
+                "for the array",
+                "in the routine"
+              ]
+            }
+          },
+          "required": [
+            "Memory occupation",
+            "Remaining Memory (B)",
+            "Tot. No. of Allocations",
+            "Tot. No. of Deallocations"
+          ]
+        },
+        "Walltime since initialization": {
+          "type": "string"
+        },
+        "Max No. of dictionaries used": {
+          "type": "integer"
+        },
+        "Number of dictionary folders allocated": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ANN architecture",
+        "CEP",
+        "CPU time",
+        "Max No. of dictionaries used",
+        "Memory Consumption Report",
+        "Number of dictionary folders allocated",
+        "Reference Paper",
+        "Timestamp of this run",
+        "Walltime since initialization",
+        "ann",
+        "bader",
+        "conf_comp",
+        "dynamics",
+        "fingerprint",
+        "fit_elecpot",
+        "genconf",
+        "geopt",
+        "geopt_prec",
+        "grid info",
+        "inside get_beta_grid",
+        "main",
+        "minhopp",
+        "misc",
+        "mpi finalized",
+        "mpi started",
+        "nthreads",
+        "number of ANN",
+        "potential",
+        "random number generator",
+        "reading structures",
+        "saddle",
+        "saddle_opt",
+        "single_point",
+        "symfunc numbers from input",
+        "system info",
+        "testforces"
+      ]
+    }
+  },
+  "required": [
+    "SLURM",
+    "Timestamp of this run",
+    "duration",
+    "empty string",
+    "flame_in",
+    "flame_log",
+    "index"
+  ]
+}
