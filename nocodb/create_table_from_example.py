@@ -10,6 +10,8 @@ import prepare_json
 from genson import SchemaBuilder
 from jsonschema import validate
 
+from gitlab_webhooks.nocodb import Table
+
 special_columns = [{
     "column_name": "URL",
     "title": "URL",
@@ -131,18 +133,39 @@ def create_table(args: argparse.Namespace):
         #     print(f"    column '{c['title']}' of type {c['uidt']} / {c['dt']}")
 
 
-def add_record(args: argparse.Namespace):
-    # assert args.base is not None
-    # assert args.name is not None
-    if args.validate is not None:
-        print()
+def add_record(args: argparse.Namespace, base: nocodb.Base, table_id: str):
+    assert args.base is not None
+    assert args.table is not None
+    assert args.input is not None
 
+    if args.validate is not None:
+
+        with open(args.input) as f:
+            input = json.load(f)
+        with open(args.validate) as f:
+            schema = json.load(f)
+
+        # Validate will raise exception if given json is not
+        # what is described in schema.
+        res = validate(instance=input, schema=schema)
+        if res is not None:
+            raise Exception(f'dataset is not valid because of the following errors: {res}')
+
+    table = Table(table_id, base=base)
+    input['URL'] = 'url'
+    input['status'] = "current"
+    res = table.insert(input)
+    print('')
 
 # - generate schema, all fields optional except primary key
 # - apply schema and create table
 # - take input file (validate with skip option) and add to an existing table directly (not the default), without data
 # SCHEMA should be by default in the current top directory
 # check dependencies and output error nicely
+# examples:
+# > generateSchema test/DATASET.json
+# > createTable test -b pn5o22efioeuz89 -n "table name"
+# > -v test/SCHEMA.json -b pn5o22efioeuz89 -t mri37qzsk50zoe9 addRecord test/DATASET.json
 
 """
 Read a 'DATASET.json' file and create a matching NocoDB table. 
@@ -171,7 +194,8 @@ if __name__ == '__main__':
                              "3) a dataset to add to an existing table")
     parser.add_argument("-b", "--base", help="Existing Nocodb base id to create the new Table in")
     parser.add_argument("-n", "--name", help="Name for the newly created table")
-    parser.add_argument("-v", "--validate", help="Name for the newly created table")
+    parser.add_argument("-t", "--table", help="Existing Nocodb table id to add a record to")
+    parser.add_argument("-v", "--validate", help="schema to validate it from")
     args = parser.parse_args()
 
     schema = args.schema
@@ -184,7 +208,8 @@ if __name__ == '__main__':
             create_table(args)
 
         case 'addRecord':
-            add_record(args)
+            base = nocodb.Base(args.base, host=nocodb_host, auth_token=nocodb_token)
+            add_record(args, base, args.table)
 
     # "id": "clvxk44a3kswa8f",
     #             "source_id": "b71a3kuda2ljzuq",
