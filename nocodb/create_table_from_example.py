@@ -10,7 +10,6 @@ import prepare_json
 from genson import SchemaBuilder
 from jsonschema import validate
 
-from gitlab_webhooks.nocodb import Table
 
 special_columns = [{
     "column_name": "URL",
@@ -151,7 +150,7 @@ def add_record(args: argparse.Namespace, base: nocodb.Base, table_id: str):
         if res is not None:
             raise Exception(f'dataset is not valid because of the following errors: {res}')
 
-    table = Table(table_id, base=base)
+    table = nocodb.Table(table_id, base=base)
     input['URL'] = 'url'
     input['status'] = "current"
     res = table.insert(input)
