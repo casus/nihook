@@ -76,7 +76,7 @@ def generate(args: argparse.Namespace):
 
         builder.add_object(input)
 
-    schema = builder.to_json(indent=2)
+    schema = builder.to_json(indent=4)
     schema_dir = input_file.rpartition("/")[0]
 
     f = open(f"{schema_dir}/SCHEMA.json", "w")
@@ -133,10 +133,10 @@ def create_table(args: argparse.Namespace):
 
 
 def add_record(args: argparse.Namespace, base: nocodb.Base, table_id: str):
-    assert args.base is not None
     assert args.table is not None
     assert args.input is not None
 
+    input= {}
     if args.validate is not None:
 
         with open(args.input) as f:
@@ -150,7 +150,11 @@ def add_record(args: argparse.Namespace, base: nocodb.Base, table_id: str):
         if res is not None:
             raise Exception(f'dataset is not valid because of the following errors: {res}')
 
-    table = nocodb.Table(table_id, base=base)
+    nocodb_host = os.getenv('NOCODB_HOST', 'http://localhost')
+    nocodb_token = os.getenv('NOCODB_TOKEN', 'none')
+    table = nocodb.Table( table_id, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
+    # table = nocodb.Table(table_id, verify=nocodb_ssl_cert)
+
     input['URL'] = 'url'
     input['status'] = "current"
     res = table.insert(input)
@@ -175,6 +179,9 @@ It will insert **one** additional key "URL" which also serves as the primary key
 """
 
 if __name__ == '__main__':
+
+    print("DEPRECATED, stop")
+    sys.exit(-9)
 
     check_package('genson')
     check_package('jsonschema')
@@ -207,7 +214,7 @@ if __name__ == '__main__':
             create_table(args)
 
         case 'addRecord':
-            base = nocodb.Base(args.base, host=nocodb_host, auth_token=nocodb_token)
+            base = ""
             add_record(args, base, args.table)
 
     # "id": "clvxk44a3kswa8f",
