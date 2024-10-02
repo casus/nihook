@@ -7,8 +7,6 @@ import argparse
 
 import nocodb
 import prepare_json
-from genson import SchemaBuilder
-from jsonschema import validate
 
 
 special_columns = [{
@@ -36,8 +34,6 @@ special_columns = [{
 
 
 def parse_and_append_column_metadata(columns: [], k: str, v: dict):
-
-    print("    parse_and_append_column_metadata: ", k, " --> ", v)
 
     if len(v) == 1:
 
