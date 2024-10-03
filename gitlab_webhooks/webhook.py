@@ -127,7 +127,7 @@ def webhook_push():
         gitlab_access_token= "none"
 
     if "none" == gitlab_access_token:
-        print("WARNING: no GITLAB_ACCESS_TOKEN given as environment variable, abort here")
+        print("WARNING: no GITLAB_ACCESS_TOKEN given in local file 'gitlab.projects', abort here")
         return False
 
     # create gitlab connection object only once
@@ -158,11 +158,15 @@ def webhook_push():
             print(f"        {action}: ", len(c[action]))
             for filename in c[action]:
 
+                log.debug(f"Handle: {filename} {action}")
+
                 dirname, basename= os.path.split(filename)
                 if basename in SPECIAL_FILENAMES:
                     print(f"            handle {dirname} {basename}")
-                    process_files_from_gitlab.process_special_files( action, 
+                    res= process_files_from_gitlab.process_special_files( action, 
                         gitlab_project, projecturl, ref, commit_before, commit_after, dirname, basename, table )
+
+                    log.debug(f"Result: {res}")
 
     log.debug("END: webhook_push() finished successfully")
     return jsonify('no errors'), 200
