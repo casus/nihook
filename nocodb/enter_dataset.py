@@ -6,7 +6,7 @@ import os
 import sys
 
 import prepare_json
-from nocodb_.nocodb import Base, Table
+import nocodb
 
 """
 Read one ore more 'DATASET.json' files and add it's contents to an existing NocoDB table
@@ -14,8 +14,12 @@ Read one ore more 'DATASET.json' files and add it's contents to an existing Noco
 
 if __name__ == '__main__':
 
+    print("BROKEN, stop")
+    sys.exit(-9)
+
     nocodb_host = os.getenv('NOCODB_HOST', 'http://localhost')
     nocodb_token = os.getenv('NOCODB_TOKEN', 'none')
+    nocodb_ssl_cert = os.getenv('NOCODB_SSL_CERT', True)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("inputs", nargs='+', help="Input JSON files")
@@ -24,57 +28,25 @@ if __name__ == '__main__':
                         help="Prefix to the URL field which is usually the host part of the URL but can be any prefix string")
     args = parser.parse_args()
 
-    inputfile = args.input
-    print("Input file ", inputfile)
+    tableid = args.table
+    table = nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
 
-    with open(inputfile, "r") as f:
-        input = json.load(f)
+    for f in args.inputs:
 
-    data = prepare_json.prepare_input(input)
+        print("Read ", f)
+        with open(f) as ff:
 
-    tableid = None
+            input = json.load(ff)
 
-    if args.table:
+            # set special extra fields:
+            extra= {}
+            extra['URL']= "https://codebase.helmholtz.cloud/knue/esa-hubble-picture-of-the-week.datalad/project/"
+            extra['status']= "current"
+            extra['branch']= "blahblah"
 
-        tableid = args.table
-        print("Nocodb table ", args.table)
+            data = prepare_json.prepare_input( input, extra=extra )
 
-    else:
-
-        print("No table given")
-
-        if args.base:
-
-            table_name = None
-            if args.name:
-                table_name = args.name
-            else:
-                print("No name for new table given, abort")
-                sys.exit(-1)
-
-            baseid = args.base
-            print("Nocodb base ", baseid)
-            print(f"... create new table '{table_name}' in base {baseid}")
-
-            # prepare column definition
-            columns = prepare_json.derive_table_columns_definition(data)
-            print(json.dumps(columns, indent=4))
-
-            # actually create the new table
-            base = Base(baseid, host=nocodb_host, auth_token=nocodb_token)
-            tableid = base.create_table(table_name, columns, color="#e6f253")
-
-        else:
-
-            for f in args.inputs:
-                print("insert file ", f)
-
-                with open(f, "r") as file:
-                    table = Table(tableid, host=nocodb_host, auth_token=nocodb_token)
-
-                    data = prepare_json.prepare_input(input, url=args.prefix + f)
-
-                    print(f"Enter input from {f} into table {args.table}")
-
-                    res = table.insert(data)
-                    print("    RESULT: ", json.dumps(res, indent=4))
+            print(f"Enter input from {f} into table {args.table}")
+            print(f"        insert: ", json.dumps(data, indent=4) )
+            res = table.insert(data)
+            print("    RESULT: ", json.dumps(res, indent=4))
