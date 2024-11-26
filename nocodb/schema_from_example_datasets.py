@@ -67,15 +67,16 @@ def is_datetime(string, fuzzy=False):
 # identiacally or at least similarly structured
 class SchemaGenerator:
 
-    template= '{"$schema": "http://json-schema.org/schema#",\n"type": "object",\n"properties": {}\n}'
+    template= '{"$schema": "http://json-schema.org/schema#", "type": "object", "properties": {}, "required": [], "count": {} }'
 
     schema= json.loads( template )
 
     def __init__(self):
-        print("Init: ")
-        print( json.dumps(self.schema) )
-        print("Done init ")
+        self.num= 0
 
+    # recursively go through JSON input files and enter all keys with their types into the schema
+    # use temporary dict 'count' to count how often each key appeared 
+    # ... use this later to identify "required" and "not required" keys
     def recursiveScan( self, input_json, output_schema ):
 
         if not "type" in output_schema:
@@ -83,6 +84,9 @@ class SchemaGenerator:
 
         if not "properties" in output_schema:
             print("WARNING: no \"properties\" in (sub)schema")
+
+        if not "required" in output_schema:
+            print("WARNING: no \"required\" in (sub)schema")
 
         for k,v in input_json.items():
 
@@ -93,8 +97,10 @@ class SchemaGenerator:
             if  type(v) is dict:
 
                 if k not in output_schema['properties']:
-                    output_schema['properties'].update( { k : { "type": "object", "properties": {} } } )
+                    output_schema['properties'].update( { k : { "type": "object", "properties": {}, "required": [], "count": {} } } )
+                    output_schema['count'].update( { k : 1 } )
                 else:
+                    output_schema['count'][k] += 1
                     if output_schema['properties'][k]["type"] != "object":
                         print( f"WARNING: type mismatch for key '{k}' where 'object' != ", output_schema['properties'][k]["type"] )
 
@@ -123,7 +129,9 @@ class SchemaGenerator:
 
                     if k not in output_schema['properties']:
                         output_schema['properties'].update( { k : { "type": "array", "items": { "type": typename } } } )
+                        output_schema['count'].update( { k : 1 } )
                     else:
+                        output_schema['count'][k] += 1
                         if output_schema['properties'][k]["type"] != "array":
                             print( f"WARNING: type mismatch for key '{k}' where 'object' != ", output_schema['properties'][k]["type"] )
                         if output_schema['properties'][k]["items"]["type"] != typename:
@@ -133,7 +141,9 @@ class SchemaGenerator:
 
                     if k not in output_schema['properties']:
                         output_schema['properties'].update( { k : { "type": "array" } } )
+                        output_schema['count'].update( { k : 1 } )
                     else:
+                        output_schema['count'][k] += 1
                         if output_schema['properties'][k]["type"] != "array":
                             print( f"WARNING: type mismatch for key '{k}' where 'object' != ", output_schema['properties'][k]["type"] )
 
@@ -146,7 +156,9 @@ class SchemaGenerator:
 
                 if k not in output_schema['properties']:
                     output_schema['properties'].update( { k : { "type": "integer" } } )
+                    output_schema['count'].update( { k : 1 } )
                 else:
+                    output_schema['count'][k] += 1
                     if output_schema['properties'][k]["type"] != "integer":
                         print( f"WARNING: type mismatch for key '{k}' where 'integer' != ", output_schema['properties'][k]["type"] )
 
@@ -156,7 +168,9 @@ class SchemaGenerator:
 
                 if k not in output_schema['properties']:
                     output_schema['properties'].update( { k : { "type": "number" } } )
+                    output_schema['count'].update( { k : 1 } )
                 else:
+                    output_schema['count'][k] += 1
                     if output_schema['properties'][k]["type"] != "number":
                         print( f"WARNING: type mismatch for key '{k}' where 'number' != ", output_schema['properties'][k]["type"] )
 
@@ -177,47 +191,62 @@ class SchemaGenerator:
 
                     newentry= { "type": "string", "subtype": "DateTime" }
 
-
                 if k not in output_schema['properties']:
                     output_schema['properties'].update( { k : newentry } )
+                    output_schema['count'].update( { k : 1 } )
                 else:
+                    output_schema['count'][k] += 1
                     if output_schema['properties'][k] != newentry:
                         print( f"WARNING: type mismatch for string key '{k}' where {newentry} != ", output_schema['properties'][k] )
 
                 continue
 
             print( "unhandled type ", type(v) )
+        return 1
 
     def addJsonObject( self, object ):
 
-        self.recursiveScan( object, self.schema )
+        if self.num < 0:
+            print("ERROR: cannot add more JSON objects, SCHEMA already finalized, abort")
+            return
 
+        self.num += self.recursiveScan( object, self.schema )
+
+    # go through schema and mark all keys as required which appeared in all input objects,
+    # this have count == self.num
+    def finalizeSchema( self, output_schema, num ):
+
+        if not "type" in output_schema:
+            print("WARNING: no \"type\" in (sub)schema")
+
+        if not "properties" in output_schema:
+            print("WARNING: no \"properties\" in (sub)schema")
+
+        if not "required" in output_schema:
+            print("WARNING: no \"required\" in (sub)schema")
+
+        if not "count" in output_schema:
+            print("WARNING: no \"count\" in (sub)schema")
+
+        for k,v in output_schema['properties'].items():
+
+            if output_schema['count'][k] == num:
+                output_schema['required'].append(k)
+
+            if type(v) is dict and v["type"] == "object":
+                self.finalizeSchema( output_schema['properties'][k], num )
+
+        # remove the counters
+        output_schema.pop("count",None)
+
+
+    # this destroys the internal counts, don't use addJsonObject after this again
     def getSchema( self ):
+
+        self.finalizeSchema( self.schema, self.num )
+        self.num= -1 # diable further addJsonObject() calls
+
         return self.schema
-
-
-
-def parse_and_append_column_metadata(columns: [], k: str, v: dict):
-    if len(v) == 1:
-        type = v['type']
-        match type:
-            case 'string':
-                prepare_json.append_column_metadata(columns, k, '')
-            case 'integer':
-                prepare_json.append_column_metadata(columns, k, 0)
-            case 'boolean':
-                prepare_json.append_column_metadata(columns, k, False)
-            case 'number':
-                prepare_json.append_column_metadata(columns, k, 0.0)
-            case _:
-                raise Exception(f'unknown column type{type}')
-    else:
-        if len(v) == 2 and 'type' in v and 'items' in v:
-            prepare_json.append_column_metadata(columns, k, [])
-        else:
-            root = k
-            for k, v in v['properties'].items():
-                parse_and_append_column_metadata(columns, f'{root}.{k}', v)
 
 
 def check_schema( schema ):
@@ -313,6 +342,7 @@ if __name__ == '__main__':
                 generator.addJsonObject(input)
 
         schemanew= generator.getSchema()
+        check_schema( schemanew )
 
         f = open("SCHEMA.new.json", "w")
         f.write(json.dumps(schemanew, indent=4))
