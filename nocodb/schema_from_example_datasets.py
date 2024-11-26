@@ -10,10 +10,59 @@ import prepare_json
 from genson import SchemaBuilder
 from jsonschema import validate
 
+import pandas
+import dateutil.parser
+
 # TODO replace genson and remove jsonschema in order to:
 # - to make this script self-contained so that ony copy it to datalad repos
 # - we can detect and mark special string types such as datatime strings
 #   ... to create NOCODB table columns accordingly, JSON SCHEMAS don't support this
+
+""" 
+Helper function to check if a string contains time duration. Test this before is_datetime() because that 
+may also answer something but will use the currect day with the time duration as point in time.
+"""
+def is_time_duration(string):
+    try:
+        # use pandas datetime parser because it also handles nanoseconds
+        result = pandas.to_datetime(string, format='%H:%M:%S.%f', errors='raise')
+        return pandas.Timedelta(days=0,
+                                hours=result.hour, minutes=result.minute, seconds=result.second,
+                                microseconds=result.microsecond, nanoseconds=result.nanosecond)
+
+    except ValueError:
+        pass
+
+    try:
+        # same but with no second decimals
+        # use pandas datetime parser because it also handles nanoseconds
+        result = pandas.to_datetime(string, format='%H:%M:%S', errors='raise')
+        return pandas.Timedelta(days=0,
+                                hours=result.hour, minutes=result.minute, seconds=result.second,
+                                microseconds=result.microsecond, nanoseconds=result.nanosecond)
+
+    except ValueError:
+        pass
+
+    return None
+
+
+""" 
+Helper function to check if a string contains datetime
+"""
+def is_datetime(string, fuzzy=False):
+    """
+    Return whether the string can be interpreted as a date.
+
+    :param string: str, string to check for date
+    :param fuzzy: bool, ignore unknown tokens in string if True
+    """
+    try:
+        result = dateutil.parser.parse(string, fuzzy=fuzzy)
+        return result
+
+    except ValueError:
+        return None
 
 # Generate a JSON SCHEMA from several JSCON objects which are
 # identiacally or at least similarly structured
@@ -29,8 +78,6 @@ class SchemaGenerator:
         print("Done init ")
 
     def recursiveScan( self, input_json, output_schema ):
-
-        print("recursiveScan")
 
         if not "type" in output_schema:
             print("WARNING: no \"type\" in (sub)schema")
@@ -107,7 +154,7 @@ class SchemaGenerator:
                 continue
 
             if  type(v) is float:
-    
+
                 if k not in output_schema['properties']:
                     output_schema['properties'].update( { k : { "type": "number" } } )
                 else:
@@ -117,23 +164,32 @@ class SchemaGenerator:
                 continue
 
 
-
-
-
             # handle string types with special sub types, no recursion here
 
             if  type(v) is str:
 
+                newentry= { "type": "string" }
+
+                if time_duration := is_time_duration(v):
+
+                    newentry= { "type": "string", "subtype": "Duration" }
+
+                elif datetime := is_datetime(v):
+
+                    newentry= { "type": "string", "subtype": "DateTime" }
+
+
                 if k not in output_schema['properties']:
-                    output_schema['properties'].update( { k : { "type": "string" } } )
+                    output_schema['properties'].update( { k : newentry } )
+                else:
+                    if output_schema['properties'][k] != newentry:
+                        print( f"WARNING: type mismatch for string key '{k}' where {newentry} != ", output_schema['properties'][k] )
 
                 continue
-
 
             print( "unhandled type ", type(v) )
 
     def addJsonObject( self, object ):
-        print("add a json object")
 
         self.recursiveScan( object, self.schema )
 

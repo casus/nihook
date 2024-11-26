@@ -13,8 +13,6 @@ Prepare JSON metadata from a 'DATASET.json' file before it can be entered to Noc
 Helper function to check if a string contains time duration. Test this before is_datetime() because that 
 may also answer something but will use the currect day with the time duration as point in time.
 """
-
-
 def is_time_duration(string):
     try:
         # use pandas datetime parser because it also handles nanoseconds
@@ -43,8 +41,6 @@ def is_time_duration(string):
 """ 
 Helper function to check if a string contains datetime
 """
-
-
 def is_datetime(string, fuzzy=False):
     """
     Return whether the string can be interpreted as a date.
