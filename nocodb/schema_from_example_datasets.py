@@ -7,7 +7,6 @@ import argparse
 
 import nocodb
 import prepare_json
-from genson import SchemaBuilder
 from jsonschema import validate
 
 import pandas
@@ -303,7 +302,6 @@ if __name__ == '__main__':
 
     else:
 
-        builder = SchemaBuilder()
         generator= SchemaGenerator()
 
         for input_file in args.input:
@@ -312,16 +310,7 @@ if __name__ == '__main__':
 
             with open(input_file, "r") as f:
                 input = json.load(f)
-                builder.add_object(input)
                 generator.addJsonObject(input)
-
-        schema = builder.to_json(indent=4)
-        check_schema( json.loads(schema) )
-
-        f = open("SCHEMA.json", "w")
-        f.write(schema)
-        f.close()
-
 
         schemanew= generator.getSchema()
 
