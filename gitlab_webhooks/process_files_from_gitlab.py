@@ -19,6 +19,7 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
         return False
 
     ref_prefix, ref_suffix= os.path.split(ref)
+    branch= ref_suffix
 
     # when DATASET.json was added, then read it and add a new row to the Nocodb table 
     if 'added' == operation:
@@ -33,9 +34,11 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
         url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
         # print("URL= ",url)
 
-        data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current" } )
+        data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current", 'branch': branch } )
         res= table.insert(data)
-        return res
+        print("inserted res: ", res)
+
+        # return res
 
 
     if 'modified' == operation:
@@ -67,30 +70,32 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
             # assume that there can be only one DATASET.json or maybe other special file names (!) in the dir
             old_record['URL']= projecturl + "/-/tree/" + commit_before + "/" + dirname
             old_record['status']= 'replaced'
+            old_record['branch']= branch
 
             # remove Nocodb's system fields
             old_record.pop('CreatedAt')
             old_record.pop('UpdatedAt')
 
             res= table.insert(old_record)
-            # print("inserted res: ", res)
+            print("inserted res: ", res)
 
             # if an existing entry was present, then change it according to the new data
             # let the 'index.id' hash unchanged if it was not changed in the 'DATASET.json' 
             # so one can track which changed versions belong together
-            data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current" } )
+            data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current", 'branch': branch } )
 
             res= table.update(data)
-            # print("updated res: ", res)
+            print("updated res: ", res)
 
         else:
 
             # if no existing entry was present, then add the new entry
 
-            data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current" } )
+            data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current", 'branch': branch } )
             res= table.insert(data)
+            print("inserted res: ", res)
 
-        return True
+    return True
 
 
     # when DATASET.json was removed, then 
@@ -130,7 +135,10 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
         old_record.pop('UpdatedAt')
 
         res= table.insert(old_record)
+        print("inserted res: ", res)
+
         res= table.delete( { "URL": old_url } )
+        print("deleted res: ", res)
 
         return True
 
