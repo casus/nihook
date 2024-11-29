@@ -319,6 +319,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate a JSON schema from multiple DATASET.json example files')
     parser.add_argument("input", nargs='+', default=None,
         help="Input files must be DATASET.json files as generated from the use-case specific metadata extraction scripts")
+    parser.add_argument("-o", "--output", default="SCHEMA.json", help="Output schema file, default 'SCHEMA.json")
     parser.add_argument("-v", "--validate", help="Don't generate but validate all input files against an existing schema")
     args = parser.parse_args()
 
@@ -355,7 +356,7 @@ if __name__ == '__main__':
         schemanew= generator.getSchema()
         check_schema( schemanew )
 
-        f = open("SCHEMA.new.json", "w")
+        f = open(args.output, "w")
         f.write(json.dumps(schemanew, indent=4))
         f.close()
 
