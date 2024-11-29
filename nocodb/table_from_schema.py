@@ -35,37 +35,44 @@ special_columns = [{
 
 def parse_and_append_column_metadata(columns: [], k: str, v: dict):
 
-    if len(v) == 1:
+    if 'type' not in v:
 
-        if 'type' in v:
+        print("ERROR: 'type' not given, abort")
+        sys.exit(-12)
 
-            type = v['type']
-            match type:
-                case 'string':
-                    prepare_json.append_column_metadata(columns, k, '')
-                case 'integer':
-                    prepare_json.append_column_metadata(columns, k, 0)
-                case 'boolean':
-                    prepare_json.append_column_metadata(columns, k, False)
-                case 'number':
-                    prepare_json.append_column_metadata(columns, k, 0.0)
-                case 'array':
-                    prepare_json.append_column_metadata(columns, k, [])
-                case _:
-                    raise Exception(f'unknown column type{type}')
+    type= v['type']
+    subtype= ""
+    if 'subtype' in v:
+        subtype= v['subtype']
 
-        elif 'anyOf' in v:
+    if 'anyOf' in v or 'anyOf' == type:
 
-            # this is an selection of types it could be -- force it to string
-            prepare_json.append_column_metadata(columns, k, '')
+        # this is an selection of types it could be
+        print(f"WARNING: conflicting types for key {k}, mapping to string, this may cause issues")
 
-    else:
-        if len(v) == 2 and 'type' in v and 'items' in v:
-            prepare_json.append_column_metadata(columns, k, [])
-        else:
-            root = k
-            for k, v in v['properties'].items():
-                parse_and_append_column_metadata(columns, f'{root}.{k}', v)
+        # force it to string -- likely to cause trouble down the road
+        prepare_json.add_column_definition(columns, k, "string", "" )
+
+    if 'type' in v:
+
+        type = v['type']
+        subtype= ""
+        if 'subtype' in v:
+            subtype= v['subtype']
+
+
+        if "object" == type:
+
+            # nested object, handle recursively
+            assert 'properties' in v
+
+            for kk, vv in v['properties'].items():
+                parse_and_append_column_metadata(columns, f'{k}.{kk}', vv)
+
+        else: # all other types and array []
+
+            prepare_json.add_column_definition(columns,k,type,subtype)
+
 
 def check_package(pkg: str):
     if pkg in sys.modules:
@@ -81,14 +88,16 @@ def check_package(pkg: str):
         print(f"can't find the {pkg!r} module, please install it")
 
 
-def create_table( base, name, schema ):
-    assert args.base is not None
-    assert args.name is not None
+def schema_to_nocodb_definition( base, name, schema ):
+
+    assert base is not None
+    assert name is not None
 
     columns = []
 
     # prepare column definition
     for k, v in schema['properties'].items():
+        print(f"KEY {k}")
         parse_and_append_column_metadata(columns, k, v)
 
     # add "URL" as extra column and as a primary key
@@ -113,13 +122,19 @@ def create_table( base, name, schema ):
 
     columns = special_columns + columns
 
-    # print(json.dumps(columns, indent=4))
+    return columns
 
-    # actually create the new table
-    base = nocodb.Base(args.base, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert)
-    table_id = base.create_table(args.name, columns)
+
+def create_new_table( base, name, columns ):
+
+    assert base is not None
+    assert name is not None
+
+    base = nocodb.Base(base, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert)
+    table_id = base.create_table(name, columns)
 
     if table_id:
+
         # print(f"new table {table_id} with columns:")
 
         table = nocodb.Table(table_id, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert)
@@ -130,15 +145,11 @@ def create_table( base, name, schema ):
         #     print(f"    column '{c['title']}' of type {c['uidt']} / {c['dt']}")
 
 
-
 """
 Create a new NOCODB table from an existing JSON schema file
 """
 
 if __name__ == '__main__':
-
-    check_package('genson')
-    check_package('jsonschema')
 
     nocodb_host = os.getenv('NOCODB_HOST', 'http://localhost')
     nocodb_token = os.getenv('NOCODB_TOKEN', 'none')
@@ -148,10 +159,20 @@ if __name__ == '__main__':
     parser.add_argument("schema", help="Existing JSON schema file as template for the NOCODB table")
     parser.add_argument("-b", "--base", help="Existing Nocodb base id to create the new Table in")
     parser.add_argument("-n", "--name", help="Name for the newly created table")
+    parser.add_argument("-d", "--dryrun", action='store_true', help="Evaluate schema but don't create table")
     args = parser.parse_args()
 
     schema= {}
     with open(args.schema, "r") as f:
         schema= json.load(f)
 
-    create_table( args.base, args.name, schema )
+    columns= schema_to_nocodb_definition( args.base, args.name, schema )
+ 
+    if not args.dryrun:
+
+        create_new_table( args.base, args.name, columns )
+
+    else:
+
+        print("Dryrun, this is what I would send to Nocodb: ")
+        print(json.dumps(columns, indent=4))

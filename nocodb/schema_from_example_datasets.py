@@ -101,7 +101,7 @@ class SchemaGenerator:
                     output_schema['count'].update( { k : 1 } )
                 else:
                     output_schema['count'][k] += 1
-                    if output_schema['properties'][k]["type"] != "object":
+                    if output_schema['properties'][k]['type'] != "object":
                         print( f"WARNING: type mismatch for key '{k}' where 'object' != ", output_schema['properties'][k]["type"] )
 
                 self.recursiveScan( input_json[k], output_schema['properties'][k] )
@@ -132,10 +132,10 @@ class SchemaGenerator:
                         output_schema['count'].update( { k : 1 } )
                     else:
                         output_schema['count'][k] += 1
-                        if output_schema['properties'][k]["type"] != "array":
-                            print( f"WARNING: type mismatch for key '{k}' where 'object' != ", output_schema['properties'][k]["type"] )
-                        if output_schema['properties'][k]["items"]["type"] != typename:
-                            print( f"WARNING: type mismatch for key '{k}' array type where '{typename}' != ", output_schema['properties'][k]["items"]["type"] )
+                        if output_schema['properties'][k]['type'] != "array":
+                            print( f"WARNING: type mismatch for key '{k}' where 'object' != ", output_schema['properties'][k]['type'] )
+                        if output_schema['properties'][k]['items']['type'] != typename:
+                            print( f"WARNING: type mismatch for key '{k}' array type where '{typename}' != ", output_schema['properties'][k]['items']['type'] )
 
                 else: # empty array
 
@@ -144,8 +144,8 @@ class SchemaGenerator:
                         output_schema['count'].update( { k : 1 } )
                     else:
                         output_schema['count'][k] += 1
-                        if output_schema['properties'][k]["type"] != "array":
-                            print( f"WARNING: type mismatch for key '{k}' where 'object' != ", output_schema['properties'][k]["type"] )
+                        if output_schema['properties'][k]['type'] != "array":
+                            print( f"WARNING: type mismatch for key '{k}' where 'object' != ", output_schema['properties'][k]['type'] )
 
                 continue
 
@@ -159,8 +159,8 @@ class SchemaGenerator:
                     output_schema['count'].update( { k : 1 } )
                 else:
                     output_schema['count'][k] += 1
-                    if output_schema['properties'][k]["type"] != "integer":
-                        print( f"WARNING: type mismatch for key '{k}' where 'integer' != ", output_schema['properties'][k]["type"] )
+                    if output_schema['properties'][k]['type'] != "integer":
+                        print( f"WARNING: type mismatch for key '{k}' where 'integer' != ", output_schema['properties'][k]['type'] )
 
                 continue
 
@@ -171,8 +171,8 @@ class SchemaGenerator:
                     output_schema['count'].update( { k : 1 } )
                 else:
                     output_schema['count'][k] += 1
-                    if output_schema['properties'][k]["type"] != "number":
-                        print( f"WARNING: type mismatch for key '{k}' where 'number' != ", output_schema['properties'][k]["type"] )
+                    if output_schema['properties'][k]['type'] != "number":
+                        print( f"WARNING: type mismatch for key '{k}' where 'number' != ", output_schema['properties'][k]['type'] )
 
                 continue
 
@@ -186,19 +186,30 @@ class SchemaGenerator:
                 if time_duration := is_time_duration(v):
 
                     newentry= { "type": "string", "subtype": "Duration" }
+                    # print(f"DEBUG: {v} interpreted as a duration")
 
                 elif datetime := is_datetime(v):
 
                     newentry= { "type": "string", "subtype": "DateTime" }
+                    # print(f"DEBUG: {v} interpreted as a datetime")
 
                 if k not in output_schema['properties']:
                     output_schema['properties'].update( { k : newentry } )
                     output_schema['count'].update( { k : 1 } )
                 else:
                     output_schema['count'][k] += 1
-                    if output_schema['properties'][k] != newentry:
+                    if output_schema['properties'][k]['type'] != "string":
+
                         print( f"WARNING: type mismatch for string key '{k}' where {newentry} != ", output_schema['properties'][k] )
 
+                    else:
+
+                        if output_schema['properties'][k] != newentry:
+
+                            ## this is not an issue to report
+                            #print( f"WARNING: sub-type mismatch for string key '{k}' where {newentry} != ", output_schema['properties'][k], " --> revert to plain string" )
+
+                            output_schema['properties'][k]['subtype']= ""
                 continue
 
             print( "unhandled type ", type(v) )

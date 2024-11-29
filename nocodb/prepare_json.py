@@ -113,6 +113,7 @@ def prepare_input(input, extra=None):
 
     return data
 
+# DEPRECATED
 def append_column_metadata(columns, k, v):
     if type(v) is int:
 
@@ -245,6 +246,140 @@ def append_column_metadata(columns, k, v):
         print("    ", k, " --> type ", type(v), " example ", v)
         print("handle unknown, abort")
         sys.exit(-2)
+
+def add_column_definition( columns, k, type, subtype="" ):
+
+    if "integer" == type :
+
+        # print("    ", k, " --> type ", type(v), " example ", v)
+        # print("handle int")
+        columns.append(
+            {
+                "column_name": k,
+                "title": k,
+                "uidt": "Number",
+                "dt": "int",
+                "un": False
+            })
+
+    elif "number" == type: # float
+
+        # print("    ", k, " --> type ", type(v), " example ", v)
+        # print("handle float or decimal")
+        columns.append(
+            {
+                "column_name": k,
+                "title": k,
+                "uidt": "Number",
+                "dt": "float8",
+                "un": False
+            })
+
+    elif "string" == type:
+
+        # print("    ", k, " --> type ", type(v), " example ", v)
+
+        # several different cases here
+
+        if "Duration" == subtype:
+
+            # print("handle string -- duration")
+            # print("    found duration ", time_duration, " from ", v)
+
+            columns.append(
+                {
+                    "column_name": k,
+                    "title": k,
+                    "uidt": "Duration",
+                    "dt": "decimal",
+                    "un": False
+                })
+
+        elif "DateTime" == subtype:
+
+            # print("handle string -- datetime")
+            # print("    found datetime ", datetime, " from ", v)
+            columns.append(
+                {
+                    "column_name": k,
+                    "title": k,
+                    "uidt": "DateTime",
+                    "dt": "timestamp",
+                    "un": False
+                })
+
+        elif "URL" == subtype:
+
+            # print("handle string -- url")
+            # print("    found datetime ", datetime, " from ", v)
+            columns.append(
+                {
+                    "column_name": k,
+                    "title": k,
+                    "uidt": "URL",
+                    "dt": "character varying",
+                    "un": False
+                })
+        else:
+
+            # print("handle string -- generic")
+            columns.append(
+                {
+                    "column_name": k,
+                    "title": k,
+                    "uidt": "SingleLineText",
+                    "dt": "character varying",
+                    "un": False
+                })
+
+    elif "boolean" == type:
+
+        # print("    ", k, " --> type ", type(v), " example ", v)
+        # print("handle bool")
+        columns.append(
+            {
+                "column_name": k,
+                "title": k,
+                "uidt": "Checkbox",
+                "dt": "bool",
+                "un": False
+            })
+
+    elif "array" == type:
+
+        # print("    ", k, " --> type ", type(v), " example ", v)
+        # print("handle list")
+        columns.append(
+            {
+                "column_name": k,
+                "title": k,
+                "uidt": "JSON",
+                "dt": "json",
+                "un": False
+            })
+
+    elif v is None:
+
+        # special case NoneType -- handle as string
+
+        # print("handle NoneType as string")
+        columns.append(
+            {
+                "column_name": k,
+                "title": k,
+                "uidt": "SingleLineText",
+                "dt": "character varying",
+                "un": False
+            })
+
+    else:
+
+        ## no not cover {} above because those should have been resolved by 'flatten_keys()'
+
+        print("    ", k, " --> type ", type(v), " example ", v)
+        print("handle unknown, abort")
+        sys.exit(-2)
+
 
 def derive_table_columns_definition(data):
     columns = []
