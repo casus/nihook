@@ -35,6 +35,10 @@ special_columns = [{
 
 def parse_and_append_column_metadata(columns: [], k: str, v: dict):
 
+    # replace spaces in keys
+    k_nice= k.replace(' ', '_')
+    print("    NICE ", k_nice)
+
     if 'type' not in v:
 
         print("ERROR: 'type' not given, abort")
@@ -51,7 +55,7 @@ def parse_and_append_column_metadata(columns: [], k: str, v: dict):
         print(f"WARNING: conflicting types for key {k}, mapping to string, this may cause issues")
 
         # force it to string -- likely to cause trouble down the road
-        prepare_json.add_column_definition(columns, k, "string", "" )
+        prepare_json.add_column_definition(columns, k_nice, "string", "" )
 
     if 'type' in v:
 
@@ -71,7 +75,7 @@ def parse_and_append_column_metadata(columns: [], k: str, v: dict):
 
         else: # all other types and array []
 
-            prepare_json.add_column_definition(columns,k,type,subtype)
+            prepare_json.add_column_definition(columns,k_nice,type,subtype)
 
 
 def check_package(pkg: str):
