@@ -37,7 +37,6 @@ def parse_and_append_column_metadata(columns: [], k: str, v: dict):
 
     # replace spaces in keys
     k_nice= k.replace(' ', '_')
-    print("    NICE ", k_nice)
 
     if 'type' not in v:
 
@@ -101,7 +100,7 @@ def schema_to_nocodb_definition( base, name, schema ):
 
     # prepare column definition
     for k, v in schema['properties'].items():
-        print(f"KEY {k}")
+
         parse_and_append_column_metadata(columns, k, v)
 
     # add "URL" as extra column and as a primary key
