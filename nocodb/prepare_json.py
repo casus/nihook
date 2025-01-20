@@ -358,7 +358,7 @@ def add_column_definition( columns, k, type, subtype="" ):
                 "un": False
             })
 
-    elif v is None:
+    elif "null" == type:
 
         # special case NoneType -- handle as string
 
@@ -376,7 +376,7 @@ def add_column_definition( columns, k, type, subtype="" ):
 
         ## no not cover {} above because those should have been resolved by 'flatten_keys()'
 
-        print("    ", k, " --> type ", type(v), " example ", v)
+        print("    ", k, " --> type ", type)
         print("handle unknown, abort")
         sys.exit(-2)
 
