@@ -1,0 +1,8 @@
+jsonschema>=4.20.0
+numpy>=2.0.0
+pandas>=2.2.2
+python-dateutil
+python-gitlab>=4.7.0
+pytz
+requests
+tzdata
