@@ -14,9 +14,6 @@ Read one ore more 'DATASET.json' files and add it's contents to an existing Noco
 
 if __name__ == '__main__':
 
-    print("BROKEN, stop")
-    sys.exit(-9)
-
     nocodb_host = os.getenv('NOCODB_HOST', 'http://localhost')
     nocodb_token = os.getenv('NOCODB_TOKEN', 'none')
     nocodb_ssl_cert = os.getenv('NOCODB_SSL_CERT', True)
@@ -33,20 +30,20 @@ if __name__ == '__main__':
 
     for f in args.inputs:
 
-        print("Read ", f)
+        print("    Read ", f)
         with open(f) as ff:
 
             input = json.load(ff)
 
             # set special extra fields:
             extra= {}
-            extra['URL']= "https://codebase.helmholtz.cloud/knue/esa-hubble-picture-of-the-week.datalad/project/"
+            extra['URL']= args.prefix + ": " + f 
             extra['status']= "current"
             extra['branch']= "blahblah"
 
             data = prepare_json.prepare_input( input, extra=extra )
 
-            print(f"Enter input from {f} into table {args.table}")
-            print(f"        insert: ", json.dumps(data, indent=4) )
+            #print(f"Enter input from {f} into table {args.table}")
+            #print(f"        insert: ", json.dumps(data, indent=4) )
             res = table.insert(data)
-            print("    RESULT: ", json.dumps(res, indent=4))
+            #print("    RESULT: ", json.dumps(res, indent=4))

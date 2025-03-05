@@ -160,7 +160,18 @@ class SchemaGenerator:
                 else:
                     output_schema['count'][k] += 1
                     if output_schema['properties'][k]['type'] != "integer":
-                        print( f"WARNING: type mismatch for key '{k}' where 'integer' != ", output_schema['properties'][k]['type'] )
+
+                        if output_schema['properties'][k]['type'] == "number":
+
+                            pass # don't warn because the integer of this instance can just as well be covered by 'number'
+
+                        elif output_schema['properties'][k]['type'] == "string":
+
+                            print( f"        HINT: found an 'integer' in a string-type field, accept" )
+
+                        else:
+
+                            print( f"        WARNING: type mismatch for key '{k}' where 'integer' != ", output_schema['properties'][k]['type'] )
 
                 continue
 
@@ -172,10 +183,45 @@ class SchemaGenerator:
                 else:
                     output_schema['count'][k] += 1
                     if output_schema['properties'][k]['type'] != "number":
-                        print( f"WARNING: type mismatch for key '{k}' where 'number' != ", output_schema['properties'][k]['type'] )
+
+                        if output_schema['properties'][k]['type'] == "integer":
+
+                            print( f"        TODO: found a 'number' field where 'integer' was expected -- convert it" )
+
+                        elif output_schema['properties'][k]['type'] == "string":
+
+                            print( f"        HINT: found a 'number' in a string-type field, accept" )
+
+                        else:
+
+                            print( f"        WARNING: type mismatch for key '{k}' where 'number' != ", output_schema['properties'][k]['type'] )
 
                 continue
 
+            if  type(v) is bool:
+
+                if k not in output_schema['properties']:
+                    output_schema['properties'].update( { k : { "type": "boolean" } } )
+                    output_schema['count'].update( { k : 1 } )
+                else:
+                    output_schema['count'][k] += 1
+                    if output_schema['properties'][k]['type'] != "boolean":
+                        print( f"WARNING: type mismatch for key '{k}' where 'boolean' != ", output_schema['properties'][k]['type'] )
+
+                continue
+
+            # test for NoneType
+            if  v is None: 
+
+                if k not in output_schema['properties']:
+                    output_schema['properties'].update( { k : { "type": "null" } } )
+                    output_schema['count'].update( { k : 1 } )
+                else:
+                    output_schema['count'][k] += 1
+                    if output_schema['properties'][k]['type'] != "null":
+                        print( f"WARNING: type mismatch for key '{k}' where 'null' != ", output_schema['properties'][k]['type'] )
+
+                continue
 
             # handle string types with special sub types, no recursion here
 
@@ -212,7 +258,7 @@ class SchemaGenerator:
                             output_schema['properties'][k]['subtype']= ""
                 continue
 
-            print( "unhandled type ", type(v) )
+            print( "unhandled type ", type(v), " for key ", k )
         return 1
 
     def addJsonObject( self, object ):
@@ -289,8 +335,10 @@ def check_schema( schema ):
                         pass
                     case 'array':
                         pass
+                    case 'null':
+                        pass
                     case _:
-                        print(f'unknown column type{type} for key {k}')
+                        print(f'unknown column type {type} for key {k}')
                         result= False
 
             elif 'anyOf' in v:
