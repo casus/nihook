@@ -11,6 +11,33 @@ Flask needs to be in the same venv
 ... or avail globally. (pandas is currently needed and probably not needed in the near future)
 
 
+## Configuration
+
+There are two config files which need to be present: `env.sh` and `gitlab.projects`.
+
+### The `env.sh` file
+
+The env.sh file defines a few environment variables that need to be there for webhook.py. They can also be exported manually. For an example look at `env.sh.template`or:
+
+    export HOOK_HOST="111.22.3.15" # IP adress where the webhook will be listening
+    export HOOK_PORT=5000 # port where the webhook will be listening
+    export NOCODB_TOKEN="somekeywithan_underscoreinside" 
+    export NOCODB_HOST="https://some.nocodb.instance"
+    export NOCODB_SSL_CERT=cert/data_casus_science_interm.cer # location of an addl. SSL cert to use for REST API
+
+
+### The `gitlab.projects` file
+    
+This file makes the gitlab API access key to a project known to thr webhook server. For an example look at `gitlab.projects.template` or:
+
+	{
+    	"https://codebase.helmholtz.cloud/some/gitlab/project": "glpat-1234567890ABCDEFGHIJ",
+    	"https://codebase.helmholtz.cloud/knue/esa-hubble-picture-of-the-week.datalad/project": "glpat-1234567890ABCDEFGHIJ"
+	}
+
+This file must be available when the webhook server starts. After updating a key you need to restart the webhook server (for now).
+
+
 ## Run
 
 Run with all the environment variables defined in `env.sh`, compare `env.sh.template`:
