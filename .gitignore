@@ -6,3 +6,4 @@ nocodb/cert
 auth/auth
 gitlab_webhooks/auth
 gitlab_webhooks/gitlab.projects
+config.yml

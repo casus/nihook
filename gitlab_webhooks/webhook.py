@@ -7,6 +7,8 @@ from flask import Flask, request, jsonify, send_file
 
 import gitlab
 import nocodb
+import yaml
+
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError, SchemaError
@@ -15,7 +17,7 @@ import base64
 from urllib.parse import urlparse
 
 import process_files_from_gitlab
-
+import table_from_schema
 
 METADATA_FILENAME= "DATASET.json"
 SCHEMA_FILENAME= "SCHEMA.json"
@@ -28,6 +30,7 @@ ADMIN_OVERRIDE_MESSAGE= "admin override"
 
 BATCH_SIZE = 100
 
+TABLE_ID = ""
 # base file names that require further processing via the following function
 SPECIAL_FILENAMES= {
     'DATASET.json'
@@ -43,6 +46,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from logging import handlers
 import sys
+from pathlib import Path
 
 import auth
 
@@ -68,6 +72,16 @@ authentication= None
 # dictionary of all known gitlab projects and their access tokens
 gitlab_projects= {}
 
+auth_file_path = Path(__file__).resolve().parent.parent / "auth" / "data" / "auth.json"
+
+
+@app.route('/', methods=['GET'])
+def index():
+    # authentication= auth.Auth(auth_file_path)
+    # authentication.debug()
+    return "I work"
+
+
 @app.route('/webhooks/push', methods=['POST'])
 def webhook_push():
     """
@@ -77,17 +91,21 @@ def webhook_push():
     log.debug("START: webhook_push() called")
     start_time = time.time()
 
+    authentication= auth.Auth(auth_file_path)
+
     headers= request.headers
 
     #print("Headers:")
     #print(headers)
 
-    tableid= headers['Nocodbtableid']
-    user= headers['User']
-    secret= headers['Auth']
+    # tableid= headers['X-Webhook-Nocodbtableid']
+    tableid = TABLE_ID
+    print("Table ID = ", tableid)
+    # user= headers['X-Webhook-User']
+    # secret= headers['X-Webhook-Secret']
 
-    if not authentication.check( user, secret ):
-        return jsonify('authentication failed'), 401 # Although the HTTP standard specifies "unauthorized", semantically this response means "unauthenticated". That is, the client must authenticate itself to get the requested response. 
+    # if not authentication.check( user, secret ):
+    #     return jsonify('authentication failed'), 401 # Although the HTTP standard specifies "unauthorized", semantically this response means "unauthenticated". That is, the client must authenticate itself to get the requested response. 
 
     event = request.get_json()
 
@@ -100,6 +118,7 @@ def webhook_push():
     commit_before= event['before']
     commit_after= event['after']
 
+#   e.g."ref": "refs/heads/master",
     ref= event['ref']
 
     print( "Project : ", project['name'], " id ", project['id'], " previous commit id ", commit_before, " current commit id ", commit_after )
@@ -132,11 +151,11 @@ def webhook_push():
 
     # create gitlab connection object only once
 
-    gl= gitlab.Gitlab( url= gitlab_host, private_token= gitlab_access_token )
-    gitlab_project= gl.projects.get(id=projectid)
-
+    # == It would be better to check nocodb credentials before connecting to gitlab
     # create Nocodb Table object only once becasue the same table will be used anyway
-    nocodb_host = os.getenv('NOCODB_HOST', 'none')
+    port = os.getenv('NOCODB_PORT', '8080')  # Default to 8080
+    nocodb_host = f"http://localhost:{port}"
+
     nocodb_token = os.getenv('NOCODB_TOKEN', 'none')
     nocodb_ssl_cert = os.getenv('NOCODB_SSL_CERT', True) # optional
 
@@ -147,6 +166,10 @@ def webhook_push():
     if 'none' == nocodb_token:
         print("WARNING: no NOCODB_TOKEN given as environment variable, abort here")
         return False
+
+    gl= gitlab.Gitlab( url= gitlab_host, private_token= gitlab_access_token )
+    gitlab_project= gl.projects.get(id=projectid)
+
 
     table= nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
 
@@ -177,15 +200,33 @@ if __name__ == '__main__':
     host = os.getenv('HOOK_HOST', '127.0.0.1')
     port = os.getenv('HOOK_PORT', '5000')
 
-    authentication= auth.Auth("auth")
 
     # read in all known gitlab projects and their access tokens
     gitlab_projects= {}
-    with open("gitlab.projects", 'r') as f:
-        gitlab_projects= json.load(f)
+    with open("config.yml", 'r') as f:
+        config = yaml.safe_load(f)
+    gitlab_projects = config["projects"]
 
     print("Known gitlab projects:")
     for i in gitlab_projects:
         print("    ", i)
+
+
+    nocodb_port = os.getenv('NOCODB_PORT', '8080')  # Default to 8080
+    nocodb_host = f"http://localhost:{nocodb_port}"
+
+    nocodb_token = os.getenv('NOCODB_TOKEN', 'none')
+    nocodb_ssl_cert = os.getenv('NOCODB_SSL_CERT', True) # optional
+
+    base_id = os.getenv("BASE_ID", "none")
+    schema= {}
+    script_dir = Path(__file__).parent
+    file_path = script_dir / "SCHEMA.json"
+    with open(file_path, "r") as f:
+        schema= json.load(f)
+    
+    TABLE_ID = table_from_schema.create_new_table_from_schema(nocodb_host, nocodb_token, nocodb_ssl_cert, base_id, "Default-Table", schema)
+    print("New table was created!")
+
 
     app.run(host=host, port=int(port))

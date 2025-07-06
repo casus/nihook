@@ -13,7 +13,7 @@ class Auth:
     '''
     Init from a JSON file
     '''
-    def __init__(self, filename : str = "auth" ):
+    def __init__(self, filename : str = "auth.json" ):
 
         self.auth={}
         self.filename=filename
@@ -23,22 +23,34 @@ class Auth:
                 self.auth= json.load(f)
         except FileNotFoundError:
             print(f"New auth file {filename}")
+            with open(filename, "w") as f:
+                json.dump(self.auth, f, indent=4)
 
 
     def debug(self):
         print("Know users: ")
         for u in self.auth:
             print(f"    {u}")
+    
+
+    def list_users(self):
+        if not self.auth:
+            print("📭 No users found.")
+            return
+        print("\n📋 Existing users:")
+        for u in self.auth:
+            print(f"    {u}")
+        print()
 
 
-    def add( self, user : str, size : int = 64 ) -> str:
+    def add( self, user_name : str, size : int = 64 ) -> str:
 
-        if user in self.auth:
-            print("User already existing")
+        if user_name in self.auth:
+            print("⚠️ User already exists.")
             return ""
 
         if size < 32:
-            print("Size must be >= 32")
+            print("⚠️ Size must be >= 32")
             return ""
 
         salt_bytes= os.urandom(size)
@@ -50,7 +62,7 @@ class Auth:
         hash_bytes= hashlib.scrypt(secret_bytes, salt=salt_bytes, n= 2048, r= 8, p= 1, dklen=64 )
         hash= b64encode(hash_bytes).decode('utf-8')
 
-        self.auth[user]={ "salt": salt, "hash": hash, "size": size}
+        self.auth[user_name]={ "salt": salt, "hash": hash, "size": size}
 
         return secret
 
@@ -62,6 +74,16 @@ class Auth:
 
         with open(self.filename,"w+") as f:
             json.dump(self.auth,f,indent=4)
+
+
+    def delete_user(self, user_name: str):
+        if not user_name in self.auth:
+            print(f"❌ User '{user_name}' not found.")
+            return False
+        del self.auth[user_name]
+        print(f"🗑️ User '{user_name}' deleted.")
+        self.write()
+        return True
 
     '''
     Check b64 encoded secret if it matches for given user
