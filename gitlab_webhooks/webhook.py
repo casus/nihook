@@ -29,16 +29,13 @@ AUTO_COMMIT_METADATA_VAL= "1"
 ADMIN_OVERRIDE_MESSAGE= "admin override"
 
 BATCH_SIZE = 100
+DEBUG_MODE = False
 
 TABLE_ID = ""
 # base file names that require further processing via the following function
 SPECIAL_FILENAMES= {
     'DATASET.json'
 }
-
-
-
-
 
 
 # logging
@@ -50,8 +47,11 @@ from pathlib import Path
 
 import auth
 
+LOGDIR = Path("logs")
+LOGFILE = LOGDIR / "push-hook.log"
 
-LOGFILE= "push-hook.log"
+# Ensure log directory exists
+LOGDIR.mkdir(parents=True, exist_ok=True)
 
 log = logging.getLogger('')
 log.setLevel(logging.INFO)
@@ -73,6 +73,9 @@ authentication= None
 gitlab_projects= {}
 
 auth_file_path = Path(__file__).resolve().parent.parent / "auth" / "data" / "auth.json"
+
+
+
 
 
 @app.route('/', methods=['GET'])
@@ -98,18 +101,20 @@ def webhook_push():
     #print("Headers:")
     #print(headers)
 
-    # tableid= headers['X-Webhook-Nocodbtableid']
-    tableid = TABLE_ID
-    print("Table ID = ", tableid)
-    # user= headers['X-Webhook-User']
-    # secret= headers['X-Webhook-Secret']
+    if (DEBUG_MODE):
+        tableid = TABLE_ID
+        print("Table ID = ", tableid)
+    else:
+        tableid= headers['X-Webhook-Nocodbtableid']
+        user= headers['X-Webhook-User']
+        secret= headers['X-Webhook-Secret']
 
-    # if not authentication.check( user, secret ):
-    #     return jsonify('authentication failed'), 401 # Although the HTTP standard specifies "unauthorized", semantically this response means "unauthenticated". That is, the client must authenticate itself to get the requested response. 
+        if not authentication.check( user, secret ):
+            return jsonify('authentication failed'), 401 # Although the HTTP standard specifies "unauthorized", semantically this response means "unauthenticated". That is, the client must authenticate itself to get the requested response. 
 
     event = request.get_json()
 
-    with open("first-gitlab-webhook.log","a") as file:
+    with open(LOGDIR / "first-gitlab-webhook.log", "a") as file:
         print(json.dump(event, file, indent=4))
 
 
@@ -151,9 +156,8 @@ def webhook_push():
 
     # create gitlab connection object only once
 
-    # == It would be better to check nocodb credentials before connecting to gitlab
     # create Nocodb Table object only once becasue the same table will be used anyway
-    port = os.getenv('NOCODB_PORT', '8080')  # Default to 8080
+    port = os.getenv('NOCODB_PORT', '8080') 
     nocodb_host = f"http://localhost:{port}"
 
     nocodb_token = os.getenv('NOCODB_TOKEN', 'none')
@@ -218,15 +222,23 @@ if __name__ == '__main__':
     nocodb_token = os.getenv('NOCODB_TOKEN', 'none')
     nocodb_ssl_cert = os.getenv('NOCODB_SSL_CERT', True) # optional
 
-    base_id = os.getenv("BASE_ID", "none")
-    schema= {}
-    script_dir = Path(__file__).parent
-    file_path = script_dir / "SCHEMA.json"
-    with open(file_path, "r") as f:
-        schema= json.load(f)
-    
-    TABLE_ID = table_from_schema.create_new_table_from_schema(nocodb_host, nocodb_token, nocodb_ssl_cert, base_id, "Default-Table", schema)
-    print("New table was created!")
+    debug_mode = os.getenv("DEBUG", "False")
+    if (debug_mode == "True"):
+        DEBUG_MODE = True
+        log.setLevel(logging.DEBUG)
+        base_id = os.getenv("BASE_ID", "none")
+        schema= {}
+        script_dir = Path(__file__).parent
+        file_path = script_dir / "SCHEMA.json"
+        if (file_path.exists()):
+            with open(file_path, "r") as f:
+                schema= json.load(f)
+            
+            TABLE_ID = table_from_schema.create_new_table_from_schema(nocodb_host, nocodb_token, nocodb_ssl_cert, base_id, "Default-Table", schema)
+            print("New table was created!")
+            log.info("New table was created!")
+        else:
+            log.info("Couldn't find file with the path = " + file_path)
 
 
     app.run(host=host, port=int(port))
