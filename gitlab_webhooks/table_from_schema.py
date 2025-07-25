@@ -1,1 +1,0 @@
-../nocodb/table_from_schema.py

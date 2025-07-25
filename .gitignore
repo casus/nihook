@@ -7,3 +7,7 @@ auth/auth
 gitlab_webhooks/auth
 gitlab_webhooks/gitlab.projects
 config.yml
+id_rsa
+gitlab.projects
+SCHEMA.json
+auth.json

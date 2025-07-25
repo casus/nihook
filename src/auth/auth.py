@@ -41,7 +41,10 @@ class Auth:
         for u in self.auth:
             print(f"    {u}")
         print()
+        
 
+    def api_users_list(self):
+        return self.auth
 
     def add( self, user_name : str, size : int = 64 ) -> str:
 
@@ -64,6 +67,38 @@ class Auth:
 
         self.auth[user_name]={ "salt": salt, "hash": hash, "size": size}
 
+        self.write()
+        return secret
+
+    def api_add(self, user_name: str, size: int = 64) -> str:
+        if user_name in self.auth:
+            raise ValueError(f"User '{user_name}' already exists.")
+
+        if size < 32:
+            raise ValueError("Size must be >= 32.")
+
+        salt_bytes = os.urandom(size)
+        secret_bytes = os.urandom(size)
+
+        salt = b64encode(salt_bytes).decode('utf-8')
+        secret = b64encode(secret_bytes).decode('utf-8')
+
+        hash_bytes = hashlib.scrypt(
+            secret_bytes,
+            salt=salt_bytes,
+            n=2048,
+            r=8,
+            p=1,
+            dklen=64
+        )
+        hash_str = b64encode(hash_bytes).decode('utf-8')
+
+        self.auth[user_name] = {
+            "salt": salt,
+            "hash": hash_str,
+            "size": size
+        }
+        self.write()
         return secret
 
 
@@ -85,11 +120,22 @@ class Auth:
         self.write()
         return True
 
+    def api_delete_user(self, user_name: str) -> str:
+        if not user_name in self.auth:
+            return "f '{user_name}' not found."
+        del self.auth[user_name]
+        print(f"🗑️ User '{user_name}' deleted.")
+        self.write()
+        return "User '{user_name}' deleted"
+
     '''
     Check b64 encoded secret if it matches for given user
     '''
     def check( self, user : str , secret : str ) -> bool:
 
+        if (user == None or secret == None):
+            print("Empty auth data")
+            return False
         if user not in self.auth:
             print("User unknown")
             return False

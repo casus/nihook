@@ -3,7 +3,7 @@
 import json
 import sys
 from pathlib import Path
-from auth import Auth  # Your existing class
+from auth import Auth  
 
 USER_BASE_DIR = Path(__file__).resolve().parent
 # CONTAINER_ID = str(int(time.time()))
@@ -55,7 +55,6 @@ def main():
 
             secret = auth.add(name, size)
             if secret:
-                auth.write()
                 print(f"✅ User '{name}' added with secret:\n{secret}\n")
             else:
                 print("❌ Failed to add user.")
