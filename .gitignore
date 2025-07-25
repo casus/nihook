@@ -11,3 +11,4 @@ id_rsa
 gitlab.projects
 SCHEMA.json
 auth.json
+/volumes
