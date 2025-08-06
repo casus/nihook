@@ -11,12 +11,21 @@ from gitlab_project_manager import (
 
 @api_bp.route('/gitlab-projects', methods=['GET'])
 def get_gitlab_projects():
+    """
+    Route in order to retrieve all GitLab projects.
+    This will return a list of projects with their URLs and tokens.
+    """
     projects = load_gitlab_projects()
     return jsonify(projects), 200
 
 
 @api_bp.route('/gitlab-projects', methods=['POST'])
 def create_gitlab_project():
+    """
+    Route in order to add a new GitLab project.
+    It expects a JSON payload with 'url' and 'token'.
+    If the project already exists, it will return a 409 Conflict error.
+    """
     data = request.get_json()
     url = data.get('url')
     token = data.get('token')
@@ -32,6 +41,10 @@ def create_gitlab_project():
 
 @api_bp.route('/gitlab-projects', methods=['DELETE'])
 def delete_gitlab_project():
+    """
+    Route in order to remove a GitLab project.
+    It expects a JSON payload with 'url'.
+    """
     data = request.get_json()
     url = data.get('url')
 

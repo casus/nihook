@@ -146,3 +146,10 @@ To run the container:
    - Test the setup by clicking **Test → Push events**.
 
 ---
+
+### NocoDB usage
+By default 
+* your login is `admin@gmail.com`
+* your password is `12345678`
+
+Change it once you logged in!

@@ -10,12 +10,19 @@ auth_file_path = Path(__file__).resolve().parent.parent.parent / "auth" / "data"
 
 @api_bp.route('/auth-data', methods=['GET'])
 def get_auth_data():
+    """
+    Route to retrieve all the users data.
+    """
     authentication= Auth(auth_file_path)
     return authentication.api_users_list()
 
 
 @api_bp.route('/auth-data', methods=['DELETE'])
 def delete_auth_data():
+    """
+    Route to delete a user by name.
+    It expects a query parameter 'name'.
+    """
     name = request.args.get('name')
     authentication= Auth(auth_file_path)
     if (authentication.api_delete_user(name)):
@@ -25,6 +32,11 @@ def delete_auth_data():
 
 @api_bp.route('/auth-data', methods=['POST'])
 def add_auth_data():
+    """
+    Route to add a new user.
+    It expects a JSON payload with 'user_name' and optional 'size'.
+    If 'size' is not provided, it defaults to 32.
+    """
     data = request.get_json()
     user_name = data.get('user_name')
     size = data.get('size', 32) 

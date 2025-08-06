@@ -8,11 +8,15 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 auth_file_path = Path(__file__).resolve().parent.parent.parent / "auth" / "data" / "auth.json"
 
-debug_mode = os.getenv("DEBUG", "False")
-DEBUG_MODE = False if debug_mode == "False" else True
+DEBUG_MODE = True if os.getenv("DEBUG", "False") == "True" else False
 
 @api_bp.before_request
 def authenticate():
+    """
+    Middleware to authenticate requests.
+    If DEBUG_MODE is True, it skips authentication.
+    Otherwise, it checks the user and secret from headers against the auth data.
+    """
     from flask import request, jsonify
     from auth import Auth
 
@@ -20,6 +24,10 @@ def authenticate():
         authentication= Auth(auth_file_path)
         user = request.headers.get('X-Webhook-User')
         secret = request.headers.get('X-Webhook-Secret')
+        print("USER: ", user)
+        print("SECRET: ", secret)
+        print("Using auth file at:", auth_file_path)
+        print("Auth file content preview:", auth_file_path.read_text()[:200])
 
         if not authentication.check(user, secret):
             return jsonify({'error': 'authentication failed'}), 401

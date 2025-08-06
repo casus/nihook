@@ -68,14 +68,15 @@ if [[ -z "$token" || "$token" == "null" ]]; then
   exit 1
 fi
 
-
-response=$(curl -s -X POST "http://localhost:$NOCODB_PORT/api/v1/db/meta/projects/" \
-  -H "Content-Type: application/json" \
-  -H "xc-auth: $user_token" \
-  -d '{"title":"Default-Base"}')
-
-base_id=$(echo "$response" | jq -r '.id')
-export BASE_ID="$base_id"
+# Create a default base only in debug mode
+if [ "$DEBUG" = "True" ]; then
+  response=$(curl -s -X POST "http://localhost:$NOCODB_PORT/api/v1/db/meta/projects/" \
+    -H "Content-Type: application/json" \
+    -H "xc-auth: $user_token" \
+    -d '{"title":"Default-Base"}')
+  base_id=$(echo "$response" | jq -r '.id')
+  export BASE_ID="$base_id"
+fi
 
 export NOCODB_TOKEN="$token"
 

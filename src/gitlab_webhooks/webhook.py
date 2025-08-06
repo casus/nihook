@@ -88,14 +88,6 @@ gitlab_projects= {}
 auth_file_path = Path(__file__).resolve().parent.parent / "auth" / "data" / "auth.json"
 
 
-@app.route('/', methods=['GET'])
-def index():
-    # authentication= auth.Auth(auth_file_path)
-    # authentication.debug()
-    
-    return "I work"
-
-
 def map_change_type(diff):
     if diff.get('new_file'):
         return 'added'
@@ -112,13 +104,9 @@ def webhhook_upload_all_commits():
     auth_result = authenticate()
     if auth_result:
         return auth_result  # immediately return 401 if auth fails
-    
-    headers= request.headers
-    if (DEBUG_MODE):
-        tableid = TABLE_ID
-        print("Table ID = ", tableid)
-    else:
-        tableid= headers.get('X-Webhook-Nocodbtableid')
+    headers = request.headers
+
+    tableid = headers.get('X-Webhook-Nocodbtableid')
 
     if (tableid == None):
         return jsonify({'error': 'X-Webhook-Nocodbtableid is empty'}), 400
@@ -164,19 +152,22 @@ def webhhook_upload_all_commits():
     print(len(commit_ids))
 
     table= nocodb.Table( tableid, host=NOCODB_HOST, auth_token=NOCODB_TOKEN, verify=NOCODB_SSL_CERT )
+    if (table.count()["count"] > 0):
+        return jsonify({'error': 'Table is not empty, please clear it first'}), 400
 
     for branch in branches:
         branch_commits = gitlab_project.commits.list(all=True, ref_name=branch.name)
         git_ref = f"refs/heads/{branch.name}"
         # Let's put the oldest commits first
         branch_commits.sort(key=lambda c: datetime.fromisoformat(c.committed_date.replace('Z', '+00:00')))
+        branch_commits_ids = [c.id for c in branch_commits]
         for c in branch_commits:
             print("    Commit ", c.get_id(), " branch = ", branch.name )
-            target_index = commit_ids.index(c.id)
-            commit_after = all_commits[target_index + 1].get_id() if target_index + 1 < len(all_commits) else None
-            commit_before = all_commits[target_index - 1].get_id() if target_index > 0 else None
+            target_index = branch_commits_ids.index(c.id)
+            commit_after = branch_commits_ids[target_index + 1] if target_index + 1 < len(branch_commits_ids) else None
+            commit_before = branch_commits_ids[target_index - 1] if target_index > 0 else None
 
-            commit_diffs = c.diff()
+            commit_diffs = c.diff(get_all=True)
             for diff in commit_diffs:
                 change_type = map_change_type(diff)
                 filename = diff['new_path']
@@ -212,12 +203,8 @@ def webhook_push():
     if auth_result:
         return auth_result  # immediately return 401 if auth fails
 
-    #print("Headers:")
-    #print(headers)
-
     if (DEBUG_MODE):
         tableid = TABLE_ID
-        print("Table ID = ", tableid)
     else:
         tableid= headers['X-Webhook-Nocodbtableid']
 
@@ -255,7 +242,6 @@ def webhook_push():
     gitlab_projects = load_gitlab_projects()
 
     if projecturl in gitlab_projects:
-
         gitlab_access_token= gitlab_projects[projecturl]
     else:
         gitlab_access_token= "none"
