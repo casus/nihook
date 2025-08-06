@@ -7,26 +7,32 @@ set +a
 
 DEBUG=${DEBUG:-False}
 
-# Function to find a free port on the host
-find_free_port() {
+is_port_free() {
+  ! lsof -i ":$1" >/dev/null 2>&1
+}
+
+# Function to find a valid pair of ports
+find_valid_ports() {
   while :; do
-    PORT=$(shuf -i 5001-5999 -n 1)
-    if ! lsof -i ":$PORT" >/dev/null 2>&1; then
-      echo "$PORT"
+    PORT1=$(shuf -i 5001-5999 -n 1)
+    LAST3=$(printf "%03d" $((PORT1 % 1000)))  # Ensures leading zeroes
+    PORT2="7$LAST3"
+
+    if is_port_free "$PORT1" && is_port_free "$PORT2"; then
+      echo "$PORT1 $PORT2"
       return
     fi
   done
 }
 
-# Dynamically find free host ports
-
 if [ "$DEBUG" = "True" ]; then
-  HOST_PORT_APP1=5000
-  HOST_PORT_APP2=5555
+  HOST_PORT_APP1=5555
+  HOST_PORT_APP2=7555
 else
-  HOST_PORT_APP1=$(find_free_port)
-  HOST_PORT_APP2=$(find_free_port)
+  # Dynamically find free host ports
+  read -r HOST_PORT_APP1 HOST_PORT_APP2 < <(find_valid_ports)
 fi
+
 
 # Create auth directory
 if [ "$DEBUG" = "True" ]; then
