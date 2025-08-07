@@ -31,11 +31,9 @@ def parse_link_field(value):
         except Exception:
             pass  # fallback to manual split if eval fails
 
-    # If it's a string with commas or spaces
+    # If it's a string with commas
     if "," in value:
         return [v.strip() for v in value.split(",") if v.strip()]
-    elif " " in value:
-        return [v.strip() for v in value.split(" ") if v.strip()]
     else:
         return [value]  # single value
 
@@ -204,11 +202,11 @@ def create_links_between_tables():
         connection = parent_table.read_table()["columnsById"][field_link]['colOptions']['type']
 
     # Step 2: Fetch records from both tables
-    parent_records = parent_table.list()["list"]
-    child_records = child_table.list()["list"]
+    parent_records = parent_table.list_all_records().get("list", [])
+    child_records = child_table.list_all_records().get("list", [])
 
-    parent_columns = parent_table.read_table()["columns"]
-    child_columns = child_table.read_table()["columns"]
+    parent_columns = parent_table.read_table().get("columns", [])
+    child_columns = child_table.read_table().get("columns", [])
 
     # Find the first column where 'pk' is 1
     parent_PK = next(
@@ -246,14 +244,15 @@ def create_links_between_tables():
                     recordId=record[parent_PK]
                 ).get("list", [])
             elif connection == "oo":
-                column_name = parent_table.read_table()["columnsById"][field_link]["title"]
+                column_name = parent_columns[field_link]["title"]
                 existing_linked_records = record.get(column_name, [])
                 existing_linked_records = [existing_linked_records] if existing_linked_records else [] 
             else:
-                existing_linked_records = [parent_table.list_linked_records(
+                existing_linked_records = parent_table.list_linked_records(
                     linkFieldId=field_link,
                     recordId=record[parent_PK]
-                )]
+                )
+                existing_linked_records = [existing_linked_records] if existing_linked_records else []
             print("Existing linked records:", existing_linked_records)
             record_ids_to_link = [r[child_PK] for r in corresponding_child_records if r[child_PK] not in [lr[child_PK] for lr in existing_linked_records]]
             record_ids_to_unlink = [lr[child_PK] for lr in existing_linked_records if lr[child_PK] not in [r[child_PK] for r in corresponding_child_records]]
@@ -263,9 +262,11 @@ def create_links_between_tables():
                 unlink_res = parent_table.unlink_records(linkFieldId=field_link,
                                             recordId=record[parent_PK],
                                             refRowPKValues=record_ids_to_unlink)
-                if "error" in unlink_res:
+                if not "error" in unlink_res:
+                    updated_count += 1
+                else:
                     print(f"Failed to unlink records for parent ID {record[parent_PK]}: {unlink_res['error']}")
-                    continue
+
             if record_ids_to_link:
                 link_records_res = parent_table.link_records(linkFieldId=field_link,
                                             recordId=record[parent_PK],
@@ -300,7 +301,3 @@ def create_links_between_tables():
         "linked_field": field_link,
         "records_updated": updated_count
     }), 200
-
-    # except Exception as e:
-    #     print(f"Error linking tables: {e}")
-    #     return jsonify({"error": str(e)}), 500
