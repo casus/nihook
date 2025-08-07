@@ -162,7 +162,8 @@ def create_links_between_tables():
         where_to_create_new_field, what_to_reference = child_table_id, parent_table_id
         where_to_create_new_field_table = child_table
 
-    
+    parent_table_meta = parent_table.read_table()
+    child_table_meta = child_table.read_table()
     new_column_created = False
     # Step 1: Handle field creation (if needed)
     if not field_link:
@@ -199,14 +200,14 @@ def create_links_between_tables():
             return jsonify({"error": "Failed to create link field"}), 500
         new_column_created = True
     else:
-        connection = parent_table.read_table()["columnsById"][field_link]['colOptions']['type']
+        connection = parent_table_meta["columnsById"][field_link]['colOptions']['type']
 
     # Step 2: Fetch records from both tables
     parent_records = parent_table.list_all_records().get("list", [])
     child_records = child_table.list_all_records().get("list", [])
 
-    parent_columns = parent_table.read_table().get("columns", [])
-    child_columns = child_table.read_table().get("columns", [])
+    parent_columns = parent_table_meta.get("columns", [])
+    child_columns = child_table_meta.get("columns", [])
 
     # Find the first column where 'pk' is 1
     parent_PK = next(
@@ -244,7 +245,7 @@ def create_links_between_tables():
                     recordId=record[parent_PK]
                 ).get("list", [])
             elif connection == "oo":
-                column_name = parent_columns[field_link]["title"]
+                column_name = parent_table_meta.get("columnsById", {}).get(field_link, {}).get("title")
                 existing_linked_records = record.get(column_name, [])
                 existing_linked_records = [existing_linked_records] if existing_linked_records else [] 
             else:
