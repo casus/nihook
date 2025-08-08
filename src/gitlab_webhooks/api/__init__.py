@@ -3,6 +3,7 @@
 import os
 from flask import Blueprint
 from pathlib import Path
+from const import HEADER_WEBHOOK_USERNAME, HEADER_WEBHOOK_SECRET
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -22,8 +23,8 @@ def authenticate():
 
     if (not DEBUG_MODE):
         authentication= Auth(auth_file_path)
-        user = request.headers.get('X-Webhook-User')
-        secret = request.headers.get('X-Webhook-Secret')
+        user = request.headers.get(HEADER_WEBHOOK_USERNAME)
+        secret = request.headers.get(HEADER_WEBHOOK_SECRET)
         print("USER: ", user)
         print("SECRET: ", secret)
         print("Using auth file at:", auth_file_path)

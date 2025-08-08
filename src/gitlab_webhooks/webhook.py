@@ -18,6 +18,7 @@ from jsonschema.exceptions import ValidationError, SchemaError
 import base64
 from urllib.parse import urlparse
 
+from const import HEADER_NOCO_DB_TABLE_ID
 import process_files_from_gitlab
 
 METADATA_FILENAME= "DATASET.json"
@@ -106,11 +107,11 @@ def webhhook_upload_all_commits():
         return auth_result  # immediately return 401 if auth fails
     headers = request.headers
 
-    tableid = headers.get('X-Webhook-Nocodbtableid')
+    tableid = headers.get(HEADER_NOCO_DB_TABLE_ID)
 
     if (tableid == None):
-        return jsonify({'error': 'X-Webhook-Nocodbtableid is empty'}), 400
-    
+        return jsonify({'error': f'{HEADER_NOCO_DB_TABLE_ID} is empty'}), 400
+
     data = request.get_json()
     project_url = data.get("project_url")
 
@@ -206,7 +207,7 @@ def webhook_push():
     if (DEBUG_MODE):
         tableid = TABLE_ID
     else:
-        tableid= headers['X-Webhook-Nocodbtableid']
+        tableid= headers.get(HEADER_NOCO_DB_TABLE_ID)
 
     event = request.get_json()
 

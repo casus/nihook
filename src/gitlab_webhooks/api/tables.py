@@ -1,9 +1,12 @@
 import json
 import os
+from urllib.parse import urlparse
 from flask import Flask, request, jsonify
 from nocodb_client import nocodb, table_from_schema
 from . import api_bp
 import ast
+import gitlab
+from const import HEADER_NOCO_DB_TABLE_ID, HEADER_WEBHOOK_USERNAME, HEADER_WEBHOOK_SECRET
 
 NOCODB_PORT = os.getenv('NOCODB_PORT', '8080')
 NOCODB_HOST = f"http://localhost:{NOCODB_PORT}"
@@ -42,7 +45,8 @@ def parse_link_field(value):
 @api_bp.route("/create-table-file", methods=["POST"])
 def create_table_file():
     """
-    Route in order to create a new table in NocoDB from a schema file.
+    Create a new table in NocoDB from a schema file.
+    Optionally, create a GitLab webhook for the given project.
     """
     # Get form data
     table_name = request.form.get("table_name")
@@ -50,13 +54,21 @@ def create_table_file():
     new_base_name = request.form.get("new_base_name")
     schema_file = request.files.get("schema")
 
+    # Optional GitLab webhook params
+    create_gitlab_webhook = request.form.get("create_gitlab_webhook", "").lower() == "true"
+    gitlab_repo_url = request.form.get("gitlab_repo_url")
+    gitlab_api_token = request.form.get("gitlab_api_token")
+    webhook_secret = request.form.get("webhook_secret")  # optional
+    webhook_username = request.form.get("webhook_username")  # optional
+    server_ip = request.form.get("server_ip")  # where your webhook service is running
+
+    # Debug
     print("=== DEBUG ===")
     print("request.form:", request.form)
     print("request.files:", request.files)
-    print("table_name:", request.form.get("table_name"))
-    print("schema_file:", request.files.get("schema"))
     print("==============")
-    # Validate input
+
+    # Validate table creation input
     if not table_name or not schema_file:
         if not table_name and not schema_file:
             return jsonify({"error": "Missing 'table_name' and 'schema' file"}), 400
@@ -64,7 +76,6 @@ def create_table_file():
             return jsonify({"error": "Missing 'table_name'"}), 400
         if not schema_file:
             return jsonify({"error": "Missing 'schema' file"}), 400
-        return jsonify({"error": "Missing 'table_name' or 'schema' file"}), 400
 
     try:
         schema = json.load(schema_file)
@@ -72,24 +83,21 @@ def create_table_file():
         return jsonify({"error": "Invalid JSON format in schema file"}), 400
 
     try:
-
         if not NOCODB_TOKEN:
             return jsonify({"error": "Missing Nocodb Token"}), 400
 
-        # Initialize base handler
-        # base_client = nocodb.Base(host=NOCODB_HOST, auth_token=nocodb_token, verify=nocodb_ssl_cert)
-
         # If new_base_name is provided, create a new base
         if new_base_name:
-            new_base = nocodb.Nocodb(NOCODB_HOST, auth_token=NOCODB_TOKEN, verify=NOCODB_SSL_CERT).create_base(new_base_name)
+            new_base = nocodb.Nocodb(
+                NOCODB_HOST, auth_token=NOCODB_TOKEN, verify=NOCODB_SSL_CERT
+            ).create_base(new_base_name)
             if not new_base:
                 return jsonify({"error": f"Failed to create new base '{new_base_name}'"}), 500
             base_id = new_base["id"]
         elif not base_id:
             return jsonify({"error": "Provide either 'base_id' or 'new_base_name'"}), 400
-        
 
-        # Now create the table in the selected base
+        # Create the table
         created_table_id = table_from_schema.create_new_table_from_schema(
             nocodb_host=NOCODB_HOST,
             nocodb_token=NOCODB_TOKEN,
@@ -98,14 +106,69 @@ def create_table_file():
             table_name=table_name,
             schema=schema
         )
+        if not created_table_id:
+            return jsonify({"error": "Failed to create table"}), 500
+        # Optional: create GitLab webhook
+        webhook_info = None
+        if create_gitlab_webhook:
+            if not all([gitlab_repo_url, gitlab_api_token, server_ip]):
+                return jsonify({"error": "Missing required parameters for GitLab webhook creation"}), 400
+            if not webhook_username:
+                webhook_username = request.headers.get(HEADER_WEBHOOK_USERNAME, None)  # use header if not provided
+            if not webhook_secret:
+                webhook_secret = request.headers.get(HEADER_WEBHOOK_SECRET, None)  # use header if not provided
+            webhook_info = create_gitlab_project_webhook(
+                repo_url=gitlab_repo_url,
+                token=gitlab_api_token,
+                webhook_secret=webhook_secret,
+                nocodb_table_id=created_table_id,
+                server_ip=server_ip,
+                webhook_username=webhook_username
+            )
 
-        return jsonify({
+        response = {
             "message": "Table created successfully",
             "table": created_table_id
-        }), 201
+        }
+        if webhook_info:
+            response["gitlab_webhook"] = webhook_info
+
+        return jsonify(response), 201
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+def create_gitlab_project_webhook(repo_url, token, webhook_secret, nocodb_table_id, server_ip, webhook_username=None):
+    """
+    Create a webhook in the given GitLab project using python-gitlab.
+    """
+    # Extract project path from repo URL (e.g., https://gitlab.com/group/project.git → group/project)
+    parsed_uri = urlparse(repo_url)
+    gitlab_host = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
+    project_path = parsed_uri.path.lstrip("/").removesuffix(".git")
+    gl = gitlab.Gitlab(gitlab_host, private_token=token)
+    project = gl.projects.get(project_path)
+
+    # Build webhook URL
+    webhook_url = f"{server_ip}/webhooks/push"
+
+    # Create webhook with custom headers
+    try:
+        hook = project.hooks.create({
+            'url': webhook_url,
+            'push_events': True,
+            'enable_ssl_verification': NOCODB_SSL_CERT,
+            'custom_headers': [
+                {"key": HEADER_NOCO_DB_TABLE_ID, 'value': str(nocodb_table_id)},
+                {"key": HEADER_WEBHOOK_USERNAME, 'value': webhook_username},
+                {"key": HEADER_WEBHOOK_SECRET, 'value': webhook_secret}
+            ]
+        })
+    except Exception as e:
+        return {"error": f"Failed to create GitLab webhook: {str(e)}"} 
+
+    return {"id": hook.id, "url": webhook_url}
     
 
 @api_bp.route("/link-tables", methods=["POST"])
