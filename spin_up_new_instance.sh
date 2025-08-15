@@ -40,9 +40,12 @@ else
   CONTAINER_ID=$(date +%s)
 fi
 VOLUME_DIR="./volumes/container_${CONTAINER_ID}"
-LOGS_DIR="./volumes/container_${CONTAINER_ID}/logs"
-mkdir -p "$VOLUME_DIR"
-AUTH_FILE="${VOLUME_DIR}/auth.json"
+AUTH_DIR=$VOLUME_DIR/auth
+DB_DIR=$VOLUME_DIR/db
+LOGS_DIR=$VOLUME_DIR/logs
+mkdir -p $VOLUME_DIR $AUTH_DIR $DB_DIR $LOGS_DIR
+
+AUTH_FILE="${AUTH_DIR}/auth.json"
 if [ ! -f "$AUTH_FILE" ]; then
     echo "{}" > "$AUTH_FILE"
     echo "📁 Created empty auth.json in $VOLUME_DIR"
@@ -54,8 +57,9 @@ python3 src/auth/add_auth.py "firstuser" -f "$AUTH_FILE"
 docker run -d \
   -p "${HOST_PORT_WEBHOOK}":"${HOOK_PORT}" \
   -p "${HOST_PORT_NOCODB}":"${NOCODB_PORT}" \
-  -v "$(realpath "$VOLUME_DIR")":/app/auth/data \
-  -v "$(realpath "$LOGS_DIR")":/app/logs \
+  -v "$(realpath "$AUTH_DIR")":/app/auth/ \
+  -v "$(realpath "$DB_DIR")":/app/db/ \
+  -v "$(realpath "$LOGS_DIR")":/app/logs/ \
   -e NOCODB_PORT=$NOCODB_PORT \
   -e HOOK_HOST=$HOOK_HOST \
   -e HOOK_PORT=$HOOK_PORT \

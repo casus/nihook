@@ -12,7 +12,7 @@
 
 
 # Run nocodb it in the background
-export NC_TOOL_DIR=/app/auth/data
+export NC_TOOL_DIR=/app/db/
 ./Noco-linux-x64 --host 0.0.0.0 --port "$NOCODB_PORT" &
 
 
