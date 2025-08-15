@@ -40,11 +40,9 @@ if [ "$DEBUG" = "True" ]; then
 else
   CONTAINER_ID=$(date +%s)
 fi
-FULLAPPDIR="./fullapp/container_${CONTAINER_ID}" # for development, remove later
 VOLUME_DIR="./volumes/container_${CONTAINER_ID}"
 LOGS_DIR="./volumes/container_${CONTAINER_ID}/logs"
 mkdir -p "$VOLUME_DIR"
-mkdir -p "$FULLAPPDIR" # for development, remove later
 AUTH_FILE="${VOLUME_DIR}/auth.json"
 if [ ! -f "$AUTH_FILE" ]; then
     echo "{}" > "$AUTH_FILE"
@@ -66,7 +64,6 @@ docker run -d \
   -p "${HOST_PORT_APP2}":"${NOCODB_PORT}" \
   -v "$(realpath "$VOLUME_DIR")":/app/auth/data \
   -v "$(realpath "$LOGS_DIR")":/app/logs \
-  -v "$(realpath "$FULLAPPDIR")":/app \
   webhook-nocodb
 
 

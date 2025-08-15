@@ -10,13 +10,8 @@
 
 # Define URL and binary name
 
-# Download the binary
-curl -L -o Noco-linux-x64 https://github.com/nocodb/nocodb/releases/download/0.263.8/Noco-linux-x64
 
-# Make it executable
-chmod +x Noco-linux-x64
-
-# Run it in the background
+# Run nocodb it in the background
 ./Noco-linux-x64 --host 0.0.0.0 --port "$NOCODB_PORT" &
 
 
@@ -78,9 +73,12 @@ if [ "$DEBUG" = "True" ]; then
   export BASE_ID="$base_id"
 fi
 
+echo "export NOCODB_TOKEN=\"$token\""
 export NOCODB_TOKEN="$token"
 
 # Start the webhook app
 python /app/gitlab_webhooks/webhook.py &
 
-wait -n
+#wait -n
+wait # for now wait for all
+
