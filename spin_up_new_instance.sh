@@ -1,10 +1,9 @@
 #!/bin/bash
 
-# Load environment variables from .env
-set -a
-source .env
-set +a
-
+# hardcode here because internal to the container and probably no need to change it
+HOOK_HOST=0.0.0.0
+HOOK_PORT=5000
+NOCODB_PORT=8000
 DEBUG=${DEBUG:-False}
 
 is_port_free() {
