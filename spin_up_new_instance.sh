@@ -3,7 +3,7 @@
 # hardcode here because internal to the container and probably no need to change it
 HOOK_HOST=0.0.0.0
 HOOK_PORT=5000
-NOCODB_PORT=8000
+NOCODB_PORT=8080
 DEBUG=${DEBUG:-False}
 
 is_port_free() {
@@ -52,11 +52,13 @@ python3 src/auth/add_auth.py "firstuser" -f "$AUTH_FILE"
 
 # Run the container
 docker run -d \
-  --env-file .env \
   -p "${HOST_PORT_WEBHOOK}":"${HOOK_PORT}" \
   -p "${HOST_PORT_NOCODB}":"${NOCODB_PORT}" \
   -v "$(realpath "$VOLUME_DIR")":/app/auth/data \
   -v "$(realpath "$LOGS_DIR")":/app/logs \
+  -e NOCODB_PORT=$NOCODB_PORT \
+  -e HOOK_HOST=$HOOK_HOST \
+  -e HOOK_PORT=$HOOK_PORT \
   webhook-nocodb
 
 # Wait for NocoDB to be ready
