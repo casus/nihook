@@ -10,7 +10,6 @@ Jinja2==3.1.6
 jsonschema==4.24.0
 jsonschema-specifications==2025.4.1
 MarkupSafe==3.0.2
-nocodb-client @ git+ssh://git@codebase.helmholtz.cloud/casus-datalad/nocodb_automation.git@okishe32-module
 numpy==2.3.1
 pandas==2.3.0
 python-dateutil==2.9.0.post0
