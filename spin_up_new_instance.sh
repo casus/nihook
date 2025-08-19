@@ -60,6 +60,8 @@ if [ ! -f "$AUTH_FILE" ]; then
 fi
 WEBHOOK_AUTH_SECRET=`python3 src/auth/add_auth.py $WEBHOOK_USERNAME -f "$AUTH_FILE"`
 
+CONFIG_FILE="${CONFIG_DIR}/nocodb.json"
+
 # create the initial projects file
 PROJECTS_FILE=$CONFIG_DIR/projects.yml
 cp projects.template.yml $PROJECTS_FILE
@@ -77,69 +79,78 @@ docker run -d \
   -e HOOK_PORT=$HOOK_PORT \
   webhook-nocodb
 
-# # Wait for NocoDB to be ready
-# TRIES=30
-# until curl -s "http://localhost:$HOST_PORT_NOCODB/api/v1/health" | grep -q 'OK'; do
-#   if (( $TRIES < 1 )); then
-#     echo "NocoDB did not become ready in time, exiting."
-#     exit 1
-#   fi
-#   echo "Waiting for NocoDB to start on port $HOST_PORT_NOCODB..."
-#   TRIES=$((TRIES-1))
-#   sleep 2
-# done
+# Wait for NocoDB to be ready
+TRIES=30
+until curl -s "http://localhost:$HOST_PORT_NOCODB/api/v1/health" | grep -q 'OK'; do
+  if (( $TRIES < 1 )); then
+    echo "NocoDB did not become ready in time, exiting."
+    exit 1
+  fi
+  echo "Waiting for NocoDB to start on port $HOST_PORT_NOCODB..."
+  TRIES=$((TRIES-1))
+  sleep 2
+done
+sleep 2 # sleep 2 extra seconds so inside the container the following config file can be written
+echo "NocoDB is up!"
 
-# echo "NocoDB is up!"
+# read token from 'nocodb.json'
 
-# # Generate the token by signing up
-# response=$(curl -s -X POST \
-#   -H "Content-Type: application/json" \
-#   -d '{
-#         "email": "admin@gmail.com",
-#         "password": "12345678",
-#         "ignore_subscribe": true,
-#         "token": ""
-#       }' \
-#   "http://localhost:$HOST_PORT_NOCODB/api/v1/auth/user/signup")
+if [ -f $CONFIG_FILE ]; then
+  
+  email=`jq -r '.nocodb_email' $CONFIG_FILE`
+  password=`jq -r '.nocodb_password' $CONFIG_FILE`
+  token=`jq -r '.nocodb_secret_token' $CONFIG_FILE`
 
-# user_token=$(echo "$response" | jq -r '.token')
+else
 
-# if [[ -z "$user_token" || "$user_token" == "null" ]]; then
-#   echo "Failed to get admin token:"
-#   echo "$response"
-#   exit 1
-# fi
+  echo "ERROR: NocoDB config file ${CONFIG_FILE} not found, exit"
+  exit -1
+fi
 
-# # Use the token as the xc-auth header for the next request
-# response=$(curl -s -X POST "http://localhost:$HOST_PORT_NOCODB/api/v1/tokens" \
-#   -H "Content-Type: application/json" \
-#   -H "xc-auth: $user_token" \
-#   -d '{"description":"Default-Token"}')
 
-# token=$(echo "$response" | jq -r '.token')
-
-# if [[ -z "$token" || "$token" == "null" ]]; then
-#   echo "Failed to get API token:"
-#   echo "$response"
-#   exit 1
-# fi
-
-jq --null-input \
-  --arg webhook_url "${PUBLIC_URL}:${HOST_PORT_WEBHOOK}" \
-  --arg nocodb_url "${PUBLIC_URL}:${HOST_PORT_NOCODB}" \
-'{ "webhook_url": $webhook_url, "nocodb_url": $nocodb_url}' >{$CONFIG_DIR}/settings.json
-
-# Print port mapping info
+# print usage info
 echo ""
-echo "🟢 Application is running:"
-echo "  👉 ${PUBLIC_URL}:${HOST_PORT_WEBHOOK} → Webhook"
-echo "  👉 ${PUBLIC_URL}:${HOST_PORT_NOCODB} → NocoDB"
+echo "🟢 NocoDB and webhook servers running:"
+echo "  👉 Webhook at ${PUBLIC_URL}:${HOST_PORT_WEBHOOK}"
+echo "  👉 NocoDB at ${PUBLIC_URL}:${HOST_PORT_NOCODB}"
 echo "      NocoDB token: ${token}"
 echo ""
-echo "🎣 Gitlab Webhook config data:"
-echo "URL: ${PUBLIC_URL}:${HOST_PORT_WEBHOOK}/webhooks/push"
-echo "Custom headers:"
-echo "    X-Webhook-User: ${WEBHOOK_USERNAME}"
-echo "    X-Webhook-Secret: ${WEBHOOK_AUTH_SECRET}"
-echo "    X-Webhook-Nocodbtableid: ..."
+echo "# Next steps"
+echo ""
+echo "1) 💻 Connect to the NocoDB instance and create a new base:"
+echo "    ${PUBLIC_URL}:${HOST_PORT_NOCODB} with initial credentials ${email} : ${password}"
+echo "    - Keep the base ID == the last part of the URL when inside the new base"
+echo ""
+echo "2) ⌨ Create a table from a SCHEMA.json in a Datalad project on Github:"
+echo "    export NOCODB_HOST=${PUBLIC_URL}:${HOST_PORT_NOCODB}"
+echo "    export NOCODB_TOKEN=${token}"
+echo "    ./nocodb_automation/table_from_schema.py -b <base> -n <new-name-for-table> SCHEMA.json"
+echo "        ... note the resulting table ID for later"
+echo ""
+echo "3) 🔑 Create a Gitlab API token and give it to the webhook server"
+echo "    - Go to your Gitlab project → Settings → Access tokens → Add new token"
+echo "        - Pick a token name 'for webhook + NocoDB' or something else"
+echo "        - Increase expiration date to 1 year from now (this is the maximum)"
+echo "        - Select role 'Reporter' or higher"
+echo "        - Select scopes 'read_api'"
+echo "        - Click 'Create project access token'"
+echo "    - On the following page copy the token (this is the only time it is shown to you)"
+echo "    - Add a new line in 'config/projects.json':"
+echo "        \"<Gitlab project URL>\" : \"<the token>\""
+echo "      ... which allows the webhook server to access your gitlab project "
+echo ""
+echo "4) 🎣 Configure the Gitlab webhook:"
+echo "    - Go to your Gitlab project → Settings → Webhooks → Add new webhook"
+echo "        - Pick a webhook name 'for NocoDB' or something else"
+echo "        - Enter the URL ${PUBLIC_URL}:${HOST_PORT_WEBHOOK}/webhooks/push"
+echo "        - Add Custom headers:"
+echo "            X-Webhook-User: ${WEBHOOK_USERNAME}"
+echo "            X-Webhook-Secret: ${WEBHOOK_AUTH_SECRET}"
+echo "            X-Webhook-Nocodbtableid: <table ID from step 2>"
+echo "        - Select 'Push events' as the Trigger"
+echo "        - Click 'Add webhook'"
+echo ""
+echo "✅ Now the webhook is active. The next time there is a 'git push' including commits "
+echo "which have new or changed 'DATASET.json' files, the webhook will automatically enter "
+echo "their contents to the NocoDB table."
 echo ""

@@ -25,9 +25,8 @@ until curl -s "http://localhost:$NOCODB_PORT/api/v1/health" | grep -q 'OK'; do
   fi
   echo "Waiting for NocoDB to start on port $HOSTNOCODB_PORT_PORT_NOCODB..."
   TRIES=$((TRIES-1))
-  sleep 5
+  sleep 2
 done
-
 echo "NocoDB is up!"
 
 
@@ -101,6 +100,5 @@ ls -alh -R /app/ >/app/logs/ls-R.txt
 # Start the webhook app
 python /app/src/gitlab_webhooks/webhook.py >/app/logs/webhook.log 2>/app/logs/webhook.error.log &
 
-#wait -n
-wait # for now wait for all
+wait -n
 
