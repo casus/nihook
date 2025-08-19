@@ -97,9 +97,6 @@ fi
 echo "export NOCODB_TOKEN=\"$token\""
 export NOCODB_TOKEN="$token"
 
-#check all the files
-ls -alh -R /app/ >/app/logs/ls-R.txt
-
 # Start the webhook app
 python /app/src/gitlab_webhooks/webhook.py >/app/logs/webhook.log 2>/app/logs/webhook.error.log &
 
