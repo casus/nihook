@@ -90,7 +90,7 @@ until curl -s "http://localhost:$HOST_PORT_NOCODB/api/v1/health" | grep -q 'OK';
   TRIES=$((TRIES-1))
   sleep 2
 done
-sleep 2 # sleep 2 extra seconds so inside the container the following config file can be written
+sleep 4 # sleep 2 extra seconds so inside the container the following config file can be written
 echo "NocoDB is up!"
 
 # read token from 'nocodb.json'

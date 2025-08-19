@@ -39,12 +39,15 @@ else
 
   echo "Generate NOCODB token"
 
+  ADMIN_EMAIL="admin@gmail.com"
+  ADMIN_PASSWORD=`/usr/bin/pwgen 20 1`
+
   # Sign up first user 
   response=$(curl -s -X POST \
     -H "Content-Type: application/json" \
     -d '{
-          "email": "admin@gmail.com",
-          "password": "12345678",
+          "email": "'$ADMIN_EMAIL'",
+          "password": "'$ADMIN_PASSWORD'",
           "ignore_subscribe": true,
           "token": ""
         }' \
@@ -72,8 +75,8 @@ else
   fi
 
   jq --null-input \
-    --arg email "admin@gmail.com" \
-    --arg password "12345678" \
+    --arg email "${ADMIN_EMAIL}" \
+    --arg password "${ADMIN_PASSWORD}" \
     --arg token "$token" \
   '{ "nocodb_email": $email, "nocodb_password": $password, "nocodb_secret_token": $token}' >/app/config/nocodb.json
 
