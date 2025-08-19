@@ -7,7 +7,7 @@ from const import HEADER_WEBHOOK_USERNAME, HEADER_WEBHOOK_SECRET
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
-auth_file_path = Path(__file__).resolve().parent.parent.parent / "auth" / "data" / "auth.json"
+auth_file_path = Path( "/app/auth/auth.json" )
 
 DEBUG_MODE = True if os.getenv("DEBUG", "False") == "True" else False
 

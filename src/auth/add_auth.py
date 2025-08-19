@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import argparse
 
 import auth
@@ -19,6 +20,6 @@ if __name__ == '__main__':
     if "" != secret:
         print( secret )
     else:
-        print("failed")
+        print("failed", file=sys.stderr)
 
     auth.write()

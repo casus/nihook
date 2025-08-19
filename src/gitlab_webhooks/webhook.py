@@ -57,6 +57,7 @@ from gitlab_project_manager import (
 LOGDIR = Path("logs")
 LOGFILE = LOGDIR / "push-hook.log"
 
+
 # Get environment variables
 HOST = os.getenv('HOOK_HOST', '127.0.0.1')
 PORT = os.getenv('HOOK_PORT', '5000')
@@ -64,6 +65,13 @@ NOCODB_HOST = f"http://localhost:{os.getenv('NOCODB_PORT', '8080')}"
 NOCODB_TOKEN = os.getenv('NOCODB_TOKEN', None)
 NOCODB_SSL_CERT = os.getenv('NOCODB_SSL_CERT', True) # optional
 
+# TODO read all config variables from setting.json
+settings={}
+with open('/app/config/nocodb.json') as f:
+    settings = json.load(f)
+
+NOCODB_TOKEN= settings["nocodb_secret_token"]
+print(f"DEBUG NOCODB_TOKEN= {NOCODB_TOKEN}")
 
 # Ensure log directory exists
 LOGDIR.mkdir(parents=True, exist_ok=True)
@@ -186,8 +194,6 @@ def webhhook_upload_all_commits():
     return jsonify({'message': 'All commits were scanned and added to the table'}), 201
 
 
-    
-
 @app.route('/webhooks/push', methods=['POST'])
 def webhook_push():
     """
@@ -211,7 +217,7 @@ def webhook_push():
 
     event = request.get_json()
 
-    with open(LOGDIR / "first-gitlab-webhook.log", "a") as file:
+    with open(LOGDIR / "/app/logs/first-gitlab-webhook.log", "a") as file:
         print(json.dump(event, file, indent=4))
 
 

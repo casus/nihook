@@ -1,0 +1,3 @@
+projects:
+  "https://codebase.helmholtz.cloud/project1": "TOKEN1"
+  "https://codebase.helmholtz.cloud/project2": "TOKEN2"

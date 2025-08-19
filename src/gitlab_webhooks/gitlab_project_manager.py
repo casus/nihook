@@ -1,8 +1,7 @@
 from pathlib import Path
 import yaml
 
-CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.yml"
-
+CONFIG_PATH = Path("/app/config/projects.yml")
 
 def load_gitlab_projects():
     if not CONFIG_PATH.exists():
