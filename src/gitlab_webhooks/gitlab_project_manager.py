@@ -1,22 +1,22 @@
 from pathlib import Path
-import yaml
+import json
 
-CONFIG_PATH = Path("/app/config/projects.yml")
+CONFIG_PATH = Path("/app/config/projects.json")
 
 def load_gitlab_projects():
     if not CONFIG_PATH.exists():
         return {}
 
     with open(CONFIG_PATH, 'r') as f:
-        config = yaml.safe_load(f) or {}
+        config = json.load(f) or {}
 
-    return config.get("projects", {})
+    return config["projects"]
 
 
 def save_gitlab_projects(projects: dict):
     config = {"projects": projects}
     with open(CONFIG_PATH, 'w') as f:
-        yaml.dump(config, f, default_flow_style=False)
+        json.dump(config, f)
 
 
 def add_gitlab_project(url: str, token: str):

@@ -63,8 +63,8 @@ WEBHOOK_AUTH_SECRET=`python3 src/auth/add_auth.py $WEBHOOK_USERNAME -f "$AUTH_FI
 CONFIG_FILE="${CONFIG_DIR}/nocodb.json"
 
 # create the initial projects file
-PROJECTS_FILE=$CONFIG_DIR/projects.yml
-cp projects.template.yml $PROJECTS_FILE
+PROJECTS_FILE=$CONFIG_DIR/projects.json
+cp projects.template.json $PROJECTS_FILE
 
 # Run the container
 docker run -d \
