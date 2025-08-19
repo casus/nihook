@@ -1,5 +1,12 @@
 #!/bin/bash
 
+PARENT_DIR=$1
+if [ -z $PARENT_DIR ]; then
+  PARENT_DIR="./"
+fi
+
+echo "Spin up new NocoDB + webhook instance in parent dir ${PARENT_DIR}"
+
 # hardcode here because internal to the container and probably no need to change it
 PUBLIC_URL="http://192.168.11.167"
 HOOK_HOST=0.0.0.0
@@ -36,14 +43,8 @@ else
   read -r HOST_PORT_WEBHOOK HOST_PORT_NOCODB < <(find_valid_ports)
 fi
 
-
-# Create auth directory
-if [ "$DEBUG" = "True" ]; then
-  CONTAINER_ID=1
-else
-  CONTAINER_ID=$(date +%s)
-fi
-VOLUME_DIR="./volumes/container_${CONTAINER_ID}"
+# Create directories
+VOLUME_DIR=$PARENT_DIR"nocodb_webhook_instance_${HOST_PORT_WEBHOOK}_${HOST_PORT_NOCODB}"
 CONFIG_DIR=$VOLUME_DIR/config
 AUTH_DIR=$VOLUME_DIR/auth
 DB_DIR=$VOLUME_DIR/db

@@ -12,3 +12,4 @@ gitlab.projects
 SCHEMA.json
 auth.json
 volumes/
+nocodb_webhook_instance_*/
