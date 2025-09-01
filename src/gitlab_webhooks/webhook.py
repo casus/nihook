@@ -9,6 +9,7 @@ from datetime import datetime
 import gitlab
 from nocodb_client import nocodb
 from nocodb_client import table_from_schema
+import yaml
 
 
 from jsonschema import validate
@@ -30,7 +31,6 @@ AUTO_COMMIT_METADATA_VAL= "1"
 ADMIN_OVERRIDE_MESSAGE= "admin override"
 
 BATCH_SIZE = 100
-DEBUG_MODE = False
 
 TABLE_ID = ""
 # base file names that require further processing via the following function
@@ -51,26 +51,11 @@ from api import authenticate
 from gitlab_project_manager import (
     load_gitlab_projects
 )
-
+from utils import (HOST, PORT, NOCODB_HOST, NOCODB_TOKEN, NOCODB_SSL_CERT, DEBUG)
 
 LOGDIR = Path("logs")
 LOGFILE = LOGDIR / "push-hook.log"
 
-
-# Get environment variables
-HOST = os.getenv('HOOK_HOST', '127.0.0.1')
-PORT = os.getenv('HOOK_PORT', '5000')
-NOCODB_HOST = f"http://localhost:{os.getenv('NOCODB_PORT', '8080')}"
-NOCODB_TOKEN = os.getenv('NOCODB_TOKEN', None)
-NOCODB_SSL_CERT = os.getenv('NOCODB_SSL_CERT', True) # optional
-
-# TODO read all config variables from setting.json
-settings={}
-with open('/app/config/nocodb.json') as f:
-    settings = json.load(f)
-
-NOCODB_TOKEN= settings["nocodb_secret_token"]
-print(f"DEBUG NOCODB_TOKEN= {NOCODB_TOKEN}")
 
 # Ensure log directory exists
 LOGDIR.mkdir(parents=True, exist_ok=True)
@@ -193,6 +178,8 @@ def webhhook_upload_all_commits():
     return jsonify({'message': 'All commits were scanned and added to the table'}), 201
 
 
+    
+
 @app.route('/webhooks/push', methods=['POST'])
 def webhook_push():
     """
@@ -209,7 +196,7 @@ def webhook_push():
     if auth_result:
         return auth_result  # immediately return 401 if auth fails
 
-    if (DEBUG_MODE):
+    if (DEBUG):
         tableid = TABLE_ID
     else:
         tableid= headers.get(HEADER_NOCO_DB_TABLE_ID)
@@ -301,9 +288,7 @@ if __name__ == '__main__':
         print("    ", i)
 
 
-    debug_mode = os.getenv("DEBUG", "False")
-    if (debug_mode == "True"):
-        DEBUG_MODE = True
+    if (DEBUG == True):
         log.setLevel(logging.DEBUG)
         base_id = os.getenv("BASE_ID", "none")
         schema= {}

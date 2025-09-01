@@ -1,4 +1,6 @@
 from flask import request, jsonify
+
+import settings_manager
 from . import api_bp
 from auth import Auth
 from pathlib import Path
@@ -56,3 +58,26 @@ def delete_gitlab_project():
         return jsonify({'message': f'Project removed: {url}'}), 200
     except ValueError as e:
         return jsonify({'error': str(e)}), 404
+    
+
+@api_bp.route('/gitlab-projects/settings', methods=['PUT'])
+def link_to_a_table():
+    """
+    Route in order to save new GitLab project and table pair in the settings file.
+    It expects a JSON payload with 'url' and 'table_id'.
+    """
+    data = request.get_json()
+    url = data.get('url')
+    table_id = data.get('table_id')
+
+    if not url or not table_id:
+        return jsonify({'error': 'Missing "url" or "table_id"'}), 400
+    try:
+        settings_manager.save_project_settings({
+            "projectURL": url,
+            "tableID": table_id,
+            "links": []
+        })
+        return jsonify({'message': f'Project {url} linked to the table {table_id}'}), 201
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 409
