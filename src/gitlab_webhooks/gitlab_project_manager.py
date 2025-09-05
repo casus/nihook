@@ -1,8 +1,7 @@
 from pathlib import Path
 import json
 
-CONFIG_PATH = Path("/app/config/projects.json")
-
+from const import CONFIG_PATH
 def load_gitlab_projects():
     if not CONFIG_PATH.exists():
         return {}

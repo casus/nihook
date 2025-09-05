@@ -4,16 +4,14 @@ from flask import request, jsonify
 from . import api_bp
 from auth import Auth
 from pathlib import Path
-
-
-auth_file_path = Path(__file__).resolve().parent.parent.parent / "auth" / "data" / "auth.json"
+from const import AUTH_FILE_PATH
 
 @api_bp.route('/auth-data', methods=['GET'])
 def get_auth_data():
     """
     Route to retrieve all the users data.
     """
-    authentication= Auth(auth_file_path)
+    authentication= Auth(AUTH_FILE_PATH)
     return authentication.api_users_list()
 
 
@@ -24,7 +22,7 @@ def delete_auth_data():
     It expects a query parameter 'name'.
     """
     name = request.args.get('name')
-    authentication= Auth(auth_file_path)
+    authentication= Auth(AUTH_FILE_PATH)
     if (authentication.api_delete_user(name)):
         return jsonify({'message': f'{name} deleted'}), 200
     return jsonify({'error': f'{name} not found'}), 404
@@ -40,7 +38,7 @@ def add_auth_data():
     data = request.get_json()
     user_name = data.get('user_name')
     size = data.get('size', 32) 
-    authentication = Auth(auth_file_path)
+    authentication = Auth(AUTH_FILE_PATH)
     try:
         secret = authentication.api_add(user_name, int(size))
         return jsonify({'secret': secret}), 200
