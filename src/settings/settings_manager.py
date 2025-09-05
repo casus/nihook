@@ -1,63 +1,65 @@
 import os
-import yaml
+import json
 
-SETTINGS_FILE = 'settings.yaml'
+from const import SETTINGS_FILE_PATH
 
 
 def init_settings_file():
     """
-    Create the settings.yaml file with an empty structure if it does not exist.
+    Create the settings.json file with an empty structure if it does not exist.
     Example structure:
-    settings:
-      - projectURL: Your-Project-URL
-        tableID: Your-Project-Table-ID
-        links: []
+    {
+        "settings": []
+    }
     """
-    if not os.path.exists(SETTINGS_FILE):
+    if not os.path.exists(SETTINGS_FILE_PATH):
         base_structure = {
             "settings": []
         }
-        with open(SETTINGS_FILE, "w") as f:
-            yaml.safe_dump(base_structure, f, sort_keys=False)
-        print(f"Created new settings file: {SETTINGS_FILE}")
+        with open(SETTINGS_FILE_PATH, "w") as f:
+            json.dump(base_structure, f, indent=2)
+        print(f"Created new settings file: {SETTINGS_FILE_PATH}")
     else:
-        print(f"Settings file already exists: {SETTINGS_FILE}")
+        print(f"Settings file already exists: {SETTINGS_FILE_PATH}")
 
 def load_settings():
     """
-    Load settings from the YAML file.
+    Load settings from the JSON file.
     Format:
-    settings:
-    - projectURL: Your-Project-URL
-        tableID: Your-Project-Table-ID
-        links:
-        - ParentTableLinkFieldID: Parent-Table-Link-Field-ID-1a
-          ParentTableChildKeyStorageFieldID: Parent-Table-Child-Key-Storage-Field-ID-1a
-          ChildTableID: Child-Table-ID-1a
-          ChildTableLinkFieldID: Child-Table-Link-Field-ID-1a
-          AutomaticallyCreateChildRecords: True
-        - ParentTableLinkFieldID: Parent-Table-Link-Field-ID-1b
-          ParentTableChildKeyStorageFieldID: Parent-Table-Child-Key-Storage-Field-ID-1b
-          ChildTableID: Child-Table-ID-1b
-          ChildTableLinkFieldID: Child-Table-Link-Field-ID-1b
-          AutomaticallyCreateChildRecords: False
+    {
+        "settings": [
+            {
+                "projectURL": "Your-Project-URL",
+                "tableID": "Your-Project-Table-ID",
+                "links": [
+                    {
+                        "ParentTableLinkFieldID": "...",
+                        "ParentTableChildKeyStorageFieldID": "...",
+                        "ChildTableID": "...",
+                        "ChildTableLinkFieldID": "...",
+                        "AutomaticallyCreateChildRecords": true
+                    }
+                ]
+            }
+        ]
+    }
     """
-    with open(SETTINGS_FILE, 'r') as f:
-        return yaml.safe_load(f)
+    with open(SETTINGS_FILE_PATH, 'r') as f:
+        return json.load(f)
 
 def save_settings(settings):
     """
-    Save settings to the YAML file.
+    Save settings to the JSON file.
     """
-    with open(SETTINGS_FILE, 'w') as f:
-        yaml.dump(settings, f)
+    with open(SETTINGS_FILE_PATH, 'w') as f:
+        json.dump(settings, f, indent=2)
 
 def find_project_by_table_id(table_id):
     try:
-        with open(SETTINGS_FILE, "r") as f:
-            data = yaml.safe_load(f)
+        with open(SETTINGS_FILE_PATH, "r") as f:
+            data = json.load(f)
     except FileNotFoundError:
-        print(f"❌ File {SETTINGS_FILE} not found.")
+        print(f"❌ File {SETTINGS_FILE_PATH} not found.")
         return None
 
     settings = data.get("settings", [])
@@ -72,13 +74,13 @@ def save_relationship_settings(settings, table_id):
     try:
         data = load_settings()
     except FileNotFoundError:
-        print(f"❌ File {SETTINGS_FILE} not found.")
+        print(f"❌ File {SETTINGS_FILE_PATH} not found.")
         data = {"settings": []}
 
     existing_settings = find_project_by_table_id(table_id)
 
     # Remove existing settings for the same tableID
-    if (not existing_settings):
+    if not existing_settings:
         raise ValueError(f"Project with tableID {table_id} not found.")
 
     if existing_settings.get("links") is None:
@@ -97,7 +99,7 @@ def save_relationship_settings(settings, table_id):
 
 def save_project_settings(project_settings):
     """
-    Save project settings to the YAML file.
+    Save project settings to the JSON file.
     """
     data = load_settings()
 
@@ -121,7 +123,7 @@ def get_all_projects():
     try:
         data = load_settings()
     except FileNotFoundError:
-        print(f"❌ File {SETTINGS_FILE} not found.")
+        print(f"❌ File {SETTINGS_FILE_PATH} not found.")
         return []
 
     return data.get("settings", [])
