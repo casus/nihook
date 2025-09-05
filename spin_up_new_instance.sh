@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PARENT_DIR=$1
-if [ -z $PARENT_DIR ]; then
+if [ -z "$PARENT_DIR" ]; then
   PARENT_DIR="./"
 fi
 
@@ -49,7 +49,7 @@ CONFIG_DIR=$VOLUME_DIR/config
 AUTH_DIR=$VOLUME_DIR/auth
 DB_DIR=$VOLUME_DIR/db
 LOGS_DIR=$VOLUME_DIR/logs
-mkdir -p $CONFIG_DIR $VOLUME_DIR $AUTH_DIR $DB_DIR $LOGS_DIR
+mkdir -p "$CONFIG_DIR" "$VOLUME_DIR" "$AUTH_DIR" "$DB_DIR" "$LOGS_DIR"
 
 
 # create the initial auth file
@@ -59,13 +59,13 @@ if [ ! -f "$AUTH_FILE" ]; then
     echo "{}" > "$AUTH_FILE"
     echo "📁 Created empty auth.json in $VOLUME_DIR"
 fi
-WEBHOOK_AUTH_SECRET=`python3 src/auth/add_auth.py $WEBHOOK_USERNAME -f "$AUTH_FILE"`
+WEBHOOK_AUTH_SECRET=$(python3 src/auth/add_auth.py $WEBHOOK_USERNAME -f "$AUTH_FILE")
 
 CONFIG_FILE="${CONFIG_DIR}/nocodb.json"
 
 # create the initial projects file
 PROJECTS_FILE=$CONFIG_DIR/projects.json
-cp projects.template.json $PROJECTS_FILE
+cp projects.template.json "$PROJECTS_FILE"
 
 # Run the container
 docker run -d \
@@ -98,9 +98,9 @@ echo "NocoDB is up!"
 
 if [ -f $CONFIG_FILE ]; then
   
-  email=`jq -r '.nocodb_email' $CONFIG_FILE`
-  password=`jq -r '.nocodb_password' $CONFIG_FILE`
-  token=`jq -r '.nocodb_secret_token' $CONFIG_FILE`
+  email=$(jq -r '.nocodb_email' "$CONFIG_FILE")
+  password=$(jq -r '.nocodb_password' "$CONFIG_FILE")
+  token=$(jq -r '.nocodb_secret_token' "$CONFIG_FILE")
 
 else
 

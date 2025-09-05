@@ -32,7 +32,7 @@ echo "NocoDB is up!"
 
 if [ -f "/app/config/nocodb.json" ]; then
 
-  token=`jq -r '.nocodb_secret_token' /app/config/nocodb.json`
+  token=$(jq -r '.nocodb_secret_token' /app/config/nocodb.json)
   echo "Read NOCODB token from file: "$token
 
 else
@@ -40,14 +40,14 @@ else
   echo "Generate NOCODB token"
 
   ADMIN_EMAIL="admin@gmail.com"
-  ADMIN_PASSWORD=`/usr/bin/pwgen 20 1`
+  ADMIN_PASSWORD=$(/usr/bin/pwgen 20 1)
 
   # Sign up first user 
   response=$(curl -s -X POST \
     -H "Content-Type: application/json" \
     -d '{
           "email": "'$ADMIN_EMAIL'",
-          "password": "'$ADMIN_PASSWORD'",
+          "password": "'"$ADMIN_PASSWORD"'",
           "ignore_subscribe": true,
           "token": ""
         }' \
@@ -80,7 +80,7 @@ else
     --arg token "$token" \
   '{ "nocodb_email": $email, "nocodb_password": $password, "nocodb_secret_token": $token}' >/app/config/nocodb.json
 
-  echo "Newly generated NOCODB token: "$token
+  echo "Newly generated NOCODB token: ""$token"
 
   # Create a default base only in debug mode
   if [ "$DEBUG" = "True" ]; then
