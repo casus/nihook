@@ -3,7 +3,6 @@ import os
 from urllib.parse import urlparse
 from flask import Flask, request, jsonify
 from nocodb_client import nocodb, table_from_schema
-import yaml
 from . import api_bp
 import ast
 import gitlab

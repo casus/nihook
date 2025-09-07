@@ -9,7 +9,6 @@ from datetime import datetime
 import gitlab
 from nocodb_client import nocodb
 from nocodb_client import table_from_schema
-import yaml
 
 
 from jsonschema import validate
