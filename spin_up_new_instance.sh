@@ -60,12 +60,16 @@ if [ ! -f "$AUTH_FILE" ]; then
     echo "📁 Created empty auth.json in $VOLUME_DIR"
 fi
 WEBHOOK_AUTH_SECRET=$(python3 src/auth/add_auth.py $WEBHOOK_USERNAME -f "$AUTH_FILE")
+cp src/auth/manage_users.sh "$AUTH_DIR/manage_users.sh"
+chmod +x "$AUTH_DIR/manage_users.sh"
 
 CONFIG_FILE="${CONFIG_DIR}/nocodb.json"
 
 # create the initial projects file
 PROJECTS_FILE=$CONFIG_DIR/projects.json
 cp projects.template.json "$PROJECTS_FILE"
+cp src/project_manager_interactive/manage_projects.sh "$CONFIG_DIR/manage_projects.sh"
+chmod +x "$CONFIG_DIR/manage_projects.sh"
 
 # Run the container
 podman run -d \
