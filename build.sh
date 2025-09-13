@@ -1,3 +1,4 @@
 #!/bin/bash
 
-docker build -t webhook-nocodb .
+podman build -t webhook-nocodb .
+

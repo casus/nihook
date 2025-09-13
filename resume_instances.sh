@@ -46,14 +46,14 @@ for INSTANCE in "${INSTANCE_DIRS[@]}"; do
   token=$(jq -r '.nocodb_secret_token' "$CONFIG_FILE")
 
   # Check if container is already running (matching published ports)
-  RUNNING_ID=$(docker ps -q -f "publish=$HOST_PORT_WEBHOOK" -f "publish=$HOST_PORT_NOCODB")
+  RUNNING_ID=$(podman ps --format "{{.ID}} {{.Ports}}" | grep "${HOST_PORT_WEBHOOK}->5000" | awk '{print $1}')
   if [ -n "$RUNNING_ID" ]; then
     echo "✅ Instance already running on ports $HOST_PORT_WEBHOOK/$HOST_PORT_NOCODB (container $RUNNING_ID)"
     continue
   fi
 
   echo "▶️ Starting instance on ports $HOST_PORT_WEBHOOK/$HOST_PORT_NOCODB..."
-  docker run -d \
+  podman run -d \
     -p "${HOST_PORT_WEBHOOK}:5000" \
     -p "${HOST_PORT_NOCODB}:8080" \
     -v "$(realpath "$CONFIG_DIR")":/app/config/ \

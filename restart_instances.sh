@@ -47,15 +47,15 @@ for INSTANCE in "${INSTANCE_DIRS[@]}"; do
   token=$(jq -r '.nocodb_secret_token' "$CONFIG_FILE")
 
   # Stop existing container if any (we can identify by ports)
-  CONTAINER_ID=$(docker ps -q -f "publish=$HOST_PORT_WEBHOOK" -f "publish=$HOST_PORT_NOCODB")
+  CONTAINER_ID=$(podman ps -a --format "{{.ID}} {{.Ports}}" | grep "${HOST_PORT_WEBHOOK}->5000" | awk '{print $1}')
   if [ -n "$CONTAINER_ID" ]; then
     echo "🛑 Stopping container $CONTAINER_ID using ports $HOST_PORT_WEBHOOK/$HOST_PORT_NOCODB..."
-    docker stop "$CONTAINER_ID"
-    docker rm "$CONTAINER_ID"
+    podman stop "$CONTAINER_ID"
+    podman rm "$CONTAINER_ID"
   fi
 
   # Run updated container
-  docker run -d \
+  podman run -d \
     -p "${HOST_PORT_WEBHOOK}:5000" \
     -p "${HOST_PORT_NOCODB}:8080" \
     -v "$(realpath "$CONFIG_DIR")":/app/config/ \

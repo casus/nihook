@@ -68,7 +68,7 @@ PROJECTS_FILE=$CONFIG_DIR/projects.json
 cp projects.template.json "$PROJECTS_FILE"
 
 # Run the container
-docker run -d \
+podman run -d \
   -p "${HOST_PORT_WEBHOOK}":"${HOOK_PORT}" \
   -p "${HOST_PORT_NOCODB}":"${NOCODB_PORT}" \
   -v "$(realpath "$CONFIG_DIR")":/app/config/ \
