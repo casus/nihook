@@ -7,6 +7,9 @@ set -e
 #   ./resume_instances.sh ./nocodb_webhook_instance_5233_7233 ./nocodb_webhook_instance_5555_7555
 
 PUBLIC_URL="http://192.168.11.167"
+HOOK_HOST=0.0.0.0
+HOOK_PORT=5000
+NOCODB_PORT=8080
 PARENT_DIR=$(pwd)
 INSTANCE_DIRS=()
 
@@ -54,15 +57,15 @@ for INSTANCE in "${INSTANCE_DIRS[@]}"; do
 
   echo "▶️ Starting instance on ports $HOST_PORT_WEBHOOK/$HOST_PORT_NOCODB..."
   podman run -d \
-    -p "${HOST_PORT_WEBHOOK}:5000" \
-    -p "${HOST_PORT_NOCODB}:8080" \
+    -p "${HOST_PORT_WEBHOOK}":"${HOOK_PORT}" \
+    -p "${HOST_PORT_NOCODB}":"${NOCODB_PORT}" \
     -v "$(realpath "$CONFIG_DIR")":/app/config/ \
     -v "$(realpath "$AUTH_DIR")":/app/auth/ \
     -v "$(realpath "$DB_DIR")":/app/db/ \
     -v "$(realpath "$LOGS_DIR")":/app/logs/ \
-    -e NOCODB_PORT=8080 \
-    -e HOOK_HOST=0.0.0.0 \
-    -e HOOK_PORT=5000 \
+    -e NOCODB_PORT="$NOCODB_PORT" \
+    -e HOOK_HOST="$HOOK_HOST" \
+    -e HOOK_PORT="$HOOK_PORT" \
     webhook-nocodb
 
   echo "✅ Instance started at:"
