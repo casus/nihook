@@ -84,72 +84,47 @@ To run the container:
 
 ### Setup Steps
 
-1. After receiving credentials and service info from your admin, use the [manager script](https://here_should_be_a_link_to_manager_script) to create a new table using your `SCHEMA.json`.
 
-2. After successful table creation, copy the table ID. You’ll see a response like:
+1) 💻 Connect to the NocoDB instance and create a new base:
+    htttps://data.casus.science/$NOCODB_PORT_NUMBER with initial credentials from your administrator
+    - Keep the base ID == the last part of the URL when inside the new base
 
-   ```json
-   {
-     "message": "Table created successfully",
-     "table": "m2hh0t4oyshybv8"
-   }
-   ```
+2) ⌨ Clone and setup the Gitlab repository with the manager script
+    git clone https://codebase.helmholtz.cloud/casus-datalad/webhook_manager
+    cd ./webhook_manager
+    cat > .env <<EOL
+    export SERVER="htttps://data.casus.science/$WEBHOOK_PORT_NUMBER"
+    export USER="Your Username"
+    export SECRET="Your Secret"
+3) 🛠 Create a table from a SCHEMA.json in a Datalad project on Github
+    ./run-cli.sh
+    Now enter '8' and follow the instructions
+4) 🔑 Create a Gitlab API token and give it to the webhook server
+    - Go to your Gitlab project → Settings → Access tokens → Add new token
+        - Pick a token name 'for webhook + NocoDB' or something else
+        - Increase expiration date to 1 year from now (this is the maximum)
+        - Select role 'Reporter' or higher
+        - Select scopes 'read_api'
+        - Click 'Create project access token'
+    - On the following page copy the token (this is the only time it is shown to you)
+    - Add a new line in 'nocodb_webhook_instance_$WEBHOOK_PORT_$NOCODB_PORT/config/projects.json':
+        "<Gitlab project URL>" : "<the token>"
+      ... which allows the webhook server to access your gitlab project 
+    🎁 Alternatively in order to add a new project you can also use the webhook manager script from the step 2:
+    ./run-cli.sh
+Now enter '5' and follow the instructions
+4) 🎣 Configure the Gitlab webhook (If you haven't done it on the step 3):
+    - Go to your Gitlab project → Settings → Webhooks → Add new webhook
+        - Pick a webhook name 'for NocoDB' or something else
+        - Enter the URL htttps://data.casus.science/$WEBHOOK_PORT/webhooks/push
+        - Add Custom headers:
+            X-Webhook-User: Your Username (the same as on the step 2)
+            X-Webhook-Secret: Your Secret (the same as on the step 2)
+            X-Webhook-Nocodbtableid: <table ID from step 2>
+        - Select 'Push events' as the Trigger
+        - Click 'Add webhook'
 
-   Here, `m2hh0t4oyshybv8` is the table ID.
+✅ Now the webhook is active. The next time there is a 'git push' including commits 
+which have new or changed 'DATASET.json' files, the webhook will automatically enter 
+their contents to the NocoDB table.
 
-3. If you have many commits with `DATASET.json` files to upload, use the manager script again. The `Upload All Commits to Table` option will help.
-
-4. Before adding a webhook to your repository, register your repo with an access token in the webhook service. Use the manager script and follow these steps:
-
-   - Go to **GitLab → Settings → Access Tokens**.
-   - Create a new token:
-     - **Name**: Choose any
-     - **Expiration Date**: Optional
-     - **Role**: `Reporter`
-     - **Scopes**: `read_api`
-   - Click **Create project access token** and copy the token.
-   - Use the manager script option `Add GitLab Project` to register your repo and token.
-
-5. Add a webhook to your GitLab repository:
-
-   - Navigate to **Settings → Webhooks → Add new webhook**
-   - Set the URL:
-
-     ```
-     https://<Webhook-IP>:<Port>/webhooks/push
-     ```
-
-     Example:
-
-     ```
-     https://192.168.11.167:5000/webhooks/push
-     ```
-
-   - Add these custom headers:
-
-     ```
-     X-Webhook-User: Your-Webhook-Username
-     X-Webhook-Secret: Your-Webhook-Secret
-     X-Webhook-Nocodbtableid: Your-NocoDB-Table-ID
-     ```
-
-   - In **Trigger**, select only:
-
-     ```
-     Push events
-     ```
-
-   - Ensure **"Enable SSL verification"** is checked.
-
-   - Click **Add webhook**.
-
-   - Test the setup by clicking **Test → Push events**.
-
----
-
-### NocoDB usage
-By default 
-* your login is `admin@gmail.com`
-* your password is `12345678`
-
-Change it once you logged in!
