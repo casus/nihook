@@ -6,7 +6,7 @@ set -e
 #   ./resume_instances.sh                      # resumes all instances
 #   ./resume_instances.sh ./nocodb_webhook_instance_5233_7233 ./nocodb_webhook_instance_5555_7555
 
-PUBLIC_URL="http://192.168.11.167"
+PUBLIC_URL="https://data.casus.science"
 HOOK_HOST=0.0.0.0
 HOOK_PORT=5000
 NOCODB_PORT=8080
