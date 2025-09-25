@@ -112,56 +112,58 @@ else
   exit -1
 fi
 
-
+GUIDE_FILE_PATH="$VOLUME_DIR/README_next_steps.md"
 # print usage info
-echo ""
-echo "🟢 NocoDB and webhook servers running:"
-echo "  👉 Webhook at ${PUBLIC_URL}/${HOST_PORT_WEBHOOK}"
-echo "  👉 NocoDB at ${PUBLIC_URL}/${HOST_PORT_NOCODB}"
-echo "      NocoDB token: ${token}"
-echo ""
-echo "# Next steps"
-echo ""
-echo "1) 💻 Connect to the NocoDB instance and create a new base:"
-echo "    ${PUBLIC_URL}/${HOST_PORT_NOCODB} with initial credentials ${email} : ${password}"
-echo "    - Keep the base ID == the last part of the URL when inside the new base"
-echo ""
-echo "2) ⌨ Clone and setup the Gitlab repository with the manager script"
-echo "    git clone https://codebase.helmholtz.cloud/casus-datalad/webhook_manager"
-echo "    cd ./webhook_manager"
-echo '    cat > .env <<EOL'
-echo "    export SERVER=\"${PUBLIC_URL}/${HOST_PORT_WEBHOOK}\""
-echo "    export USER=\"${WEBHOOK_USERNAME}\""
-echo "    export SECRET=\"${WEBHOOK_AUTH_SECRET}\""
-echo "3) 🛠 Create a table from a SCHEMA.json in a Datalad project on Github"
-echo "    ./run-cli.sh"
-echo "    Now enter '8' and follow the instructions"
-echo "4) 🔑 Create a Gitlab API token and give it to the webhook server"
-echo "    - Go to your Gitlab project → Settings → Access tokens → Add new token"
-echo "        - Pick a token name 'for webhook + NocoDB' or something else"
-echo "        - Increase expiration date to 1 year from now (this is the maximum)"
-echo "        - Select role 'Reporter' or higher"
-echo "        - Select scopes 'read_api'"
-echo "        - Click 'Create project access token'"
-echo "    - On the following page copy the token (this is the only time it is shown to you)"
-echo "    - Add a new line in 'nocodb_webhook_instance_${HOST_PORT_WEBHOOK}_${HOST_PORT_NOCODB}/config/projects.json':"
-echo "        \"<Gitlab project URL>\" : \"<the token>\""
-echo "      ... which allows the webhook server to access your gitlab project "
-echo "    🎁 Alternatively in order to add a new project you can also use the webhook manager script from the step 2:"
-echo "    ./run-cli.sh"
-echo "Now enter '5' and follow the instructions"
-echo "4) 🎣 Configure the Gitlab webhook (If you haven't done it on the step 3):"
-echo "    - Go to your Gitlab project → Settings → Webhooks → Add new webhook"
-echo "        - Pick a webhook name 'for NocoDB' or something else"
-echo "        - Enter the URL ${PUBLIC_URL}/${HOST_PORT_WEBHOOK}/webhooks/push"
-echo "        - Add Custom headers:"
-echo "            X-Webhook-User: ${WEBHOOK_USERNAME}"
-echo "            X-Webhook-Secret: ${WEBHOOK_AUTH_SECRET}"
-echo "            X-Webhook-Nocodbtableid: <table ID from step 2>"
-echo "        - Select 'Push events' as the Trigger"
-echo "        - Click 'Add webhook'"
-echo ""
-echo "✅ Now the webhook is active. The next time there is a 'git push' including commits "
-echo "which have new or changed 'DATASET.json' files, the webhook will automatically enter "
-echo "their contents to the NocoDB table."
-echo ""
+cat <<EOF | tee "$GUIDE_FILE_PATH"
+🟢 NocoDB and webhook servers running:
+  👉 Webhook at ${PUBLIC_URL}:5000/${HOST_PORT_WEBHOOK}
+  👉 NocoDB at ${PUBLIC_URL}/${HOST_PORT_NOCODB}
+      NocoDB token: ${token}
+
+# Next steps
+
+1) 💻 Connect to the NocoDB instance and create a new base:
+    ${PUBLIC_URL}/${HOST_PORT_NOCODB} with initial credentials ${email} : ${password}
+    - Keep the base ID == the last part of the URL when inside the new base
+
+2) ⌨ Create a table from a SCHEMA.json in a Datalad project on Github:
+    - Clone the repository
+    git clone https://codebase.helmholtz.cloud/casus-datalad/nocodb_automation.git
+    cd ./nocodb_automation
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+    export NOCODB_HOST=${PUBLIC_URL}/${HOST_PORT_NOCODB}
+    export NOCODB_TOKEN=${token}
+    python ./src/nocodb_client/table_from_schema.py -b <base_id> -n <new-name-for-table> <path-to-SCHEMA.json>
+        ... note the resulting table ID for later
+
+3) 🔑 Create a Gitlab API token and give it to the webhook server
+    - Go to your Gitlab project → Settings → Access tokens → Add new token
+        - Pick a token name 'for webhook + NocoDB' or something else
+        - Increase expiration date to 1 year from now (this is the maximum)
+        - Select role 'Reporter' or higher
+        - Select scopes 'read_api'
+        - Click 'Create project access token'
+    - On the following page copy the token (this is the only time it is shown to you)
+    - Add a new line in 'config/projects.json' or give the token to your administrator:
+        "<Gitlab project URL>" : "<the token>"
+      ... which allows the webhook server to access your gitlab project 
+
+4) 🎣 Configure the Gitlab webhook:
+    - Go to your Gitlab project → Settings → Webhooks → Add new webhook
+        - Pick a webhook name 'for NocoDB' or something else
+        - Enter the URL ${PUBLIC_URL}:5000/${HOST_PORT_WEBHOOK}/webhooks/push
+        - Add Custom headers:
+            X-Webhook-User: ${WEBHOOK_USERNAME}
+            X-Webhook-Secret: ${WEBHOOK_AUTH_SECRET}
+            X-Webhook-Nocodbtableid: <table ID from step 2>
+        - Select 'Push events' as the Trigger
+        - Disable SSL verification
+        - Click 'Add webhook'
+
+✅ Now the webhook is active. The next time there is a 'git push' including commits 
+which have new or changed 'DATASET.json' files, the webhook will automatically enter 
+their contents to the NocoDB table.
+
+EOF
