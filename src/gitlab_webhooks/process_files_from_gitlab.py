@@ -6,8 +6,8 @@ import json
 import gitlab
 import base64
 
-import nocodb
-import prepare_json
+from nocodb_client import nocodb
+from nocodb_client import prepare_json
 
 
 def process_special_files( operation, gitlab_project, projecturl, ref, commit_before, commit_after, dirname, basename, table ) -> bool:
@@ -27,7 +27,6 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
         f= gitlab_project.files.get( file_path= os.path.join(dirname,basename), ref= ref ) # get the base64 encoded content
         file_content= f.decode()
         j= json.loads(file_content)
-        #print( json.dumps(j,indent=4) )
 
         ### recreate the complete URL to the dir that contains the DATASET.json
 
@@ -35,6 +34,8 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
         # print("URL= ",url)
 
         data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current", 'branch': branch } )
+        print("Data to be inserted: ")
+        print( json.dumps(data,indent=4) )
         res= table.insert(data)
         print("inserted res: ", res)
 
@@ -57,7 +58,7 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
         file_content= f.decode()
         j= json.loads(file_content)
         #print( json.dumps(j,indent=4) )
-
+        
 
         # of len == 0, then no old entry present -- can happen because webhook was inactive some time, ignore
         # len cannot be > 1 because the URL is the primary key

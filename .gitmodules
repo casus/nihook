@@ -1,0 +1,3 @@
+[submodule "submodules/nocodb_automation"]
+	path = submodules/nocodb_automation
+	url = git@codebase.helmholtz.cloud:casus-datalad/nocodb_automation.git

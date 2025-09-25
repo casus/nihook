@@ -1,7 +1,0 @@
-Flask>=3.0.0
-jsonschema>=4.0.0
-numpy>=2.0.0
-pandas>=2.2.2
-python-dateutil
-requests>=2.32.3
-tzdata
