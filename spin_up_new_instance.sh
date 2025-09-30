@@ -112,9 +112,12 @@ else
   exit -1
 fi
 
-GUIDE_FILE_PATH="$VOLUME_DIR/README_next_steps.md"
+GUIDE_FILE_PATH="$VOLUME_DIR/README.md"
 # print usage info
 cat <<EOF | tee "$GUIDE_FILE_PATH"
+<Username>
+<Purpose>
+
 🟢 NocoDB and webhook servers running:
   👉 Webhook at ${PUBLIC_URL}:5000/${HOST_PORT_WEBHOOK}
   👉 NocoDB at ${PUBLIC_URL}/${HOST_PORT_NOCODB}
