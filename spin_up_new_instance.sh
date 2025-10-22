@@ -83,6 +83,7 @@ podman run -d \
   -e HOOK_HOST=$HOOK_HOST \
   -e HOOK_PORT=$HOOK_PORT \
   -e NC_PUBLIC_URL="${PUBLIC_URL}/${HOST_PORT_NOCODB}" \
+  --restart=always \
   webhook-nocodb
 
 # Wait for NocoDB to be ready
@@ -139,7 +140,6 @@ cat <<EOF | tee "$GUIDE_FILE_PATH"
     pip install -r requirements.txt
     export NOCODB_HOST=${PUBLIC_URL}/${HOST_PORT_NOCODB}
     export NOCODB_TOKEN=${token}
-    export NOCODB_SSL_CERT="" # optional
     python ./src/nocodb_client/table_from_schema.py -b <base_id> -n <new-name-for-table> <path-to-SCHEMA.json>
         ... note the resulting table ID for later
 
