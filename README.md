@@ -78,28 +78,30 @@ To run the container:
    - Your webhook username and secret
    - NocoDB service IP address and port
 
-3. To use the [manager script](https://here_should_be_a_link_to_manager_script), ensure [Python](https://www.python.org/downloads/) is installed on your machine.
 
 ---
 
 ### Setup Steps
 
 
+
 1) 💻 Connect to the NocoDB instance and create a new base:
-    htttps://data.casus.science/$NOCODB_PORT_NUMBER with initial credentials from your administrator
+    https://data.casus.science/$NOCODB_PORT_NUMBER with initial credentials from your administrator
     - Keep the base ID == the last part of the URL when inside the new base
 
-2) ⌨ Clone and setup the Gitlab repository with the manager script
-    git clone https://codebase.helmholtz.cloud/casus-datalad/webhook_manager
-    cd ./webhook_manager
-    cat > .env <<EOL
-    export SERVER="htttps://data.casus.science/$WEBHOOK_PORT_NUMBER"
-    export USER="Your Username"
-    export SECRET="Your Secret"
-3) 🛠 Create a table from a SCHEMA.json in a Datalad project on Github
-    ./run-cli.sh
-    Now enter '8' and follow the instructions
-4) 🔑 Create a Gitlab API token and give it to the webhook server
+2) ⌨ Create a table from a SCHEMA.json in a Datalad project on Github:
+    - Clone the repository
+    git clone https://codebase.helmholtz.cloud/casus-datalad/nocodb_automation.git
+    cd ./nocodb_automation
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+    export NOCODB_HOST=${PUBLIC_URL}/${HOST_PORT_NOCODB}
+    export NOCODB_TOKEN=${token}
+    python ./src/nocodb_client/table_from_schema.py -b <base_id> -n <new-name-for-table> <path-to-SCHEMA.json>
+        ... note the resulting table ID for later
+
+3) 🔑 Create a Gitlab API token and give it to the webhook server
     - Go to your Gitlab project → Settings → Access tokens → Add new token
         - Pick a token name 'for webhook + NocoDB' or something else
         - Increase expiration date to 1 year from now (this is the maximum)
@@ -107,24 +109,22 @@ To run the container:
         - Select scopes 'read_api'
         - Click 'Create project access token'
     - On the following page copy the token (this is the only time it is shown to you)
-    - Add a new line in 'nocodb_webhook_instance_$WEBHOOK_PORT_$NOCODB_PORT/config/projects.json':
+    - Add a new line in 'config/projects.json' or give the token to your administrator:
         "<Gitlab project URL>" : "<the token>"
       ... which allows the webhook server to access your gitlab project 
-    🎁 Alternatively in order to add a new project you can also use the webhook manager script from the step 2:
-    ./run-cli.sh
-Now enter '5' and follow the instructions
-4) 🎣 Configure the Gitlab webhook (If you haven't done it on the step 3):
+
+4) 🎣 Configure the Gitlab webhook:
     - Go to your Gitlab project → Settings → Webhooks → Add new webhook
         - Pick a webhook name 'for NocoDB' or something else
-        - Enter the URL htttps://data.casus.science/$WEBHOOK_PORT/webhooks/push
+        - Enter the URL https://data.casus.science/${HOST_PORT_WEBHOOK}/webhooks/push
         - Add Custom headers:
-            X-Webhook-User: Your Username (the same as on the step 2)
-            X-Webhook-Secret: Your Secret (the same as on the step 2)
-            X-Webhook-Nocodbtableid: <table ID from step 2>
+            X-Webhook-User: Your Username 
+            X-Webhook-Secret: Your Secret 
+            X-Webhook-Nocodbtableid: <table ID from step 3>
         - Select 'Push events' as the Trigger
+        - Disable SSL verification
         - Click 'Add webhook'
 
 ✅ Now the webhook is active. The next time there is a 'git push' including commits 
 which have new or changed 'DATASET.json' files, the webhook will automatically enter 
 their contents to the NocoDB table.
-
