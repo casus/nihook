@@ -66,6 +66,7 @@ for INSTANCE in "${INSTANCE_DIRS[@]}"; do
     -e NOCODB_PORT="$NOCODB_PORT" \
     -e HOOK_HOST="$HOOK_HOST" \
     -e HOOK_PORT="$HOOK_PORT" \
+    --restart=always \
     webhook-nocodb
 
   echo "✅ Instance started at:"
