@@ -55,6 +55,12 @@ for INSTANCE in "${INSTANCE_DIRS[@]}"; do
     continue
   fi
 
+  OLD_ID=$(podman ps -a --format "{{.ID}} {{.Ports}}" | grep "${HOST_PORT_WEBHOOK}->5000" | awk '{print $1}')
+  if [ -n "$OLD_ID" ]; then
+    echo "Removing old container"
+    podman rm "$OLD_ID" || echo "️Failed to remove old container $OLD_ID"
+  fi
+  
   echo "▶️ Starting instance on ports $HOST_PORT_WEBHOOK/$HOST_PORT_NOCODB..."
   podman run -d \
     -p "${HOST_PORT_WEBHOOK}":"${HOOK_PORT}" \
@@ -78,3 +84,4 @@ for INSTANCE in "${INSTANCE_DIRS[@]}"; do
   echo "      NocoDB Token  : ${token}"
   echo ""
 done
+
