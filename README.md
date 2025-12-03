@@ -21,8 +21,12 @@ Codebase for integrations and automations for [Datalad](https://handbook.datalad
    ```
     Alternatevily you can initially clone the repo with all submodules using
     ```bash
-    git clone --recurse-submodules https://codebase.helmholtz.cloud/casus-datalad/datalad_automation.git
+    git clone --recurse-submodules git@codebase.helmholtz.cloud:casus-datalad/datalad_automation.git
     ```
+4. If there are new commits in the submodules and you want to have the latest version you need to run 
+    ```bash
+   git submodule update --remote --recursive
+   ```
 ---
 
 ### Build and Run
