@@ -72,6 +72,7 @@ for INSTANCE in "${INSTANCE_DIRS[@]}"; do
     -e NOCODB_PORT="$NOCODB_PORT" \
     -e HOOK_HOST="$HOOK_HOST" \
     -e HOOK_PORT="$HOOK_PORT" \
+    -e NC_PUBLIC_URL="${PUBLIC_URL}/${HOST_PORT_NOCODB}" \
     --restart=always \
     webhook-nocodb
 
