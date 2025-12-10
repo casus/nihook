@@ -195,10 +195,7 @@ def webhook_push():
     if auth_result:
         return auth_result  # immediately return 401 if auth fails
 
-    if (DEBUG):
-        tableid = TABLE_ID
-    else:
-        tableid= headers.get(HEADER_NOCO_DB_TABLE_ID)
+    tableid= headers.get(HEADER_NOCO_DB_TABLE_ID)
 
     event = request.get_json()
 
@@ -289,19 +286,19 @@ if __name__ == '__main__':
 
     if (DEBUG == True):
         log.setLevel(logging.DEBUG)
-        base_id = os.getenv("BASE_ID", "none")
-        schema= {}
-        script_dir = Path(__file__).parent
-        file_path = script_dir / "SCHEMA.json"
-        if (file_path.exists()):
-            with open(file_path, "r") as f:
-                schema= json.load(f)
+        # base_id = os.getenv("BASE_ID", "none")
+        # schema= {}
+        # script_dir = Path(__file__).parent
+        # file_path = script_dir / "SCHEMA.json"
+        # if (file_path.exists()):
+        #     with open(file_path, "r") as f:
+        #         schema= json.load(f)
 
-            TABLE_ID = table_from_schema.create_new_table_from_schema(NOCODB_HOST, NOCODB_TOKEN, NOCODB_SSL_CERT, base_id, "Default-Table", schema)
-            print("New table was created!")
-            print(TABLE_ID)
-        else:
-            log.info("Couldn't find file with the path = " + file_path)
+        #     TABLE_ID = table_from_schema.create_new_table_from_schema(NOCODB_HOST, NOCODB_TOKEN, NOCODB_SSL_CERT, base_id, "Default-Table", schema)
+        #     print("New table was created!")
+        #     print(TABLE_ID)
+        # else:
+        #     log.info("Couldn't find file with the path = " + file_path)
 
 
     app.run(host=HOST, port=int(PORT))
