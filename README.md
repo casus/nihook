@@ -15,6 +15,18 @@ Codebase for integrations and automations for [Datalad](https://handbook.datalad
    - Add the **public** key to your GitLab account.
    - Place the **private key** (`id_rsa`) in the project’s root directory.
 
+3. You need to install the submodules needed for this project. In order to do this you need to run 
+   ```bash
+   git submodule update --init --recursive
+   ```
+    Alternatevily you can initially clone the repo with all submodules using
+    ```bash
+    git clone --recurse-submodules git@codebase.helmholtz.cloud:casus-datalad/datalad_automation.git
+    ```
+4. If there are new commits in the submodules and you want to have the latest version you need to run 
+    ```bash
+   git submodule update --remote --recursive
+   ```
 ---
 
 ### Build and Run
