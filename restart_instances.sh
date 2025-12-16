@@ -10,8 +10,16 @@ PUBLIC_URL="https://data.casus.science"
 HOOK_HOST=0.0.0.0
 HOOK_PORT=5000
 NOCODB_PORT=8080
+DEBUG=${DEBUG:-False}
 PARENT_DIR=$(pwd)
 INSTANCE_DIRS=()
+
+
+if [ "$DEBUG" = "True" ]; then
+  echo "⚠️ DEBUG mode active"
+else
+  echo "Debug mode NOT active"
+fi
 
 if [ $# -eq 0 ]; then
   # No arguments → find all instances
@@ -69,6 +77,7 @@ for INSTANCE in "${INSTANCE_DIRS[@]}"; do
     -e HOOK_HOST="$HOOK_HOST" \
     -e HOOK_PORT="$HOOK_PORT" \
     -e NC_PUBLIC_URL="${PUBLIC_URL}/${HOST_PORT_NOCODB}" \
+    -e DEBUG="$DEBUG" \
     --restart=always \
     webhook-nocodb
 

@@ -89,6 +89,7 @@ podman run -d \
   -e HOOK_HOST=$HOOK_HOST \
   -e HOOK_PORT=$HOOK_PORT \
   -e NC_PUBLIC_URL="${PUBLIC_URL}/${HOST_PORT_NOCODB}" \
+  -e DEBUG="$DEBUG" \
   --restart=always \
   webhook-nocodb
 
