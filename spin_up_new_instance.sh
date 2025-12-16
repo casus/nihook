@@ -14,6 +14,12 @@ HOOK_PORT=5000
 NOCODB_PORT=8080
 DEBUG=${DEBUG:-False}
 
+if [ "$DEBUG" = "True" ]; then
+  echo "⚠️ DEBUG mode active: using fixed ports"
+else
+  echo "🔎 Searching for free ports..."
+fi
+
 WEBHOOK_USERNAME="firstuser"
 WEBHOOK_AUTH_SECRET=""
 
