@@ -138,8 +138,8 @@ cat <<EOF | tee "$GUIDE_FILE_PATH"
   👉 NocoDB at ${PUBLIC_URL}/${HOST_PORT_NOCODB}
       NocoDB token: ${token}
 
-      🛠 DEBUG is '${DEBUG}'
-      🔒 SSL certificate checking is '${$NOCODB_SSL_CERT}'
+      🛠 DEBUG is \'${DEBUG}\'
+      🔒 SSL certificate checking is \'${NOCODB_SSL_CERT}\'
 
 # Next steps
 
