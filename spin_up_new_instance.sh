@@ -138,8 +138,8 @@ cat <<EOF | tee "$GUIDE_FILE_PATH"
   👉 NocoDB at ${PUBLIC_URL}/${HOST_PORT_NOCODB}
       NocoDB token: ${token}
 
-      🛠 DEBUG is \'${DEBUG}\'
-      🔒 SSL certificate checking is \'${NOCODB_SSL_CERT}\'
+      🛠 DEBUG is '${DEBUG}'
+      🔒 SSL certificate checking is NOCODB_SSL_CERT='${NOCODB_SSL_CERT}'
 
 # Next steps
 
@@ -156,6 +156,7 @@ cat <<EOF | tee "$GUIDE_FILE_PATH"
     pip install -r requirements.txt
     export NOCODB_HOST=${PUBLIC_URL}/${HOST_PORT_NOCODB}
     export NOCODB_TOKEN=${token}
+    export NOCODB_SSL_CERT="" # only in case you want to disable SSL certificate checking
     python ./src/nocodb_client/table_from_schema.py -b <base_id> -n <new-name-for-table> <path-to-SCHEMA.json>
         ... note the resulting table ID for later
 
