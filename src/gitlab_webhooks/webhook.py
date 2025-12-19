@@ -3,8 +3,10 @@
 import os
 import time
 import json
-from flask import Flask, request, jsonify, send_file
 from datetime import datetime
+
+from flask import Flask, request, jsonify, send_file
+from waitress import serve
 
 import gitlab
 from nocodb_client import nocodb
@@ -276,5 +278,4 @@ if __name__ == '__main__':
         log.debug(f"    NOCODB_TOKEN= {NOCODB_TOKEN}")
         log.debug(f"    NOCODB_SSL_CERT= {NOCODB_SSL_CERT}")
 
-
-    app.run(host=HOST, port=int(PORT))
+    serve(app, host=HOST, port=int(PORT))
