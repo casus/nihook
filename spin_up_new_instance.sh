@@ -13,12 +13,17 @@ HOOK_HOST=0.0.0.0 # internal port inside the container
 HOOK_PORT=5000    # internal port inside the container
 NOCODB_PORT=8080  # internal port inside the container
 DEBUG=${DEBUG:-False}
+NOCODB_SSL_CERT=${NOCODB_SSL_CERT:-True}
+
 
 if [ "$DEBUG" = "True" ]; then
   echo "⚠️ DEBUG mode active: using fixed ports"
 else
   echo "🔎 Searching for free ports..."
 fi
+
+echo "🔒 NOCODB_SSL_CERT is ${NOCODB_SSL_CERT}"
+
 
 WEBHOOK_USERNAME="firstuser"
 WEBHOOK_AUTH_SECRET=""
@@ -89,7 +94,8 @@ podman run -d \
   -e HOOK_HOST=$HOOK_HOST \
   -e HOOK_PORT=$HOOK_PORT \
   -e NC_PUBLIC_URL="${PUBLIC_URL}/${HOST_PORT_NOCODB}" \
-  -e DEBUG="$DEBUG" \
+  -e NOCODB_SSL_CERT=$NOCODB_SSL_CERT \
+  -e DEBUG=$DEBUG \
   --restart=always \
   nihook
 
@@ -127,11 +133,13 @@ cat <<EOF | tee "$GUIDE_FILE_PATH"
 <Username>
 <Purpose>
 
-🟢 NocoDB and webhook servers running with DEBUG mode '${DEBUG}'
+🟢 NocoDB and webhook servers running:
   👉 Webhook at ${PUBLIC_URL}:5000/${HOST_PORT_WEBHOOK}
   👉 NocoDB at ${PUBLIC_URL}/${HOST_PORT_NOCODB}
       NocoDB token: ${token}
 
+      🛠 DEBUG is '${DEBUG}'
+      🔒 SSL certificate checking is '${$NOCODB_SSL_CERT}'
 
 # Next steps
 
