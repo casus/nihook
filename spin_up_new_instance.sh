@@ -9,9 +9,9 @@ echo "Spin up new NocoDB + webhook instance in parent dir ${PARENT_DIR}"
 
 # hardcode here because internal to the container and probably no need to change it
 PUBLIC_URL="https://data.casus.science"
-HOOK_HOST=0.0.0.0
-HOOK_PORT=5000
-NOCODB_PORT=8080
+HOOK_HOST=0.0.0.0 # internal port inside the container
+HOOK_PORT=5000    # internal port inside the container
+NOCODB_PORT=8080  # internal port inside the container
 DEBUG=${DEBUG:-False}
 
 if [ "$DEBUG" = "True" ]; then
@@ -127,7 +127,7 @@ cat <<EOF | tee "$GUIDE_FILE_PATH"
 <Username>
 <Purpose>
 
-🟢 NocoDB and webhook servers running with DEBUG mode ${DEBUG}
+🟢 NocoDB and webhook servers running with DEBUG mode '${DEBUG}'
   👉 Webhook at ${PUBLIC_URL}:5000/${HOST_PORT_WEBHOOK}
   👉 NocoDB at ${PUBLIC_URL}/${HOST_PORT_NOCODB}
       NocoDB token: ${token}
