@@ -5,6 +5,11 @@ import time
 import json
 import gitlab
 import base64
+import logging
+
+# inherit the parent logger
+log = logging.getLogger('')
+log.propagate= True
 
 from nocodb_client import nocodb
 from nocodb_client import prepare_json
@@ -15,7 +20,6 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
     # double check here even though it should have been checked upstairs already
     if 'DATASET.json' != basename:
 
-        print(f"ignore this file '{basename}'")
         return False
 
     ref_prefix, ref_suffix= os.path.split(ref)
@@ -31,13 +35,11 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
         ### recreate the complete URL to the dir that contains the DATASET.json
 
         url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
-        # print("URL= ",url)
 
         data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current", 'branch': branch } )
-        print("Data to be inserted: ")
-        print( json.dumps(data,indent=4) )
+        log.debug(f"Data to be inserted: ", extra={"data": data})
         res= table.insert(data)
-        print("inserted res: ", res)
+        log.debug(f"inserted res: ", extra= {"res": res})
 
         # return res
 
@@ -45,11 +47,9 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
     if 'modified' == operation:
 
         url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
-        # print("URL= ",url)
 
         # get the old entry
         old= table.list(where=f"(URL,eq,{url})" )
-        # print(json.dumps(old,indent=4))
 
         assert 'list' in old
 
@@ -57,8 +57,7 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
         f= gitlab_project.files.get( file_path= os.path.join(dirname,basename), ref= ref ) # get the base64 encoded content
         file_content= f.decode()
         j= json.loads(file_content)
-        #print( json.dumps(j,indent=4) )
-        
+
 
         # of len == 0, then no old entry present -- can happen because webhook was inactive some time, ignore
         # len cannot be > 1 because the URL is the primary key
@@ -78,7 +77,7 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
             old_record.pop('UpdatedAt')
 
             res= table.insert(old_record)
-            print("inserted res: ", res)
+            log.debug(f"inserted res: ", extra= {"res": res})
 
             # if an existing entry was present, then change it according to the new data
             # let the 'index.id' hash unchanged if it was not changed in the 'DATASET.json' 
@@ -86,7 +85,7 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
             data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current", 'branch': branch } )
 
             res= table.update(data)
-            print("updated res: ", res)
+            log.debug(f"updated res: ", extra={"res": res})
 
         else:
 
@@ -94,7 +93,7 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
 
             data= prepare_json.prepare_input( j, extra={ 'URL': url, 'status': "current", 'branch': branch } )
             res= table.insert(data)
-            print("inserted res: ", res)
+            log.debug(f"inserted res: ", extra={"res": res})
 
     return True
 
@@ -107,18 +106,16 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
     if 'removed' == operation:
 
         url=projecturl + "/-/tree/" + ref_suffix + "/" + dirname
-        # print("URL= ",url)
 
         # get the old entry
         old= table.list(where=f"(URL,eq,{url})" )
-        # print(json.dumps(old,indent=4))
 
         assert 'list' in old
 
         if 0 == len(old['list']):
 
             # did not find an old entry, can happen if it was added to gitlab which the webhook was inactive, skip
-            print("No matchin entry in DB, skip")
+            log.warning(f"No matching entry in DB, skip")
             return False
 
         assert 1 == len(old['list'])
@@ -136,13 +133,13 @@ def process_special_files( operation, gitlab_project, projecturl, ref, commit_be
         old_record.pop('UpdatedAt')
 
         res= table.insert(old_record)
-        print("inserted res: ", res)
+        log.debug(f"inserted res: ", extra={"res": res})
 
         res= table.delete( { "URL": old_url } )
-        print("deleted res: ", res)
+        log.debug(f"deleted res: ", extra={"res": res})
 
         return True
 
 
-    print(f"unknown operation '{operation}', skip")
+    log.warning(f"unknown operation '{operation}', skip")
     return False

@@ -8,8 +8,6 @@ from datetime import datetime
 
 import gitlab
 from nocodb_client import nocodb
-from nocodb_client import table_from_schema
-
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError, SchemaError
@@ -61,9 +59,6 @@ LOGFILE = LOGDIR / "webhook.log"
 log = logging.getLogger('')
 log.setLevel(logging.INFO)
 
-ch = logging.StreamHandler(sys.stdout)
-log.addHandler(ch)
-
 fh = handlers.RotatingFileHandler(LOGFILE, maxBytes=(1048576*5), backupCount=7)
 log.addHandler(fh)
 
@@ -105,7 +100,7 @@ def webhhook_upload_all_commits():
 
     if not project_url:
         return jsonify({'error': 'Missing "project_url" in request body'}), 400
-    
+
     parsed_uri = urlparse(project_url)
     gitlab_host= '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
     project_path = parsed_uri.path.lstrip('/')
@@ -134,11 +129,7 @@ def webhhook_upload_all_commits():
 
     commit_ids = [c.id for c in all_commits]
 
-    # table= nocodb.Table( tableid, host=nocodb_host, auth_token=nocodb_token, verify=nocodb_ssl_cert )
-    # print(commits)
-    # commits_data = [commit.attributes for commit in commits]
-    print(commit_ids)
-    print(len(commit_ids))
+    log.debug(f"commit_ids {commit_ids}, len {len(commit_ids)}")
 
     table= nocodb.Table( tableid, host=NOCODB_HOST, auth_token=NOCODB_TOKEN, verify=NOCODB_SSL_CERT )
     if (table.count()["count"] > 0):
@@ -151,7 +142,7 @@ def webhhook_upload_all_commits():
         branch_commits.sort(key=lambda c: datetime.fromisoformat(c.committed_date.replace('Z', '+00:00')))
         branch_commits_ids = [c.id for c in branch_commits]
         for c in branch_commits:
-            print("    Commit ", c.get_id(), " branch = ", branch.name )
+            log.debug(f"    Commit {c.get_id()}, branch {branch.name}")
             target_index = branch_commits_ids.index(c.id)
             commit_after = branch_commits_ids[target_index + 1] if target_index + 1 < len(branch_commits_ids) else None
             commit_before = branch_commits_ids[target_index - 1] if target_index > 0 else None
@@ -165,10 +156,9 @@ def webhhook_upload_all_commits():
 
                 dirname, basename= os.path.split(filename)
                 if basename in SPECIAL_FILENAMES:
-                    print(f"            handle {dirname} {basename}")
+                    log.debug(f"            handle {dirname} / {basename}")
                     res= process_files_from_gitlab.process_special_files( change_type, 
                         gitlab_project, project_url, git_ref, commit_before, commit_after, dirname, basename, table )
-
                     log.debug(f"Result: {res}")
 
     return jsonify({'message': 'All commits were scanned and added to the table'}), 201
@@ -182,24 +172,23 @@ def webhook_push():
     Flask based webhook for push events in gogs
     """
 
-    log.debug("START: webhook_push() called")
     start_time = time.time()
+    log.debug(f"webhook_push() called at {start_time}")
 
     headers= request.headers
+    log.debug(f"    headers:", extra= {"headers": headers})
 
     auth_result = authenticate()
+    log.debug(f"    auth:", extra= {"auth_result": auth_result})
     if auth_result:
         return auth_result  # immediately return 401 if auth fails
 
     tableid= headers.get(HEADER_NOCO_DB_TABLE_ID)
+    log.debug(f"    tableid:", extra= {"tableid": tableid})
 
     event = request.get_json()
+    log.debug(f"    request:", extra= {"event": event})
 
-    with open(LOGDIR / "/app/logs/first-gitlab-webhook.log", "a") as file:
-        print(json.dump(event, file, indent=4))
-
-
-    print( " ### Summary ### " )
     project= event['project']
     commit_before= event['before']
     commit_after= event['after']
@@ -207,20 +196,15 @@ def webhook_push():
 #   e.g."ref": "refs/heads/master",
     ref= event['ref']
 
-    print( "Project : ", project['name'], " id ", project['id'], " previous commit id ", commit_before, " current commit id ", commit_after )
+    log.debug(f"Project: {project['name']} with id {project['id']}, previous commit id {commit_before}, current commit id {commit_after}" )
+
     projectid= project['id']
-    print( "URL : ", project['web_url'] )
     projecturl= project['web_url']
-    print( "PATH : ", project['path_with_namespace'] )
+    log.debug(f"    projecturl {projecturl}")
+    log.debug(f"    project path with namespace {project['path_with_namespace']}")
 
-    print( "Number commits: ", len(event['commits']) )
-    print( "Total commits: ", event['total_commits_count'] )
-
-    # old from evn var
-    # gitlab_host = os.getenv('GITLAB_HOST', "http://localhost")
-    # gitlab_access_token = os.getenv('GITLAB_ACCESS_TOKEN', "none")
-
-    # new: get gitlab access token from 'gitlab.projects' file
+    log.debug(f"    number commits {len(event['commits'])}" )
+    log.debug(f"    total commits {event['total_commits_count']}" )
 
     parsed_uri = urlparse(projecturl)
     gitlab_host= '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
@@ -232,14 +216,13 @@ def webhook_push():
         gitlab_access_token= "none"
 
     if "none" == gitlab_access_token:
-        print("WARNING: no GITLAB_ACCESS_TOKEN given in local file 'gitlab.projects', abort here")
+        log.error(f"no GITLAB_ACCESS_TOKEN for {projecturl} in local file 'gitlab.projects', abort")
         return False
 
     # create gitlab connection object only once
 
-
     if None == NOCODB_TOKEN:
-        print("WARNING: no NOCODB_TOKEN given as environment variable, abort here")
+        log.error(f"no NOCODB_TOKEN given as environment variable, abort")
         return False
 
     gl= gitlab.Gitlab( url= gitlab_host, private_token= gitlab_access_token )
@@ -250,24 +233,26 @@ def webhook_push():
     table= nocodb.Table( tableid, host=NOCODB_HOST, auth_token=NOCODB_TOKEN, verify=NOCODB_SSL_CERT )
 
     for c in event['commits']:
-        print("    Commit ", c['id'], " at ", c['timestamp'] )
+        log.debug(f"    Commit {c['id']} at {c['timestamp']}" )
 
         for action in ['added','modified','removed']:
 
-            print(f"        {action}: ", len(c[action]))
+            log.debug(f"        {action}: {len(c[action])}")
+
             for filename in c[action]:
 
                 log.debug(f"Handle: {filename} {action}")
 
                 dirname, basename= os.path.split(filename)
                 if basename in SPECIAL_FILENAMES:
-                    print(f"            handle {dirname} {basename}")
+                    log.debug(f"            handle {dirname} {basename}")
+
                     res= process_files_from_gitlab.process_special_files( action, 
                         gitlab_project, projecturl, ref, commit_before, commit_after, dirname, basename, table )
+                    log.debug(f"res: ", extra={"res":res})
 
-                    log.debug(f"Result: {res}")
-
-    log.debug("END: webhook_push() finished successfully")
+    end_time = time.time()
+    log.debug(f"webhook_push() finished successfully at time {end_time}")
     return jsonify('no errors'), 200
 
 
@@ -275,12 +260,14 @@ if __name__ == '__main__':
 
     # read in all known gitlab projects and their access tokens
     gitlab_projects = load_gitlab_projects()
-
-    print("Known gitlab projects:")
-    for i in gitlab_projects:
-        print("    ", i)
+    log.debug(f"Known gitlab projects are:", extra= {"gitlab_projects": gitlab_projects})
 
     if True == DEBUG:
+
+        # only in debug mode send everything to stdout as well
+        ch = logging.StreamHandler(sys.stdout)
+        log.addHandler(ch)
+
         log.setLevel(logging.DEBUG)
         log.debug(f"DEBUG MODE is ON with:")
         log.debug(f"    HOST= {HOST}")
@@ -288,5 +275,6 @@ if __name__ == '__main__':
         log.debug(f"    NOCODB_HOST= {NOCODB_HOST}")
         log.debug(f"    NOCODB_TOKEN= {NOCODB_TOKEN}")
         log.debug(f"    NOCODB_SSL_CERT= {NOCODB_SSL_CERT}")
+
 
     app.run(host=HOST, port=int(PORT))
