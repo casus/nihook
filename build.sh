@@ -1,4 +1,4 @@
 #!/bin/bash
 
-podman build -t webhook-nocodb .
+podman build -t nihook .
 

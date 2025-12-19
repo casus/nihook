@@ -82,7 +82,7 @@ for INSTANCE in "${INSTANCE_DIRS[@]}"; do
     -e NC_PUBLIC_URL="${PUBLIC_URL}/${HOST_PORT_NOCODB}" \
     -e DEBUG="$DEBUG" \
     --restart=always \
-    webhook-nocodb
+    nihook
 
   echo "✅ Instance started at:"
   echo "   👉 Webhook: ${PUBLIC_URL}:${HOST_PORT_WEBHOOK}"

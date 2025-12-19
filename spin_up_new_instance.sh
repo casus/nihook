@@ -91,7 +91,7 @@ podman run -d \
   -e NC_PUBLIC_URL="${PUBLIC_URL}/${HOST_PORT_NOCODB}" \
   -e DEBUG="$DEBUG" \
   --restart=always \
-  webhook-nocodb
+  nihook
 
 # Wait for NocoDB to be ready
 TRIES=30
