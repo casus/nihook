@@ -127,10 +127,11 @@ cat <<EOF | tee "$GUIDE_FILE_PATH"
 <Username>
 <Purpose>
 
-🟢 NocoDB and webhook servers running:
+🟢 NocoDB and webhook servers running with DEBUG mode ${DEBUG}
   👉 Webhook at ${PUBLIC_URL}:5000/${HOST_PORT_WEBHOOK}
   👉 NocoDB at ${PUBLIC_URL}/${HOST_PORT_NOCODB}
       NocoDB token: ${token}
+
 
 # Next steps
 
