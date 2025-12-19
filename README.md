@@ -2,6 +2,8 @@
 
 Codebase for integrations and automations for [Datalad](https://handbook.datalad.org/en/latest/) repositories.
 
+Prospective new name: "NiHook" like "Nocodb Integration Hook" or like "The Webhooks who say Ni!"
+
 ---
 
 ## Developer Guide: Setup

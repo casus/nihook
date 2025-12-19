@@ -10,15 +10,20 @@ PUBLIC_URL="https://data.casus.science"
 HOOK_HOST=0.0.0.0
 HOOK_PORT=5000
 NOCODB_PORT=8080
+DEBUG=${DEBUG:-False}
+NOCODB_SSL_CERT=${NOCODB_SSL_CERT:-True}
 PARENT_DIR=$(pwd)
 INSTANCE_DIRS=()
-DEBUG=${DEBUG:-False}
+
 
 if [ "$DEBUG" = "True" ]; then
   echo "⚠️ DEBUG mode active"
 else
   echo "Debug mode NOT active"
 fi
+
+echo "🔒 NOCODB_SSL_CERT is ${NOCODB_SSL_CERT}"
+
 
 if [ $# -eq 0 ]; then
   # No arguments → find all instances
@@ -76,13 +81,14 @@ for INSTANCE in "${INSTANCE_DIRS[@]}"; do
     -v "$(realpath "$AUTH_DIR")":/app/auth/ \
     -v "$(realpath "$DB_DIR")":/app/db/ \
     -v "$(realpath "$LOGS_DIR")":/app/logs/ \
-    -e NOCODB_PORT="$NOCODB_PORT" \
-    -e HOOK_HOST="$HOOK_HOST" \
-    -e HOOK_PORT="$HOOK_PORT" \
+    -e NOCODB_PORT=$NOCODB_PORT \
+    -e HOOK_HOST=$HOOK_HOST \
+    -e HOOK_PORT=$HOOK_PORT \
     -e NC_PUBLIC_URL="${PUBLIC_URL}/${HOST_PORT_NOCODB}" \
-    -e DEBUG="$DEBUG" \
+    -e NOCODB_SSL_CERT=$NOCODB_SSL_CERT \
+    -e DEBUG=$DEBUG \
     --restart=always \
-    webhook-nocodb
+    nihook
 
   echo "✅ Instance started at:"
   echo "   👉 Webhook: ${PUBLIC_URL}:${HOST_PORT_WEBHOOK}"

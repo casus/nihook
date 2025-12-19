@@ -98,7 +98,7 @@ echo "export NOCODB_TOKEN=\"$token\""
 export NOCODB_TOKEN="$token"
 
 # Start the webhook app
-python /app/src/gitlab_webhooks/webhook.py >/app/logs/webhook.log 2>/app/logs/webhook.error.log &
+python /app/src/gitlab_webhooks/webhook.py >/app/logs/webhook.stdout.log 2>/app/logs/webhook.stderr.log &
 
 wait -n
 
