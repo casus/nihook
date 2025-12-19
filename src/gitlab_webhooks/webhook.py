@@ -53,21 +53,18 @@ from gitlab_project_manager import (
 from utils import (HOST, PORT, NOCODB_HOST, NOCODB_TOKEN, NOCODB_SSL_CERT, DEBUG)
 
 LOGDIR = Path("logs")
-LOGFILE = LOGDIR / "push-hook.log"
-
+LOGDIR.mkdir(parents=True, exist_ok=True)
+LOGFILE = LOGDIR / "webhook.log"
 
 # Ensure log directory exists
-LOGDIR.mkdir(parents=True, exist_ok=True)
 
 log = logging.getLogger('')
 log.setLevel(logging.INFO)
 
-
 ch = logging.StreamHandler(sys.stdout)
 log.addHandler(ch)
 
-#fh = handlers.RotatingFileHandler(LOGFILE, maxBytes=(1048576*5), backupCount=7)
-fh = handlers.RotatingFileHandler(LOGFILE)
+fh = handlers.RotatingFileHandler(LOGFILE, maxBytes=(1048576*5), backupCount=7)
 log.addHandler(fh)
 
 
@@ -188,7 +185,6 @@ def webhook_push():
     log.debug("START: webhook_push() called")
     start_time = time.time()
 
-
     headers= request.headers
 
     auth_result = authenticate()
@@ -274,6 +270,7 @@ def webhook_push():
     log.debug("END: webhook_push() finished successfully")
     return jsonify('no errors'), 200
 
+
 if __name__ == '__main__':
 
     # read in all known gitlab projects and their access tokens
@@ -283,22 +280,13 @@ if __name__ == '__main__':
     for i in gitlab_projects:
         print("    ", i)
 
-
-    if (DEBUG == True):
+    if True == DEBUG:
         log.setLevel(logging.DEBUG)
-        # base_id = os.getenv("BASE_ID", "none")
-        # schema= {}
-        # script_dir = Path(__file__).parent
-        # file_path = script_dir / "SCHEMA.json"
-        # if (file_path.exists()):
-        #     with open(file_path, "r") as f:
-        #         schema= json.load(f)
-
-        #     TABLE_ID = table_from_schema.create_new_table_from_schema(NOCODB_HOST, NOCODB_TOKEN, NOCODB_SSL_CERT, base_id, "Default-Table", schema)
-        #     print("New table was created!")
-        #     print(TABLE_ID)
-        # else:
-        #     log.info("Couldn't find file with the path = " + file_path)
-
+        log.debug(f"DEBUG MODE is ON with:")
+        log.debug(f"    HOST= {HOST}")
+        log.debug(f"    PORT= {PORT}, ")
+        log.debug(f"    NOCODB_HOST= {NOCODB_HOST}")
+        log.debug(f"    NOCODB_TOKEN= {NOCODB_TOKEN}")
+        log.debug(f"    NOCODB_SSL_CERT= {NOCODB_SSL_CERT}")
 
     app.run(host=HOST, port=int(PORT))
