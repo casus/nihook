@@ -1,16 +1,28 @@
-# Datalad Automation
+# NiHook Data Repository Automation
 
-Codebase for integrations and automations for [Datalad](https://handbook.datalad.org/en/latest/) repositories.
+The _NocoDB Integration Hooks_ are the webhooks who say "Ni!". 
 
-Prospective new name: "NiHook" like "Nocodb Integration Hook" or like "The Webhooks who say Ni!"
+They will integrate git data repositories with [NocoDB](https://nocodb.com/) / 
+[NocoDB on github](https://github.com/nocodb/nocodb). 
+Matching data repositories are standard git repositories or git-annex enabled git repositories 
+or [Datalad](https://handbook.datalad.org/en/latest/) repositories.
+When such repositories contain metadata in the form of DATASET.json metadata files, 
+they will be synchronized to a linked NocoDB instance.
 
----
+## Public example repository
+
+There is a public data repository with example data used for tutorials etc. at 
+the [Helmholtz GitLab Server](https://codebase.helmholtz.cloud/knue/esa-hubble-picture-of-the-week.datalad/project) and
+a public view of the metadata inventory at 
+the [CASUS data server](https://data.casus.science/7716/dashboard/#/nc/view/a44a2c02-e0b6-4fa7-ab5e-222f807f5f3a).
+
 
 ## Developer Guide: Setup
 
 ### Prerequisites
 
-1. Ensure you have both [Docker](https://docs.docker.com/engine/install/) and [Python](https://www.python.org/downloads/) installed on your machine.
+1. Ensure you have [Podman](https://podman.io/) or [Docker](https://docs.docker.com/engine/install/) 
+and [Python](https://www.python.org/downloads/) installed on your server.
 
 2. This project requires access to private GitLab repositories. To enable this:
    - Generate a new SSH key pair.
