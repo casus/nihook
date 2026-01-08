@@ -2,8 +2,8 @@
 
 ## Substantial contributions
 
-Andreas Knüpfer on behalf CASUS/HZDR
-Dmitrii Okishev on behalf CASUS/HZDR
+* Andreas Knüpfer, CASUS/HZDR
+* Dmitrii Okishev, CASUS/HZDR
 
 ## Minor contributions
 
