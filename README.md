@@ -70,10 +70,11 @@ Before running the container, make sure to configure the `.env` file. In particu
   - `5000` for the Webhook API
   - `5555` for the NocoDB server
 
-To run the container:
+Then check the script `spin_up_new_instance.sh` and adjust the `PUBLIC_URL` variable from "https://data.casus.science" to 
+what your public URL prefix will be. Then bring up the first instance (or later additional instances) with:
 
 ```bash
-./run.sh
+./spin_up_new_instance.sh
 ```
 
 ---
