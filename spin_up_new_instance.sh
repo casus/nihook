@@ -1,17 +1,25 @@
 #!/bin/bash
 
-PARENT_DIR=$1
-if [ -z "$PARENT_DIR" ]; then
-  PARENT_DIR="./"
+PARENT_DIR="${1:-./}"
+# Ensure PARENT_DIR ends with a slash
+if [[ "${PARENT_DIR}" != */ ]]; then
+  PARENT_DIR="${PARENT_DIR}/"
 fi
+ENV_FILE="${ENV_FILE:-$SCRIPT_DIR/.env}"
 
+# If an env file exists, load it
+if [ -f "$ENV_FILE" ]; then
+    set -a
+    source "$ENV_FILE"
+    set +a
+fi
 echo "Spin up new NocoDB + webhook instance in parent dir ${PARENT_DIR}"
 
 # hardcode here because internal to the container and probably no need to change it
-PUBLIC_URL="https://data.casus.science"
-HOOK_HOST=0.0.0.0 # internal port inside the container
-HOOK_PORT=5000    # internal port inside the container
-NOCODB_PORT=8080  # internal port inside the container
+PUBLIC_URL=${PUBLIC_URL:-"https://data.casus.science"}
+HOOK_HOST=${HOOK_HOST:-0.0.0.0} # internal port inside the container
+HOOK_PORT=${HOOK_PORT:-5000}    # internal port inside the container
+NOCODB_PORT=${NOCODB_PORT:-8080}  # internal port inside the container
 DEBUG=${DEBUG:-False}
 NOCODB_SSL_CERT=${NOCODB_SSL_CERT:-True}
 
@@ -124,7 +132,7 @@ if [ -f $CONFIG_FILE ]; then
 else
 
   echo "ERROR: NocoDB config file ${CONFIG_FILE} not found, exit"
-  exit -1
+  exit 1
 fi
 
 GUIDE_FILE_PATH="$VOLUME_DIR/README.md"

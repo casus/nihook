@@ -45,7 +45,7 @@ and [Python](https://www.python.org/downloads/) installed on your server.
 
 ### Build and Run
 
-To build the Docker container:
+To build the Podman container:
 
 - Run the script:  
   ```bash
@@ -54,11 +54,12 @@ To build the Docker container:
 
 - Or build it manually:  
   ```bash
-  docker build -t webhook-nocodb .
+  podman build -t nihook .
   ```
 
 Before running the container, make sure to configure the `.env` file. In particular:
 
+- Adjust the `PUBLIC_URL` from "https://data.casus.science" to what your public URL prefix will be. 
 - Remove `DEBUG=True` if deploying in **production mode**.
 
 **What `DEBUG=True` does:**
@@ -70,15 +71,20 @@ Before running the container, make sure to configure the `.env` file. In particu
   - `5000` for the Webhook API
   - `5555` for the NocoDB server
 
-Then check the script `spin_up_new_instance.sh` and adjust the `PUBLIC_URL` variable from "https://data.casus.science" to 
-what your public URL prefix will be. Then bring up the first instance (or later additional instances) with:
+
+Then bring up the first instance (or later additional instances) with:
 
 ```bash
 ./spin_up_new_instance.sh
 ```
 
----
 
+By default all containers folders will be created inside the directory where the `spin_up_new_instance.sh` script is located.
+Alternatively, you can pass a path to a folder where you want to create a new instance. For example
+```bash
+./spin_up_new_instance.sh /path/to/another/folder
+```
+---
 ### Additional Notes
 
 - **Port allocation:**  
