@@ -5,6 +5,7 @@ PARENT_DIR="${1:-./}"
 if [[ "${PARENT_DIR}" != */ ]]; then
   PARENT_DIR="${PARENT_DIR}/"
 fi
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="${ENV_FILE:-$SCRIPT_DIR/.env}"
 
 # If an env file exists, load it
