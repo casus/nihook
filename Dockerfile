@@ -13,7 +13,7 @@ COPY src /app/src
 COPY submodules /app/submodules
 
 RUN pip install --upgrade pip
-RUN pip install /app/submodules/nocodb_automation
+RUN pip install /app/submodules/nihook-client
 RUN pip install --no-cache-dir -r /app/src/requirements.txt
 
 COPY start.sh /app/start.sh
