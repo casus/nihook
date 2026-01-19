@@ -156,17 +156,24 @@ cat <<EOF | tee "$GUIDE_FILE_PATH"
     - Keep the base ID == the last part of the URL when inside the new base
 
 2) ⌨ Create a table from a SCHEMA.json in a Datalad project on Github:
-    - Clone the repository
-    git clone https://codebase.helmholtz.cloud/casus-datalad/nocodb_automation.git
-    cd ./nocodb_automation
-    python3 -m venv venv
-    source venv/bin/activate
-    pip install -r requirements.txt
-    export NOCODB_HOST=${PUBLIC_URL}/${HOST_PORT_NOCODB}
-    export NOCODB_TOKEN=${token}
-    export NOCODB_SSL_CERT="" # only in case you want to disable SSL certificate checking
-    python ./src/nocodb_client/table_from_schema.py -b <base_id> -n <new-name-for-table> <path-to-SCHEMA.json>
-        ... note the resulting table ID for later
+    - Either use an existing installation of NiHook-Client or make a new one
+        - 2a) It is recommended to include it in your data repository as a submodule, do it via:
+            - cd to the data directory 
+            - Call 'git submodule add https://codebase.helmholtz.cloud/casus-datalad/nihook-client.git'
+            - ...
+        - 2b) Alternatively, install it into a separate Python VENV (an existing one or a new one)
+            - python3 -m venv venv
+            - source venv/bin/activate
+            - Clone the repository
+            - git clone https://codebase.helmholtz.cloud/casus-datalad/nihook-client.git
+            - pip install -r nihook-client/requirements.txt
+            - pip install nihook-client/
+    - Export the following environment variables:
+        - 'export NOCODB_HOST=${PUBLIC_URL}/${HOST_PORT_NOCODB}'
+        - 'export NOCODB_TOKEN=${token}'
+        - 'export NOCODB_SSL_CERT="" # only in case you want to disable SSL certificate checking'
+    - Run python ./nihook-client/table_from_schema.py -b <base_id> -n <new-name-for-table> <path-to-SCHEMA.json>
+        - Note down the resulting table ID for later
 
 3) 🔑 Create a Gitlab API token and give it to the webhook server
     - Go to your Gitlab project → Settings → Access tokens → Add new token
