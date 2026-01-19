@@ -1,4 +1,4 @@
-[submodule "submodules/nocodb_automation"]
-	path = submodules/nocodb_automation
-	url = git@codebase.helmholtz.cloud:casus-datalad/nocodb_automation.git 
+[submodule "submodules/nihook-client"]
+	path = submodules/nihook-client
+	url = https://codebase.helmholtz.cloud/casus-datalad/nihook-client.git
 	branch = main
