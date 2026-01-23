@@ -16,7 +16,6 @@ if [ -f "$ENV_FILE" ]; then
 fi
 echo "Spin up new NocoDB + webhook instance in parent dir ${PARENT_DIR}"
 
-# hardcode here because internal to the container and probably no need to change it
 PUBLIC_URL=${PUBLIC_URL:-"https://data.casus.science"}
 HOOK_HOST=${HOOK_HOST:-0.0.0.0} # internal port inside the container
 HOOK_PORT=${HOOK_PORT:-5000}    # internal port inside the container
@@ -91,6 +90,22 @@ cp projects.template.json "$PROJECTS_FILE"
 cp src/project_manager_interactive/manage_projects.sh "$CONFIG_DIR/manage_projects.sh"
 chmod +x "$CONFIG_DIR/manage_projects.sh"
 
+# Determine URLs based on whether PUBLIC_URL is an IP address (direct ports) or domain (proxied)
+# Remove protocol
+TEMP_HOST="${PUBLIC_URL#*://}"
+
+if [[ "$TEMP_HOST" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    # It's an IP address: assume direct port usage
+    WEBHOOK_URL_BASE="${PUBLIC_URL}:${HOST_PORT_WEBHOOK}"
+    NOCODB_URL_BASE="${PUBLIC_URL}:${HOST_PORT_NOCODB}"
+    NC_PUBLIC_URL_ARG=""
+else
+    # It's a domain: assume proxy usage
+    WEBHOOK_URL_BASE="${PUBLIC_URL}:5000/${HOST_PORT_WEBHOOK}"
+    NOCODB_URL_BASE="${PUBLIC_URL}/${HOST_PORT_NOCODB}"
+    NC_PUBLIC_URL_ARG="-e NC_PUBLIC_URL=${NOCODB_URL_BASE}"
+fi
+
 # Run the container
 podman run -d \
   -p "${HOST_PORT_WEBHOOK}":"${HOOK_PORT}" \
@@ -99,12 +114,12 @@ podman run -d \
   -v "$(realpath "$AUTH_DIR")":/app/auth/ \
   -v "$(realpath "$DB_DIR")":/app/db/ \
   -v "$(realpath "$LOGS_DIR")":/app/logs/ \
-  -e NOCODB_PORT=$NOCODB_PORT \
-  -e HOOK_HOST=$HOOK_HOST \
-  -e HOOK_PORT=$HOOK_PORT \
-  -e NC_PUBLIC_URL="${PUBLIC_URL}/${HOST_PORT_NOCODB}" \
-  -e NOCODB_SSL_CERT=$NOCODB_SSL_CERT \
-  -e DEBUG=$DEBUG \
+  -e NOCODB_PORT="$NOCODB_PORT" \
+  -e HOOK_HOST="$HOOK_HOST" \
+  -e HOOK_PORT="$HOOK_PORT" \
+  $NC_PUBLIC_URL_ARG \
+  -e NOCODB_SSL_CERT="$NOCODB_SSL_CERT" \
+  -e DEBUG="$DEBUG" \
   --restart=always \
   nihook
 
@@ -124,7 +139,7 @@ echo "NocoDB is up!"
 
 # read token from 'nocodb.json'
 
-if [ -f $CONFIG_FILE ]; then
+if [ -f "$CONFIG_FILE" ]; then
   
   email=$(jq -r '.nocodb_email' "$CONFIG_FILE")
   password=$(jq -r '.nocodb_password' "$CONFIG_FILE")
@@ -143,8 +158,8 @@ cat <<EOF | tee "$GUIDE_FILE_PATH"
 <Purpose>
 
 🟢 NocoDB and webhook servers running:
-  👉 Webhook at ${PUBLIC_URL}:5000/${HOST_PORT_WEBHOOK}
-  👉 NocoDB at ${PUBLIC_URL}/${HOST_PORT_NOCODB}
+  👉 Webhook at ${WEBHOOK_URL_BASE}
+  👉 NocoDB at ${NOCODB_URL_BASE}
       NocoDB token: ${token}
 
       🛠 DEBUG is '${DEBUG}'
@@ -153,7 +168,7 @@ cat <<EOF | tee "$GUIDE_FILE_PATH"
 # Next steps
 
 1) 💻 Connect to the NocoDB instance and create a new base:
-    ${PUBLIC_URL}/${HOST_PORT_NOCODB} with initial credentials ${email} : ${password}
+    ${NOCODB_URL_BASE} with initial credentials ${email} : ${password}
     - Keep the base ID == the last part of the URL when inside the new base
 
 2) ⌨ Create a table from a SCHEMA.json in a Datalad project on Github:
@@ -170,7 +185,7 @@ cat <<EOF | tee "$GUIDE_FILE_PATH"
             - pip install -r nihook-client/requirements.txt
             - pip install nihook-client/
     - Export the following environment variables:
-        - 'export NOCODB_HOST=${PUBLIC_URL}/${HOST_PORT_NOCODB}'
+        - 'export NOCODB_HOST=${NOCODB_URL_BASE}'
         - 'export NOCODB_TOKEN=${token}'
         - 'export NOCODB_SSL_CERT="" # only in case you want to disable SSL certificate checking'
     - Run python ./nihook-client/table_from_schema.py -b <base_id> -n <new-name-for-table> <path-to-SCHEMA.json>
@@ -191,7 +206,7 @@ cat <<EOF | tee "$GUIDE_FILE_PATH"
 4) 🎣 Configure the Gitlab webhook:
     - Go to your Gitlab project → Settings → Webhooks → Add new webhook
         - Pick a webhook name 'for NocoDB' or something else
-        - Enter the URL ${PUBLIC_URL}:5000/${HOST_PORT_WEBHOOK}/webhooks/push
+        - Enter the URL ${WEBHOOK_URL_BASE}/webhooks/push
         - Add Custom headers:
             X-Webhook-User: ${WEBHOOK_USERNAME}
             X-Webhook-Secret: ${WEBHOOK_AUTH_SECRET}
