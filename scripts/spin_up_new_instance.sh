@@ -163,7 +163,7 @@ cat <<EOF | tee "$GUIDE_FILE_PATH"
       NocoDB token: ${token}
 
       🛠 DEBUG is '${DEBUG}'
-      🔒 SSL certificate checking is NOCODB_SSL_CERT='${NOCODB_SSL_CERT}'
+      🔒 SSL certificate checking is '${NOCODB_SSL_CERT}'
 
 # Next steps
 
