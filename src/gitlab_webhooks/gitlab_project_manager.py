@@ -35,4 +35,8 @@ def remove_gitlab_project(url: str):
     del projects[url]
     save_gitlab_projects(projects)
 
+def does_gitlab_project_exist(url: str) -> bool:
+    projects = load_gitlab_projects()
+    return url in projects
+
 

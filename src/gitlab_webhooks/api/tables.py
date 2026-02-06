@@ -5,6 +5,8 @@ from flask import Flask, request, jsonify
 from nocodb_client import nocodb, table_from_schema
 from gitlab_project_manager import (
     add_gitlab_project,
+    does_gitlab_project_exist,
+    remove_gitlab_project
 )
 from . import api_bp
 import ast
@@ -154,6 +156,8 @@ def create_table_file():
                 server_ip=server_ip,
                 webhook_username=webhook_username
             )
+            if does_gitlab_project_exist(gitlab_repo_url):
+                remove_gitlab_project(gitlab_repo_url) # Remove the project if it already exists to avoid duplicates
             add_gitlab_project(gitlab_repo_url, gitlab_project_token) # Store the project URL and token in projects.json
 
         response = {
