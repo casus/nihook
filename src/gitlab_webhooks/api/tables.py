@@ -3,6 +3,9 @@ import os
 from urllib.parse import urlparse
 from flask import Flask, request, jsonify
 from nocodb_client import nocodb, table_from_schema
+from gitlab_project_manager import (
+    add_gitlab_project,
+)
 from . import api_bp
 import ast
 import gitlab
@@ -80,6 +83,7 @@ def create_table_file():
     # Optional GitLab webhook params
     create_gitlab_webhook = request.form.get("create_gitlab_webhook", "").lower() == "true"
     gitlab_repo_url = request.form.get("gitlab_repo_url")
+    gitlab_project_token = request.form.get("gitlab_project_token") # Token which will be stored in the projects.json
     gitlab_api_token = request.form.get("gitlab_api_token")
     webhook_secret = request.form.get("webhook_secret")  # optional
     webhook_username = request.form.get("webhook_username")  # optional
@@ -150,6 +154,7 @@ def create_table_file():
                 server_ip=server_ip,
                 webhook_username=webhook_username
             )
+            add_gitlab_project(gitlab_repo_url, gitlab_project_token) # Store the project URL and token in projects.json
 
         response = {
             "message": "Table created successfully",
@@ -157,6 +162,7 @@ def create_table_file():
         }
         if webhook_info:
             response["gitlab_webhook"] = webhook_info
+
 
         if create_gitlab_webhook or store_settings:
             # Save the relationship settings to settings.yaml
