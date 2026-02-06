@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y curl jq pwgen && rm -rf /var/lib/apt/li
 
 
 # install NocoDB
-RUN curl -L -o Noco-linux-x64 https://github.com/nocodb/nocodb/releases/download/0.265.1/Noco-linux-x64
+RUN curl -L -o Noco-linux-x64 https://github.com/nocodb/nocodb/releases/download/0.263.8/Noco-linux-x64
 RUN chmod +x Noco-linux-x64
 
 # install webhook server
