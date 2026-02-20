@@ -26,6 +26,13 @@ def add_gitlab_project(url: str, token: str):
     projects[url] = token
     save_gitlab_projects(projects)
 
+def update_gitlab_project(url: str, token: str):
+    projects = load_gitlab_projects()
+    if url not in projects:
+        raise ValueError(f"Project '{url}' not found.")
+
+    projects[url] = token
+    save_gitlab_projects(projects)
 
 def remove_gitlab_project(url: str):
     projects = load_gitlab_projects()

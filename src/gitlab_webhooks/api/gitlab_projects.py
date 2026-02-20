@@ -7,7 +7,8 @@ from pathlib import Path
 from gitlab_project_manager import (
     load_gitlab_projects,
     add_gitlab_project,
-    remove_gitlab_project
+    remove_gitlab_project,
+    update_gitlab_project
 )
 
 
@@ -40,6 +41,24 @@ def create_gitlab_project():
     except ValueError as e:
         return jsonify({'error': str(e)}), 409
 
+@api_bp.route('/gitlab-projects', methods=['PUT'])
+def replace_gitlab_project():
+    """
+    Route in order to update an existing GitLab project.
+    It expects a JSON payload with 'url' and 'token'.
+    If the project doesn't exist, it will return a 404 Not Found error.
+    """
+    data = request.get_json()
+    url = data.get('url')
+    token = data.get('token')
+
+    if not url or not token:
+        return jsonify({'error': 'Missing "url" or "token"'}), 400
+    try:
+        update_gitlab_project(url, token)
+        return jsonify({'message': f'Project updated: {url}'}), 200
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 409
 
 @api_bp.route('/gitlab-projects', methods=['DELETE'])
 def delete_gitlab_project():
