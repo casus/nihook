@@ -11,8 +11,8 @@ import logging
 log = logging.getLogger('')
 log.propagate= True
 
-from nocodb_client import nocodb
-from nocodb_client import prepare_json
+from nihook_client import nocodb
+from nihook_client import prepare_json
 
 
 def process_special_files( operation, gitlab_project, projecturl, ref, commit_before, commit_after, dirname, basename, table ) -> bool:

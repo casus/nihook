@@ -99,6 +99,7 @@ if [[ "$TEMP_HOST" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     WEBHOOK_URL_BASE="${PUBLIC_URL}:${HOST_PORT_WEBHOOK}"
     NOCODB_URL_BASE="${PUBLIC_URL}:${HOST_PORT_NOCODB}"
     NC_PUBLIC_URL_ARG=""
+    echo "Using direct ports for webhook and NocoDB: ${WEBHOOK_URL_BASE} and ${NOCODB_URL_BASE}"
 else
     # It's a domain: assume proxy usage
     WEBHOOK_URL_BASE="${PUBLIC_URL}:5000/${HOST_PORT_WEBHOOK}"
@@ -110,10 +111,10 @@ fi
 podman run -d \
   -p "${HOST_PORT_WEBHOOK}":"${HOOK_PORT}" \
   -p "${HOST_PORT_NOCODB}":"${NOCODB_PORT}" \
-  -v "$(realpath "$CONFIG_DIR")":/app/config/ \
-  -v "$(realpath "$AUTH_DIR")":/app/auth/ \
-  -v "$(realpath "$DB_DIR")":/app/db/ \
-  -v "$(realpath "$LOGS_DIR")":/app/logs/ \
+  -v "$(realpath "$CONFIG_DIR")":/app/config/:z \
+  -v "$(realpath "$AUTH_DIR")":/app/auth/:z \
+  -v "$(realpath "$DB_DIR")":/app/db/:z \
+  -v "$(realpath "$LOGS_DIR")":/app/logs/:z \
   -e NOCODB_PORT="$NOCODB_PORT" \
   -e HOOK_HOST="$HOOK_HOST" \
   -e HOOK_PORT="$HOOK_PORT" \

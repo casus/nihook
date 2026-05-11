@@ -10,10 +10,11 @@ RUN chmod +x Noco-linux-x64
 
 # install webhook server
 COPY src /app/src
-COPY submodules /app/submodules
+# COPY submodules /app/submodules
 
 RUN pip install --upgrade pip
-RUN pip install /app/submodules/nihook-client
+# RUN pip install /app/submodules/nihook-client
+# RUN pip install nihook-client
 RUN pip install --no-cache-dir -r /app/src/requirements.txt
 
 COPY scripts_in_container/start.sh /app/start.sh

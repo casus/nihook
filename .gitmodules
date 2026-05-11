@@ -1,4 +1,0 @@
-[submodule "submodules/nihook-client"]
-	path = submodules/nihook-client
-	url = https://codebase.helmholtz.cloud/casus-datalad/nihook-client.git
-	branch = main

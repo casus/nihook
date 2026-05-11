@@ -3,7 +3,6 @@
 from flask import request, jsonify
 from . import api_bp
 from auth import Auth
-from pathlib import Path
 from const import AUTH_FILE_PATH
 
 @api_bp.route('/auth-data', methods=['GET'])

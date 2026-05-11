@@ -2,7 +2,7 @@ import json
 import os
 from urllib.parse import urlparse
 from flask import Flask, request, jsonify
-from nocodb_client import nocodb, table_from_schema
+from nihook_client import nocodb, table_from_schema
 from gitlab_project_manager import (
     add_gitlab_project,
     does_gitlab_project_exist,
