@@ -9,7 +9,7 @@ from flask import Flask, request, jsonify, send_file
 from waitress import serve
 
 import gitlab
-from nocodb_client import nocodb
+from nihook_client import nocodb
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError, SchemaError

@@ -2,8 +2,6 @@ from flask import request, jsonify
 
 import settings_manager
 from . import api_bp
-from auth import Auth
-from pathlib import Path
 from gitlab_project_manager import (
     load_gitlab_projects,
     add_gitlab_project,

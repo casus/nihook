@@ -131,7 +131,7 @@ Alternatively, you can pass a path to a folder where you want to create a new in
     pip install -r requirements.txt
     export NOCODB_HOST=${PUBLIC_URL}/${HOST_PORT_NOCODB}
     export NOCODB_TOKEN=${token}
-    python ./src/nocodb_client/table_from_schema.py -b <base_id> -n <new-name-for-table> <path-to-SCHEMA.json>
+    python ./src/nihook_client/table_from_schema.py -b <base_id> -n <new-name-for-table> <path-to-SCHEMA.json>
         ... note the resulting table ID for later
 
 3) 🔑 Create a Gitlab API token and give it to the webhook server
