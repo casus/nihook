@@ -1,6 +1,6 @@
 stages:          # List of stages for jobs, and their order of execution
   - build
-  # - integration_tests
+  - integration_tests
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
