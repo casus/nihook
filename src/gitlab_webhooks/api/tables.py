@@ -109,7 +109,7 @@ def create_table_file():
             return jsonify({"error": "Missing 'schema' file"}), 400
 
     try:
-        schema = json.load(schema_file)
+        schema = json.load(schema_file.stream)
     except json.JSONDecodeError:
         return jsonify({"error": "Invalid JSON format in schema file"}), 400
 
@@ -156,6 +156,11 @@ def create_table_file():
                 server_ip=server_ip,
                 webhook_username=webhook_username
             )
+            if gitlab_repo_url is None:
+                return jsonify({"error": "GitLab repository URL is required for webhook creation"}), 400
+            if gitlab_project_token is None:
+                return jsonify({"error": "GitLab project token is required for storing project info"}), 400
+
             if does_gitlab_project_exist(gitlab_repo_url):
                 remove_gitlab_project(gitlab_repo_url) # Remove the project if it already exists to avoid duplicates
             add_gitlab_project(gitlab_repo_url, gitlab_project_token) # Store the project URL and token in projects.json
@@ -262,7 +267,7 @@ def link_records_between_tables(parent_table_client: nocodb.Table,
                 existing_linked_records = parent_table_client.list_linked_records(
                     linkFieldId=field_link,
                     recordId=record[parent_PK]
-                ).get("list", [])
+                ).json().get("list", [])
             elif connection == "oo":
                 column_name = parent_table_meta.get("columnsById", {}).get(field_link, {}).get("title")
                 existing_linked_records = record.get(column_name, [])
@@ -271,7 +276,7 @@ def link_records_between_tables(parent_table_client: nocodb.Table,
                 existing_linked_records = parent_table_client.list_linked_records(
                     linkFieldId=field_link,
                     recordId=record[parent_PK]
-                )
+                ).json().get("list", [])
                 existing_linked_records = [existing_linked_records] if existing_linked_records else []
             print("Existing linked records:", existing_linked_records)
             record_ids_to_link = [r[child_PK] for r in corresponding_child_records if r[child_PK] not in [lr[child_PK] for lr in existing_linked_records]]
@@ -282,19 +287,21 @@ def link_records_between_tables(parent_table_client: nocodb.Table,
                 unlink_res = parent_table_client.unlink_records(linkFieldId=field_link,
                                             recordId=record[parent_PK],
                                             refRowPKValues=record_ids_to_unlink)
-                if not "error" in unlink_res:
+                unlink_res_dict = unlink_res if isinstance(unlink_res, dict) else unlink_res.json() if hasattr(unlink_res, 'json') else {}
+                if "error" not in unlink_res_dict:
                     updated_count += 1
                 else:
-                    print(f"Failed to unlink records for parent ID {record[parent_PK]}: {unlink_res['error']}")
+                    print(f"Failed to unlink records for parent ID {record[parent_PK]}: {unlink_res_dict.get('error')}")
 
             if record_ids_to_link:
                 link_records_res = parent_table_client.link_records(linkFieldId=field_link,
                                             recordId=record[parent_PK],
                                             refRowPKValues=record_ids_to_link)
-                if not "error" in link_records_res:
+                link_records_res_dict = link_records_res if isinstance(link_records_res, dict) else link_records_res.json() if hasattr(link_records_res, 'json') else {}
+                if "error" not in link_records_res_dict:
                     updated_count += len(record_ids_to_link)
                 else:
-                    print(f"Failed to link records for parent ID {record[parent_PK]}: {link_records_res['error']}")
+                    print(f"Failed to link records for parent ID {record[parent_PK]}: {link_records_res_dict.get('error')}")
         else:
             if (len(corresponding_child_records) == 0):
                 print(f"No corresponding child records found for parent ID {record[parent_PK]}")
@@ -303,6 +310,11 @@ def link_records_between_tables(parent_table_client: nocodb.Table,
                 link_records_res = parent_table_client.link_records(linkFieldId=field_link,
                                             recordId=record[parent_PK],
                                             refRowPKValues=[r[child_PK] for r in corresponding_child_records])
+                link_records_res_dict = link_records_res if isinstance(link_records_res, dict) else link_records_res.json() if hasattr(link_records_res, 'json') else {}
+                if "error" not in link_records_res_dict:
+                    updated_count += 1
+                else:
+                    print(f"Failed to link records for parent ID {record[parent_PK]}: {link_records_res_dict['error']}")
             else:
                 # For "mo", we link the child records to the parent record
                 for r in corresponding_child_records:
@@ -311,10 +323,11 @@ def link_records_between_tables(parent_table_client: nocodb.Table,
                     link_records_res = child_table_client.link_records(linkFieldId=field_link,
                                                 recordId=r[child_PK],
                                                 refRowPKValue=record[parent_PK])
-            if not "error" in link_records_res:
-                updated_count += 1
-            else:
-                print(f"Failed to link records for parent ID {record[parent_PK]}: {link_records_res['error']}")
+                    link_records_res_dict = link_records_res if isinstance(link_records_res, dict) else link_records_res.json() if hasattr(link_records_res, 'json') else {}
+                    if "error" not in link_records_res_dict:
+                        updated_count += 1
+                    else:
+                        print(f"Failed to link records for parent ID {record[parent_PK]}: {link_records_res_dict['error']}")
     return updated_count
 
 
@@ -576,6 +589,10 @@ def normalize_columns():
                     (col for col in table_metadata.get("columns", []) if col.get("title") == column_title),
                     None
                 )
+                if not all_column_metadata:
+                    # Column metadata not found; skip normalizing this column
+                    print(f"Column metadata for '{column_title}' not found on table {table_id}")
+                    continue
                 column_metadata = {k: all_column_metadata[k] for k in COLUMN_METADATA_TO_COPY if k in all_column_metadata}
                 new_table_id = table_base.create_table(
                     name=f"{table_metadata.get('title')}_{column_title}",
@@ -619,6 +636,9 @@ def normalize_columns():
                 )
                 print("Created link field:", field_link)
 
+                if not isinstance(field_link, str):
+                    raise ValueError("Failed to create link field")
+
                 updated_count = link_records_between_tables(parent_table_client=table_client, 
                                                             child_table_client=new_table_client,
                                                             parent_field_name=column_title,
@@ -644,4 +664,6 @@ def normalize_columns():
 
             except Exception as e:
                 return jsonify({"error": f"Failed to normalize column {column_title}: {str(e)}"}), 500
+    
+    return jsonify({"error": "No columns were normalized"}), 400
 

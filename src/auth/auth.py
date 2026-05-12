@@ -4,6 +4,7 @@ import os
 from base64 import b64encode, b64decode
 import json
 import hashlib
+from pathlib import Path
 
 """
 Class for local authentication 
@@ -13,17 +14,17 @@ class Auth:
     '''
     Init from a JSON file
     '''
-    def __init__(self, filename : str = "auth.json" ):
+    def __init__(self, filepath = Path("auth.json") ):
 
         self.auth={}
-        self.filename=filename
+        self.filepath=filepath
 
         try:
-            with open(filename,"r") as f:
+            with open(filepath,"r") as f:
                 self.auth= json.load(f)
         except FileNotFoundError:
-            print(f"New auth file {filename}")
-            with open(filename, "w") as f:
+            print(f"New auth file {filepath}")
+            with open(filepath, "w") as f:
                 json.dump(self.auth, f, indent=4)
 
 
@@ -107,7 +108,7 @@ class Auth:
     '''
     def write( self ):
 
-        with open(self.filename,"w+") as f:
+        with open(self.filepath,"w+") as f:
             json.dump(self.auth,f,indent=4)
 
 
@@ -122,7 +123,7 @@ class Auth:
 
     def api_delete_user(self, user_name: str) -> str:
         if not user_name in self.auth:
-            return "f '{user_name}' not found."
+            return f"'{user_name}' not found."
         del self.auth[user_name]
         print(f"🗑️ User '{user_name}' deleted.")
         self.write()

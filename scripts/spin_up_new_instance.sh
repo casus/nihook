@@ -126,7 +126,7 @@ podman run -d \
 
 # Wait for NocoDB to be ready
 TRIES=30
-until curl -s "http://localhost:$HOST_PORT_NOCODB/api/v1/health" | grep -q 'OK'; do
+until curl -s "http://127.0.0.1:$HOST_PORT_NOCODB/api/v1/health" | grep -q 'OK'; do
   if (( $TRIES < 1 )); then
     echo "NocoDB did not become ready in time, exiting."
     exit 1
@@ -137,6 +137,21 @@ until curl -s "http://localhost:$HOST_PORT_NOCODB/api/v1/health" | grep -q 'OK';
 done
 sleep 4 # sleep 2 extra seconds so inside the container the following config file can be written
 echo "NocoDB is up!"
+
+# Wait for Webhook to be ready natively
+TRIES=20
+# We assume the webhook container replies with HTTP 200/4xx/5xx on its base URL or /webhooks/ping. 
+# We'll just check if the port accepts a connection using curl.
+until curl -s "http://127.0.0.1:$HOST_PORT_WEBHOOK/webhooks/ping" | grep -q 'pong'; do
+  if (( $TRIES < 1 )); then
+    echo "Webhook did not become ready in time, exiting."
+    exit 1
+  fi
+  echo "Waiting for Webhook to start on port $HOST_PORT_WEBHOOK..."
+  TRIES=$((TRIES-1))
+  sleep 2
+done
+echo "Webhook is up!"
 
 # read token from 'nocodb.json'
 

@@ -1,0 +1,63 @@
+stages:          # List of stages for jobs, and their order of execution
+  - build
+  # - integration_tests
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PYTHON_VERSION: "3.12"
+  # Use GitLab's built-in registry to pass the image between stages
+  TEST_IMAGE_TAG: "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
+
+cache:
+  key: pip-cache
+  paths:
+    - .cache/pip
+
+build_stage:
+  stage: build
+  image: quay.io/podman/stable
+  variables:
+    STORAGE_DRIVER: vfs # Podman uses VFS inside unprivileged containers
+  before_script:
+    # Log into the GitLab container registry
+    - podman login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+  script:
+    - echo "Building the application Podman image..."
+    - podman build -t "$TEST_IMAGE_TAG" .
+    - echo "Pushing the image to GitLab container registry so other stages can use it..."
+    - podman push "$TEST_IMAGE_TAG"
+
+integration_tests_stage:
+  stage: integration_tests
+  image: quay.io/podman/stable
+  variables:
+    STORAGE_DRIVER: "vfs"
+    PUBLIC_URL: "127.0.0.1"
+    HOOK_HOST: "0.0.0.0"
+    HOOK_PORT: "5000"
+    NOCODB_PORT: "8080"
+    NOCODB_SSL_CERT: "false"
+    DEBUG: "True"
+  before_script:
+    - dnf install -y python3-pip jq pwgen curl procps-ng lsof
+    - pip3 install .[dev] || pip install .
+    # Log into the registry to pull the image built in the previous stage
+    - podman login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - podman pull "$TEST_IMAGE_TAG"
+    # Tag it as 'nihook' because spin_up_new_instance.sh hardcodes this image name
+    - podman tag "$TEST_IMAGE_TAG" nihook
+    
+    # Run the spin-up script and explicitly exit if it fails
+    - ./scripts/spin_up_new_instance.sh ./ || (echo "❌ Failed to spin up instances" && exit 1)
+
+    # The script creates a folder like nocodb_webhook_instance_5555_7555/ when DEBUG='True'
+    # Parse the configurations output by the script
+    - export INSTANCE_DIR=$(find . -maxdepth 1 -type d -name "nocodb_webhook_instance_*" | head -n 1)
+    - export NOCODB_HOST="http://127.0.0.1:7555"
+    - export NOCODB_TOKEN=$(jq -r '.nocodb_secret_token' "$INSTANCE_DIR/config/nocodb.json")
+    - 'echo "Passed parsed token: $NOCODB_TOKEN"'
+
+  script:
+    - echo "Running integration tests against $NOCODB_HOST"
+    - pytest tests/integration -v --disable-warnings
+

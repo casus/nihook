@@ -2,7 +2,7 @@
 
 from flask import request, jsonify
 from . import api_bp
-from auth import Auth
+from auth import Auth # type: ignore
 from const import AUTH_FILE_PATH
 
 @api_bp.route('/auth-data', methods=['GET'])
@@ -22,6 +22,8 @@ def delete_auth_data():
     """
     name = request.args.get('name')
     authentication= Auth(AUTH_FILE_PATH)
+    if not name:
+        return jsonify({'error': 'Name parameter is required'}), 400
     if (authentication.api_delete_user(name)):
         return jsonify({'message': f'{name} deleted'}), 200
     return jsonify({'error': f'{name} not found'}), 404
