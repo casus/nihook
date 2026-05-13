@@ -16,6 +16,8 @@ cache:
 build_stage:
   stage: build
   image: quay.io/podman/stable
+  tags:
+    - privileged # Ensure this runs on a runner that supports Podman
   variables:
     STORAGE_DRIVER: vfs # Podman uses VFS inside unprivileged containers
   before_script:
@@ -30,6 +32,8 @@ build_stage:
 integration_tests_stage:
   stage: integration_tests
   image: quay.io/podman/stable
+  tags:
+    - privileged # Ensure this runs on a runner that supports Podman
   variables:
     STORAGE_DRIVER: "vfs"
     PUBLIC_URL: "127.0.0.1"
