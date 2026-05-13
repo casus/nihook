@@ -44,8 +44,8 @@ integration_tests_stage:
     # Log into the registry to pull the image built in the previous stage
     - podman login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
     - podman pull "$TEST_IMAGE_TAG"
-    # Tag it as 'nihook' because spin_up_new_instance.sh hardcodes this image name
-    - podman tag "$TEST_IMAGE_TAG" nihook
+    # Tag it as 'localhost/nihook' because spin_up_new_instance.sh uses this image name
+    - podman tag "$TEST_IMAGE_TAG" localhost/nihook
     
     # Run the spin-up script and explicitly exit if it fails
     - ./scripts/spin_up_new_instance.sh ./ || (echo "❌ Failed to spin up instances" && exit 1)

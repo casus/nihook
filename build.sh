@@ -1,4 +1,4 @@
 #!/bin/bash
 
-podman build -t nihook .
+podman build -t localhost/nihook .
 

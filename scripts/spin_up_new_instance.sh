@@ -122,7 +122,7 @@ podman run -d \
   -e NOCODB_SSL_CERT="$NOCODB_SSL_CERT" \
   -e DEBUG="$DEBUG" \
   --restart=always \
-  nihook
+  localhost/nihook
 
 # Wait for NocoDB to be ready
 TRIES=30
