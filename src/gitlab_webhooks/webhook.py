@@ -269,7 +269,7 @@ if __name__ == '__main__':
     gitlab_projects = load_gitlab_projects()
     log.debug(f"Known gitlab projects are:", extra= {"gitlab_projects": gitlab_projects})
 
-    if True == DEBUG:
+    if DEBUG == True:
 
         # only in debug mode send everything to stdout as well
         ch = logging.StreamHandler(sys.stdout)
@@ -282,5 +282,6 @@ if __name__ == '__main__':
         log.debug(f"    NOCODB_HOST= {NOCODB_HOST}")
         log.debug(f"    NOCODB_TOKEN= {NOCODB_TOKEN}")
         log.debug(f"    NOCODB_SSL_CERT= {NOCODB_SSL_CERT}")
-
-    serve(app, host=HOST, port=int(PORT))
+        app.run(host=HOST, port=int(PORT), debug=True)
+    else:
+        serve(app, host=HOST, port=int(PORT))

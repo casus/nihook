@@ -1,4 +1,5 @@
 stages:          # List of stages for jobs, and their order of execution
+  - unit_tests
   - build
   - integration_tests
 
@@ -12,6 +13,21 @@ cache:
   key: pip-cache
   paths:
     - .cache/pip
+
+unit_tests_stage:
+  stage: unit_tests
+  image: python:$PYTHON_VERSION
+  before_script:
+    - pip install -r requirements-dev.txt
+  script:
+    - pytest tests/unit -v
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+    paths:
+      - report.xml
+
 
 build_stage:
   stage: build
