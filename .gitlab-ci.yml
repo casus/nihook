@@ -21,12 +21,6 @@ unit_tests_stage:
     - pip install -r requirements-dev.txt
   script:
     - pytest tests/unit -v
-  artifacts:
-    when: always
-    reports:
-      junit: report.xml
-    paths:
-      - report.xml
 
 
 build_stage:
@@ -61,8 +55,8 @@ integration_tests_stage:
     NOCODB_SSL_CERT: "false"
     DEBUG: "True"
   before_script:
-    - dnf install -y python3-pip jq pwgen curl procps-ng lsof gcc gcc-c++ python3-devel
-    - pip3 install -r requirements-dev.txt
+    - dnf install -y python3.12 python3.12-pip jq pwgen curl procps-ng lsof
+    - python3.12 -m pip install -r requirements-dev.txt
     # Log into the registry to pull the image built in the previous stage
     - podman login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
     - podman pull "$TEST_IMAGE_TAG"
@@ -82,5 +76,5 @@ integration_tests_stage:
 
   script:
     - echo "Running integration tests against $NOCODB_HOST"
-    - pytest tests/integration -v --disable-warnings
+    - python3.12 -m pytest tests/integration -v --disable-warnings
 
