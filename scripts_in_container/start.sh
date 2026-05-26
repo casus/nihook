@@ -18,12 +18,12 @@ export NC_TOOL_DIR=/app/db/
 
 # Wait for NocoDB to be ready
 TRIES=30
-until curl -s "http://localhost:$NOCODB_PORT/api/v1/health" | grep -q 'OK'; do
+until curl -s "http://127.0.0.1:$NOCODB_PORT/api/v1/health" | grep -q 'OK'; do
   if (( $TRIES < 1 )); then
     echo "NocoDB did not become ready in time, exiting."
     exit 1
   fi
-  echo "Waiting for NocoDB to start on port $HOSTNOCODB_PORT_PORT_NOCODB..."
+  echo "Waiting for NocoDB to start on port $NOCODB_PORT..."
   TRIES=$((TRIES-1))
   sleep 2
 done
@@ -51,7 +51,7 @@ else
           "ignore_subscribe": true,
           "token": ""
         }' \
-    "http://localhost:$NOCODB_PORT/api/v1/auth/user/signup")
+    "http://127.0.0.1:$NOCODB_PORT/api/v1/auth/user/signup")
   user_token=$(echo "$response" | jq -r '.token')
 
   if [[ -z "$user_token" || "$user_token" == "null" ]]; then
@@ -61,7 +61,7 @@ else
   fi
 
   # Use the token as the xc-auth header for the next request
-  response=$(curl -s -X POST "http://localhost:$NOCODB_PORT/api/v1/tokens" \
+  response=$(curl -s -X POST "http://127.0.0.1:$NOCODB_PORT/api/v1/tokens" \
     -H "Content-Type: application/json" \
     -H "xc-auth: $user_token" \
     -d '{"description":"Default-Token"}')
@@ -84,7 +84,7 @@ else
 
   # Create a default base only in debug mode
   if [ "$DEBUG" = "True" ]; then
-    response=$(curl -s -X POST "http://localhost:$NOCODB_PORT/api/v1/db/meta/projects/" \
+    response=$(curl -s -X POST "http://127.0.0.1:$NOCODB_PORT/api/v1/db/meta/projects/" \
       -H "Content-Type: application/json" \
       -H "xc-auth: $user_token" \
       -d '{"title":"Default-Base"}')

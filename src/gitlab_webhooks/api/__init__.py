@@ -19,7 +19,7 @@ def authenticate():
     Otherwise, it checks the user and secret from headers against the auth data.
     """
     from flask import request, jsonify
-    from auth import Auth
+    from auth import Auth # type: ignore
 
     if (not DEBUG_MODE):
         authentication= Auth(auth_file_path)

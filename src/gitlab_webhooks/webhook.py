@@ -166,7 +166,12 @@ def webhhook_upload_all_commits():
     return jsonify({'message': 'All commits were scanned and added to the table'}), 201
 
 
-    
+@app.route('/webhooks/ping', methods=['GET'])
+def webhook_ping():
+    """
+    Simple route to test if the webhook is up and running
+    """
+    return jsonify({'message': 'pong'}), 200    
 
 @app.route('/webhooks/push', methods=['POST'])
 def webhook_push():
@@ -219,13 +224,13 @@ def webhook_push():
 
     if "none" == gitlab_access_token:
         log.error(f"no GITLAB_ACCESS_TOKEN for {projecturl} in local file 'gitlab.projects', abort")
-        return False
+        return jsonify({'error': 'Missing GITLAB_ACCESS_TOKEN'}), 401
 
     # create gitlab connection object only once
 
     if None == NOCODB_TOKEN:
         log.error(f"no NOCODB_TOKEN given as environment variable, abort")
-        return False
+        return jsonify({'error': 'Missing NOCODB_TOKEN'}), 401
 
     gl= gitlab.Gitlab( url= gitlab_host, private_token= gitlab_access_token )
     gitlab_project= gl.projects.get(id=projectid)
@@ -264,7 +269,7 @@ if __name__ == '__main__':
     gitlab_projects = load_gitlab_projects()
     log.debug(f"Known gitlab projects are:", extra= {"gitlab_projects": gitlab_projects})
 
-    if True == DEBUG:
+    if DEBUG == True:
 
         # only in debug mode send everything to stdout as well
         ch = logging.StreamHandler(sys.stdout)
@@ -277,5 +282,6 @@ if __name__ == '__main__':
         log.debug(f"    NOCODB_HOST= {NOCODB_HOST}")
         log.debug(f"    NOCODB_TOKEN= {NOCODB_TOKEN}")
         log.debug(f"    NOCODB_SSL_CERT= {NOCODB_SSL_CERT}")
-
-    serve(app, host=HOST, port=int(PORT))
+        app.run(host=HOST, port=int(PORT), debug=True)
+    else:
+        serve(app, host=HOST, port=int(PORT))

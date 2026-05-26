@@ -54,13 +54,24 @@ find_valid_ports() {
   done
 }
 
-if [ "$DEBUG" = "True" ]; then
-  HOST_PORT_WEBHOOK=5555
-  HOST_PORT_NOCODB=7555
-else
-  # Dynamically find free host ports
-  read -r HOST_PORT_WEBHOOK HOST_PORT_NOCODB < <(find_valid_ports)
-fi
+  if [ "$DEBUG" = "True" ]; then
+    HOST_PORT_WEBHOOK=5555
+    HOST_PORT_NOCODB=7555
+  else
+    # Dynamically find free host ports
+    read -r HOST_PORT_WEBHOOK HOST_PORT_NOCODB < <(find_valid_ports)
+  fi
+
+  if [ -n "$CI" ] || [ -f /.dockerenv ] || [ -f /run/.containerenv ]; then
+    echo "⚠️ Container environment detected. Using --network host for podman run."
+    NET_ARG="--network host"
+    PORT_ARGS=""
+    HOST_PORT_NOCODB="$NOCODB_PORT"
+    HOST_PORT_WEBHOOK="$HOOK_PORT"
+  else
+    NET_ARG=""
+    PORT_ARGS="-p 127.0.0.1:${HOST_PORT_WEBHOOK}:${HOOK_PORT} -p 127.0.0.1:${HOST_PORT_NOCODB}:${NOCODB_PORT}"
+  fi
 
 # Create directories
 VOLUME_DIR=$PARENT_DIR"nocodb_webhook_instance_${HOST_PORT_WEBHOOK}_${HOST_PORT_NOCODB}"
@@ -109,8 +120,8 @@ fi
 
 # Run the container
 podman run -d \
-  -p "${HOST_PORT_WEBHOOK}":"${HOOK_PORT}" \
-  -p "${HOST_PORT_NOCODB}":"${NOCODB_PORT}" \
+  $PORT_ARGS \
+  $NET_ARG \
   -v "$(realpath "$CONFIG_DIR")":/app/config/:z \
   -v "$(realpath "$AUTH_DIR")":/app/auth/:z \
   -v "$(realpath "$DB_DIR")":/app/db/:z \
@@ -124,9 +135,10 @@ podman run -d \
   --restart=always \
   nihook
 
+# sleep inf
 # Wait for NocoDB to be ready
 TRIES=30
-until curl -s "http://localhost:$HOST_PORT_NOCODB/api/v1/health" | grep -q 'OK'; do
+until curl -s "http://127.0.0.1:$HOST_PORT_NOCODB/api/v1/health" | grep -q 'OK'; do
   if (( $TRIES < 1 )); then
     echo "NocoDB did not become ready in time, exiting."
     exit 1
@@ -137,6 +149,21 @@ until curl -s "http://localhost:$HOST_PORT_NOCODB/api/v1/health" | grep -q 'OK';
 done
 sleep 4 # sleep 2 extra seconds so inside the container the following config file can be written
 echo "NocoDB is up!"
+
+# Wait for Webhook to be ready natively
+TRIES=20
+# We assume the webhook container replies with HTTP 200/4xx/5xx on its base URL or /webhooks/ping. 
+# We'll just check if the port accepts a connection using curl.
+until curl -s "http://127.0.0.1:$HOST_PORT_WEBHOOK/webhooks/ping" | grep -q 'pong'; do
+  if (( $TRIES < 1 )); then
+    echo "Webhook did not become ready in time, exiting."
+    exit 1
+  fi
+  echo "Waiting for Webhook to start on port $HOST_PORT_WEBHOOK..."
+  TRIES=$((TRIES-1))
+  sleep 2
+done
+echo "Webhook is up!"
 
 # read token from 'nocodb.json'
 
