@@ -31,11 +31,10 @@ def test_get_auth_data(env_config):
     
     assert response.status_code == 200, f"Unexpected status code: {response.status_code} - {response.text}"
     data = response.json()
-    assert isinstance(data, list)
+    assert isinstance(data, dict)
     
     # We should have at least the integration_test_user we created (or already existed)
-    users = [u.get("name") for u in data]
-    assert "integration_test_user" in users, "integration_test_user not found in auth data"
+    assert "integration_test_user" in data, "integration_test_user not found in auth data"
 
 def test_delete_auth_data(env_config):
     """Test deleting the auth user"""

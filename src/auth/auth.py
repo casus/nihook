@@ -72,6 +72,8 @@ class Auth:
         return secret
 
     def api_add(self, user_name: str, size: int = 64) -> str:
+        if (user_name == None or user_name.strip() == ""):
+            raise ValueError("User name cannot be empty.")
         if user_name in self.auth:
             raise ValueError(f"User '{user_name}' already exists.")
 
@@ -121,13 +123,13 @@ class Auth:
         self.write()
         return True
 
-    def api_delete_user(self, user_name: str) -> str:
+    def api_delete_user(self, user_name: str) -> bool:
         if not user_name in self.auth:
-            return f"'{user_name}' not found."
+            return False
         del self.auth[user_name]
         print(f"🗑️ User '{user_name}' deleted.")
         self.write()
-        return "User '{user_name}' deleted"
+        return True
 
     '''
     Check b64 encoded secret if it matches for given user
