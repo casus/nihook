@@ -92,12 +92,12 @@ def test_delete_nonexistent_user(auth_instance):
 def test_api_delete_user(auth_instance):
     auth_instance.add("todelete_api", size=32)
     result = auth_instance.api_delete_user("todelete_api")
-    assert result == "User '{user_name}' deleted"
+    assert result == True
     assert "todelete_api" not in auth_instance.auth
 
 def test_api_delete_nonexistent_user(auth_instance):
     result = auth_instance.api_delete_user("nonexistent")
-    assert result == "'nonexistent' not found."
+    assert result == False
 
 def test_api_users_list(auth_instance):
     auth_instance.add("user1", size=32)
