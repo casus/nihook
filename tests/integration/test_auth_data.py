@@ -5,7 +5,7 @@ import pytest
 def test_add_auth_data(env_config):
     """Test creating a new auth user"""
     base_url = env_config["WEBHOOK_HOST"].rstrip('/')
-    url = f"{base_url}/auth-data"
+    url = f"{base_url}/api/auth-data"
     payload = {
         "user_name": "integration_test_user",
         "size": 32
@@ -26,7 +26,7 @@ def test_add_auth_data(env_config):
 def test_get_auth_data(env_config):
     """Test retrieving all users"""
     base_url = env_config["WEBHOOK_HOST"].rstrip('/')
-    url = f"{base_url}/auth-data"
+    url = f"{base_url}/api/auth-data"
     response = requests.get(url)
     
     assert response.status_code == 200, f"Unexpected status code: {response.status_code} - {response.text}"
@@ -40,7 +40,7 @@ def test_get_auth_data(env_config):
 def test_delete_auth_data(env_config):
     """Test deleting the auth user"""
     base_url = env_config["WEBHOOK_HOST"].rstrip('/')
-    url = f"{base_url}/auth-data"
+    url = f"{base_url}/api/auth-data"
     params = {"name": "integration_test_user"}
     response = requests.delete(url, params=params)
     
@@ -51,7 +51,7 @@ def test_delete_auth_data(env_config):
 def test_delete_auth_data_not_found(env_config):
     """Test deleting a non-existent auth user"""
     base_url = env_config["WEBHOOK_HOST"].rstrip('/')
-    url = f"{base_url}/auth-data"
+    url = f"{base_url}/api/auth-data"
     params = {"name": "non_existent_test_user_xyz"}
     response = requests.delete(url, params=params)
     
@@ -62,7 +62,7 @@ def test_delete_auth_data_not_found(env_config):
 def test_add_auth_data_invalid_payload(env_config):
     """Test creating a new auth user with invalid payload"""
     base_url = env_config["WEBHOOK_HOST"].rstrip('/')
-    url = f"{base_url}/auth-data"
+    url = f"{base_url}/api/auth-data"
     # Missing user_name
     payload = {
         "size": 32
@@ -75,7 +75,7 @@ def test_add_auth_data_invalid_payload(env_config):
 def test_delete_auth_data_missing_name(env_config):
     """Test deleting the auth user without a name parameter"""
     base_url = env_config["WEBHOOK_HOST"].rstrip('/')
-    url = f"{base_url}/auth-data"
+    url = f"{base_url}/api/auth-data"
     response = requests.delete(url)
     
     assert response.status_code == 400, f"Unexpected status code: {response.status_code} - {response.text}"
