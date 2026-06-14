@@ -258,6 +258,67 @@ def webhook_push():
                         gitlab_project, projecturl, ref, commit_before, commit_after, dirname, basename, table )
                     log.debug(f"res: ", extra={"res":res})
 
+    # Collect commit IDs already processed from webhook payload
+    processed_commit_ids = set(c['id'] for c in event['commits'])
+
+    # GitLab limits webhook payload to 20 commits, so if truncated, fetch missing commits
+    # from the GitLab API between commit_before and commit_after to ensure completeness
+    commits_in_webhook = len(event['commits'])
+    total_commits = event['total_commits_count']
+
+    if commits_in_webhook != total_commits:
+        log.warning(f"GitLab webhook truncated: {commits_in_webhook} commits received, {total_commits} total. Fetching all commits from GitLab API between {commit_before} and {commit_after}.")
+
+        ref_prefix, ref_suffix = os.path.split(ref)
+
+        # Fetch all commits between commit_before and commit_after from GitLab API
+        # This ensures we process ALL commits, not just the ones in the webhook payload
+        all_new_commits = gitlab_project.commits.list(
+            ref_name=ref_suffix,
+            since=commit_before,
+            all=True
+        )
+
+        # Build ordered list of commits from newest to oldest (GitLab returns newest first)
+        # We need to process oldest first for proper commit_before/commit_after calculation
+        all_new_commits.sort(key=lambda c: datetime.fromisoformat(c.committed_date.replace('Z', '+00:00')))
+        all_commit_ids = [c.id for c in all_new_commits]
+
+        for commit in all_new_commits:
+            commit_id = commit.id
+
+            # Skip commits that were already processed from the webhook payload
+            if commit_id in processed_commit_ids:
+                continue
+
+            log.debug(f"    Processing missing commit {commit_id} at {commit.committed_date}")
+
+            # Get commit diffs directly from GitLab API
+            commit_diffs = commit.diff(get_all=True)
+
+            for diff in commit_diffs:
+                change_type = map_change_type(diff)
+                filename = diff['new_path']
+
+                log.debug(f"Handle: {filename} {change_type}")
+
+                dirname, basename = os.path.split(filename)
+                if basename in SPECIAL_FILENAMES:
+                    log.debug(f"            handle {dirname} / {basename}")
+
+                    # Calculate commit_before and commit_after for this specific commit
+                    commit_index = all_commit_ids.index(commit_id)
+                    missing_commit_after = all_commit_ids[commit_index + 1] if commit_index + 1 < len(all_commit_ids) else commit_after
+                    missing_commit_before = all_commit_ids[commit_index - 1] if commit_index > 0 else commit_before
+
+                    res = process_files_from_gitlab.process_special_files(
+                        change_type,
+                        gitlab_project, projecturl, ref,
+                        missing_commit_before, missing_commit_after,
+                        dirname, basename, table
+                    )
+                    log.debug(f"res: ", extra={"res": res})
+
     end_time = time.time()
     log.debug(f"webhook_push() finished successfully at time {end_time}")
     return jsonify('no errors'), 200
