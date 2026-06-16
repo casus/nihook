@@ -60,6 +60,7 @@ LOGFILE = LOGDIR / "webhook.log"
 
 log = logging.getLogger('')
 log.setLevel(logging.INFO)
+#log.setLevel(logging.DEBUG)
 
 fh = handlers.RotatingFileHandler(LOGFILE, maxBytes=(1048576*5), backupCount=7)
 log.addHandler(fh)
@@ -180,7 +181,7 @@ def webhook_push():
     """
 
     start_time = time.time()
-    log.debug(f"webhook_push() called at {start_time}")
+    log.info(f"webhook_push() called")
 
     headers= request.headers
     log.debug(f"    headers:", extra= {"headers": headers})
@@ -199,6 +200,12 @@ def webhook_push():
     project= event['project']
     commit_before= event['before']
     commit_after= event['after']
+
+
+    log.debug(f" new push event with commits between commit_before {commit_before} (oldest) and commit_after {commit_after} (newest)")
+
+    eee=json.dumps( event, indent=4 )
+    log.debug(f"{eee}\n----")
 
 #   e.g."ref": "refs/heads/master",
     ref= event['ref']
@@ -242,6 +249,8 @@ def webhook_push():
     for c in event['commits']:
         log.debug(f"    Commit {c['id']} at {c['timestamp']}" )
 
+        log.debug(f"process commit\n", c)
+
         for action in ['added','modified','removed']:
 
             log.debug(f"        {action}: {len(c[action])}")
@@ -267,60 +276,70 @@ def webhook_push():
     total_commits = event['total_commits_count']
 
     if commits_in_webhook != total_commits:
-        log.warning(f"GitLab webhook truncated: {commits_in_webhook} commits received, {total_commits} total. Fetching all commits from GitLab API between {commit_before} and {commit_after}.")
-
+        log.info(f"GitLab webhook truncated: {commits_in_webhook} commits received out of {total_commits} total. Fetching all commits from GitLab.")
         ref_prefix, ref_suffix = os.path.split(ref)
 
-        # Fetch all commits between commit_before and commit_after from GitLab API
-        # This ensures we process ALL commits, not just the ones in the webhook payload
-        all_new_commits = gitlab_project.commits.list(
-            ref_name=ref_suffix,
-            since=commit_before,
-            all=True
-        )
+        # Fetch all commits from the ref - GitLab's 'since' parameter is useless because it expects timestamps, not commit SHAs. We need to find commits between commit_before and commit_after ourselves
+        try:
+            log.debug(f"Fetching all commits from {ref_suffix}")
+            all_branch_commits = gitlab_project.commits.list(
+                ref_name=ref_suffix,
+                all=True
+            )
 
-        # Build ordered list of commits from newest to oldest (GitLab returns newest first)
-        # We need to process oldest first for proper commit_before/commit_after calculation
-        all_new_commits.sort(key=lambda c: datetime.fromisoformat(c.committed_date.replace('Z', '+00:00')))
-        all_commit_ids = [c.id for c in all_new_commits]
+            # Search forward through the list (should be newest to oldest) to find the commits
+            for idx in range(len(all_branch_commits)):
 
-        for commit in all_new_commits:
-            commit_id = commit.id
+                log.debug(f"    {idx} - {all_branch_commits[idx].id}")
 
-            # Skip commits that were already processed from the webhook payload
-            if commit_id in processed_commit_ids:
-                continue
+                # after 'total_commits' have been processed (including those processed above
+                # and skipped with 'continue' below) do not continue
+                # in case this is a new branch, it would not find 'commit_before' but then
+                # this loop would continue until the very beginning of the main branch
+                # which is not what we want
+                if idx >= total_commits:
+                    log.debug(f"        handled {total_commits} already, skip any further")
+                    break
 
-            log.debug(f"    Processing missing commit {commit_id} at {commit.committed_date}")
+                if commit_before == all_branch_commits[idx].id:
+                    log.debug(f"        spotted commit_before= {commit_before}, skip all older ones")
+                    break
 
-            # Get commit diffs directly from GitLab API
-            commit_diffs = commit.diff(get_all=True)
+                if all_branch_commits[idx].id in processed_commit_ids:
+                    log.debug(f"                commit {all_branch_commits[idx].id} was already processed above, skip")
+                    continue
 
-            for diff in commit_diffs:
-                change_type = map_change_type(diff)
-                filename = diff['new_path']
+                log.debug(f"                process commit {all_branch_commits[idx].id}")
 
-                log.debug(f"Handle: {filename} {change_type}")
+                commit= all_branch_commits[idx]
 
-                dirname, basename = os.path.split(filename)
-                if basename in SPECIAL_FILENAMES:
-                    log.debug(f"            handle {dirname} / {basename}")
+                # Get commit diffs directly from GitLab API
+                commit_diffs = commit.diff(get_all=True)
 
-                    # Calculate commit_before and commit_after for this specific commit
-                    commit_index = all_commit_ids.index(commit_id)
-                    missing_commit_after = all_commit_ids[commit_index + 1] if commit_index + 1 < len(all_commit_ids) else commit_after
-                    missing_commit_before = all_commit_ids[commit_index - 1] if commit_index > 0 else commit_before
+                for diff in commit_diffs:
+                    change_type = map_change_type(diff)
+                    filename = diff['new_path']
 
-                    res = process_files_from_gitlab.process_special_files(
-                        change_type,
-                        gitlab_project, projecturl, ref,
-                        missing_commit_before, missing_commit_after,
-                        dirname, basename, table
-                    )
-                    log.debug(f"res: ", extra={"res": res})
+                    log.debug(f"Handle: {filename} {change_type}")
+
+                    dirname, basename = os.path.split(filename)
+                    if basename in SPECIAL_FILENAMES:
+                        log.debug(f"            handle {dirname} / {basename}")
+
+                        res = process_files_from_gitlab.process_special_files(
+                            change_type,
+                            gitlab_project, projecturl, ref,
+                            commit_before, commit_after,
+                            dirname, basename, table
+                        )
+                        log.debug(f"res: ", extra={"res": res})
+
+        except Exception as e:
+            log.error(f"Error fetching commits from GitLab API: {e}")
+            return jsonify({'error': f'Failed to fetch commits: {str(e)}'}), 500
 
     end_time = time.time()
-    log.debug(f"webhook_push() finished successfully at time {end_time}")
+    log.info(f"webhook_push() finished {total_commits} commits successfully in {(end_time-start_time):.2f}s")
     return jsonify('no errors'), 200
 
 
