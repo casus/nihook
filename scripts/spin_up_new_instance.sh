@@ -70,7 +70,7 @@ find_valid_ports() {
     HOST_PORT_WEBHOOK="$HOOK_PORT"
   else
     NET_ARG=""
-    PORT_ARGS="-p 127.0.0.1:${HOST_PORT_WEBHOOK}:${HOOK_PORT} -p 127.0.0.1:${HOST_PORT_NOCODB}:${NOCODB_PORT}"
+    PORT_ARGS="-p ${HOST_PORT_WEBHOOK}:${HOOK_PORT} -p ${HOST_PORT_NOCODB}:${NOCODB_PORT}"
   fi
 
 # Create directories

@@ -14,6 +14,12 @@ import gitlab
 from const import HEADER_NOCO_DB_TABLE_ID, HEADER_WEBHOOK_USERNAME, HEADER_WEBHOOK_SECRET
 import settings_manager
 from utils import NOCODB_HOST, NOCODB_TOKEN, NOCODB_SSL_CERT, DEBUG
+import logging
+from datetime import date, timedelta
+
+
+log = logging.getLogger('')
+log.setLevel(logging.INFO)
 
 
 ID_COLUMN = {
@@ -93,11 +99,14 @@ def create_table_file():
 
     store_settings = request.form.get("store_settings", "").lower() == "true" # optional, if you want to save the relationship settings in settings.yaml
 
-    # Debug
-    print("=== DEBUG ===")
-    print("request.form:", request.form)
-    print("request.files:", request.files)
-    print("==============")
+    # # Debug
+    # print("=== DEBUG ===")
+    # print("request.form:", request.form)
+    # print("request.files:", request.files)
+    # print("==============")
+    log.info("=== DEBUG ===")
+    log.info("request.form: %s", request.form)
+    log.info("request.files: %s", request.files)
 
     # Validate table creation input
     if not table_name or not schema_file:
@@ -142,7 +151,7 @@ def create_table_file():
         # Optional: create GitLab webhook
         webhook_info = None
         if create_gitlab_webhook:
-            if not all([gitlab_repo_url, gitlab_api_token, server_ip]):
+            if not all([gitlab_api_token, server_ip]):
                 return jsonify({"error": "Missing required parameters for GitLab webhook creation"}), 400
             if not webhook_username:
                 webhook_username = request.headers.get(HEADER_WEBHOOK_USERNAME, None)  # use header if not provided
@@ -158,9 +167,13 @@ def create_table_file():
             )
             if gitlab_repo_url is None:
                 return jsonify({"error": "GitLab repository URL is required for webhook creation"}), 400
-            if gitlab_project_token is None:
-                return jsonify({"error": "GitLab project token is required for storing project info"}), 400
-
+            if not gitlab_project_token:
+                gitlab_project_token = create_gitlab_project_token(gitlab_repo_url, gitlab_api_token)
+                if "error" in gitlab_project_token:
+                    return jsonify({"error": f"Failed to create GitLab project token: {gitlab_project_token['error']}"}), 500
+                gitlab_project_token = gitlab_project_token.get("token", "")
+                log.info(f"Created GitLab project token: {gitlab_project_token}")
+                
             if does_gitlab_project_exist(gitlab_repo_url):
                 remove_gitlab_project(gitlab_repo_url) # Remove the project if it already exists to avoid duplicates
             add_gitlab_project(gitlab_repo_url, gitlab_project_token) # Store the project URL and token in projects.json
@@ -220,6 +233,33 @@ def create_gitlab_project_webhook(repo_url, token, webhook_secret, nocodb_table_
 
     return {"id": hook.id, "url": webhook_url}
     
+
+
+
+def create_gitlab_project_token(repo_url, token):
+    """
+    Create a personal access token for the given GitLab project using python-gitlab.
+    """
+    # Extract project path from repo URL (e.g., https://gitlab.com/group/project.git → group/project)
+    parsed_uri = urlparse(repo_url)
+    gitlab_host = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
+    project_path = parsed_uri.path.lstrip("/").removesuffix(".git")
+    gl = gitlab.Gitlab(gitlab_host, private_token=token)
+    project = gl.projects.get(project_path)
+    expires = (date.today() + timedelta(days=364)).isoformat()
+
+    # Create project access token
+    try:
+        token = project.access_tokens.create({
+            'name': 'NocoDB Integration',
+            'scopes': ['api'],
+            'expires_at': expires  # or set a specific expiration date
+        })
+    except Exception as e:
+        return {"error": f"Failed to create GitLab project token: {str(e)}"}
+
+    return {"token": token.token}
+
 
 def link_records_between_tables(parent_table_client: nocodb.Table, 
                                 child_table_client: nocodb.Table, 
